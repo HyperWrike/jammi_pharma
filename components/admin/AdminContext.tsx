@@ -33,7 +33,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const logout = async () => {
     const { supabase } = await import('../../lib/supabase');
-    await supabase.auth.signOut();
+    if (supabase) await supabase.auth.signOut();
     sessionStorage.removeItem("jammi_admin_session");
     sessionStorage.removeItem("jammi_edit_mode");
     setIsAdmin(false);
