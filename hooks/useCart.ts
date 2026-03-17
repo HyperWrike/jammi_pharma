@@ -27,6 +27,7 @@ export function useCart() {
   }, []);
 
   const fetchCart = useCallback(async (gid: string) => {
+    if (!supabase) return;
     const { data } = await supabase
       .from('guest_carts')
       .select(`
@@ -45,7 +46,7 @@ export function useCart() {
   useEffect(() => {
     const gid = getGuestId();
     guestId.current = gid;
-    if (!gid) { setLoading(false); return; }
+    if (!gid || !supabase) { setLoading(false); return; }
 
     fetchCart(gid).finally(() => setLoading(false));
 

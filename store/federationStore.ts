@@ -21,7 +21,7 @@ export const useFederationStore = create<FederationStore>((set, get) => {
             .subscribe();
     };
 
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && supabase) {
         setupSubscription('federation_posts', 'posts');
         setupSubscription('doctor_profiles', 'doctorProfiles');
         setupSubscription('partner_requests', 'partnerRequests');
