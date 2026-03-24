@@ -29,9 +29,14 @@ export const useFederationStore = create<FederationStore>((set, get) => {
         setupSubscription('customers', 'customers');
         setupSubscription('products', 'products', 'category', true);
 
-        const checkAuth = () => {
-            if (sessionStorage.getItem("jammi_admin_session") === "true" || localStorage.getItem("jammi_cms_session") === "true") {
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            const hasLocalSession = sessionStorage.getItem("jammi_admin_session") === "true" || 
+                                   localStorage.getItem("jammi_cms_session") === "true";
+            
+            if (session || hasLocalSession) {
                 set({ isAdminLoggedIn: true, sanctumModalOpen: false });
+                if (session?.user) set({ userUID: session.user.id });
             } else {
                 set({ isAdminLoggedIn: false });
             }
@@ -250,7 +255,28 @@ export const useFederationStore = create<FederationStore>((set, get) => {
 
         loginAdmin: async (username, pass) => {
             try {
-                if (username.trim() === 'admin@jammipharma.com' && pass.trim() === 'Jammi@007') {
+                // Hardcoded check
+                const isHardcoded = username.trim() === 'admin@jammipharma.com' && pass.trim() === 'Jammi@007';
+                
+                // Always attempt Supabase login for the token
+                const email = username.includes('@') ? username : `${username}@jammi.com`;
+                const { data, error } = await supabase.auth.signInWithPassword({ 
+                    email: isHardcoded ? 'admin@jammipharma.com' : email, 
+                    password: pass 
+                });
+                
+                if (!error && data.session) {
+                    set({ isAdminLoggedIn: true, sanctumModalOpen: false });
+                    localStorage.setItem("jammi_admin_session", "true");
+                    localStorage.setItem("jammi_cms_session", "true");
+                    sessionStorage.setItem("jammi_admin_session", "true");
+                    return true;
+                }
+                
+                // Fallback for hardcoded ONLY if Supabase fails (e.g. user doesn't exist yet)
+                // BUT warn that saving might fail
+                if (isHardcoded) {
+                    console.warn("Supabase auth failed for hardcoded admin. Save operations may fail.");
                     set({ isAdminLoggedIn: true, sanctumModalOpen: false });
                     localStorage.setItem("jammi_admin_session", "true");
                     localStorage.setItem("jammi_cms_session", "true");
@@ -258,13 +284,6 @@ export const useFederationStore = create<FederationStore>((set, get) => {
                     return true;
                 }
 
-                const email = username.includes('@') ? username : `${username}@jammi.com`;
-                const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
-                
-                if (!error) {
-                    sessionStorage.setItem("jammi_admin_session", "true");
-                    return true;
-                }
                 return false;
             } catch (error) {
                 console.error("Error logging in:", error);

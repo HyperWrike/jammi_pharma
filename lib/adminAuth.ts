@@ -5,57 +5,65 @@ import { supabaseAdmin as sharedAdmin } from './supabase'
 // Re-export the centralized admin client
 export const supabaseAdmin: SupabaseClient = sharedAdmin;
 
-export async function verifyAdmin(req: Request | any) {
+export async function verifyAdmin(req: any, res?: any) {
   try {
-    // Handle both Request (App Router) and incoming message (Pages Router)
-    const headers = req.headers instanceof Headers ? req.headers : new Headers(req.headers);
-    const token = headers.get('authorization')?.replace('Bearer ', '')
-    if (!token) return null
+    // 1. Get token from headers
+    let token = '';
+    if (req.headers instanceof Headers) {
+      token = req.headers.get('authorization')?.replace('Bearer ', '') || '';
+    } else {
+      token = (req.headers['authorization'] as string)?.replace('Bearer ', '') || '';
+    }
 
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token)
-    if (error || !user) return null
+    if (!token) {
+      if (res) return unauthorized(res);
+      return null;
+    }
 
-    const { data: adminRecord } = await supabaseAdmin
+    // 2. Verify with Supabase
+    const { data: { user }, error } = await sharedAdmin.auth.getUser(token);
+    if (error || !user) {
+      if (res) return unauthorized(res);
+      return null;
+    }
+
+    // 3. Verify Admin Role in DB
+    const { data: adminRecord, error: dbError } = await sharedAdmin
       .from('admin_users')
-      .select('id, name, email, role, status')
+      .select('*')
       .eq('auth_user_id', user.id)
       .eq('status', 'active')
-      .single()
+      .single();
 
-    if (!adminRecord) return null
-    return { user, adminRecord }
+    if (dbError || !adminRecord) {
+      console.warn('[verifyAdmin] User is not an active admin:', user.email);
+      if (res) return unauthorized(res);
+      return null;
+    }
+
+    return { user, adminRecord };
   } catch (err) {
-    console.error('[verifyAdmin] error:', err);
-    return null
+    console.error('[verifyAdmin] critical error:', err);
+    if (res) return serverError(res, err);
+    return null;
   }
 }
 
-/**
- * Common unauthorized response helper.
- * Supports both Pages Router (passing 'res') and App Router (returning NextResponse).
- */
 export function unauthorized(res?: any) {
   const message = { error: 'Unauthorized. Admin session required.' };
-  if (res && typeof res.status === 'function') {
-    return res.status(401).json(message);
+  if (res && res.status) {
+    res.status(401).json(message);
+    return null;
   }
   return NextResponse.json(message, { status: 401 });
 }
 
-/**
- * Common server error response helper.
- * Supports both Pages Router (passing 'res') and App Router (returning NextResponse).
- */
-export function serverError(resOrError: any, error?: any) {
-  // If only one argument is provided, treat it as the error for App Router
-  const err = error || resOrError;
-  const res = error ? resOrError : null;
-
-  console.error('[Jammi Admin API Error]', err);
-  const message = { error: err?.message || 'Internal server error' };
-
-  if (res && typeof res.status === 'function') {
-    return res.status(500).json(message);
+export function serverError(res: any, error: any) {
+  console.error('[Admin API Error]', error);
+  const message = { error: error?.message || 'Internal server error' };
+  if (res && res.status) {
+    res.status(500).json(message);
+    return null;
   }
   return NextResponse.json(message, { status: 500 });
 }
