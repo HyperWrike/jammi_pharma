@@ -1,0 +1,117 @@
+﻿
+> jammi-pharmaceuticals-digital-platform@0.0.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 30.8s
+  Running TypeScript ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/31) ...
+  Generating static pages using 7 workers (7/31) 
+  Generating static pages using 7 workers (15/31) 
+node.exe : [2026-03-14
+T09:34:27.772Z]  
+@firebase/firestore: 
+Firestore (12.10.0): 
+GrpcConnection RPC 
+'Listen' stream 
+0x58acd3be error. 
+Code: 5 Message: 5 
+NOT_FOUND: 
+At line:1 char:1
++ & "C:\Program Files\
+nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: ([2026-03-1   
+ 4T09:...: 5 NOT_F    
+OUND: :String) []    
+, RemoteException
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+[2026-03-14T09:34:27.7
+77Z]  
+@firebase/firestore: 
+Firestore (12.10.0): 
+Could not reach Cloud 
+Firestore backend. 
+Connection failed 1 
+times. Most recent 
+error: FirebaseError: 
+[code=not-found]: 5 
+NOT_FOUND: 
+This typically 
+indicates that your 
+device does not have 
+a healthy Internet 
+connection at the 
+moment. The client 
+will operate in 
+offline mode until it 
+is able to 
+successfully connect 
+to the backend.
+  Generating static pages using 7 workers (23/31) 
+Γ£ô Generating static pages using 7 workers (31/31) in 5.7s
+[2026-03-14T09:34:29.2
+72Z]  
+@firebase/firestore: 
+Firestore (12.10.0): 
+GrpcConnection RPC 
+'Listen' stream 
+0x58acd3bf error. 
+Code: 5 Message: 5 
+NOT_FOUND: 
+  Finalizing page optimization ...
+
+Route (app)
+Γöî Γùï /
+Γö£ Γùï /_not-found
+Γö£ Γùï /admin
+Γö£ Γùï /admin/bundles
+Γö£ Γùï /admin/categories
+Γö£ Γùï /admin/cms
+Γö£ Γùï /admin/coupons
+Γö£ Γùï /admin/customers
+Γö£ Γùï /admin/dashboard
+Γö£ Γùï /admin/federation
+Γö£ Γùï /admin/inventory
+Γö£ Γùï /admin/orders
+Γö£ Γùï /admin/partners
+Γö£ Γùï /admin/payments
+Γö£ Γùï /admin/products
+Γö£ ╞Æ /admin/products/[productId]/edit
+Γö£ Γùï /admin/products/new
+Γö£ Γùï /admin/reports
+Γö£ Γùï /admin/reviews
+Γö£ Γùï /admin/roles
+Γö£ Γùï /admin/shipping
+Γö£ ╞Æ /api/admin/products
+Γö£ ╞Æ /api/admin/products/[id]
+Γö£ ╞Æ /api/admin/products/upload-image
+Γö£ Γùï /checkout
+Γö£ Γùï /consultation
+Γö£ Γùï /doctors
+Γö£ Γùï /federation
+Γö£ Γùï /founders
+Γö£ Γùï /heritage
+Γö£ Γùï /journal
+Γö£ ╞Æ /product/[id]
+Γöö Γùï /shop
+
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+

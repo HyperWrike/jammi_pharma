@@ -1,0 +1,20 @@
+﻿Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 20.7s
+  Running TypeScript ...
+Failed to compile.
+System.Management.Automation.RemoteException
+./_pages_legacy/DoctorHub.tsx:33:9
+Type error: Type '{ src: any; alt: any; className: any; bucket: string; folder: string; editorActive: boolean; onUpdate: (url: any) => Promise<void>; }' is not assignable to type 'IntrinsicAttributes & EditorImageProps'.
+  Property 'bucket' does not exist on type 'IntrinsicAttributes & EditorImageProps'.
+System.Management.Automation.RemoteException
+[0m [90m 31 |[39m         alt[33m=[39m{field}
+ [90m 32 |[39m         className[33m=[39m{className}
+[31m[1m>[22m[39m[90m 33 |[39m         bucket[33m=[39m[32m"cms-images"[39m
+ [90m    |[39m         [31m[1m^[22m[39m
+ [90m 34 |[39m         folder[33m=[39m[32m"doctor-hub"[39m
+ [90m 35 |[39m         editorActive[33m=[39m{editorActive}
+ [90m 36 |[39m         onUpdate[33m=[39m{[36masync[39m (url) [33m=>[39m {[0m
+Next.js build worker exited with code: 1 and signal: null
