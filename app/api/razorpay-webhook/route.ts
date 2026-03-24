@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { createHmac } from 'crypto';
 import { Resend } from 'resend';
 import { supabaseAdmin } from '../../../lib/supabase';
