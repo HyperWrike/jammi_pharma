@@ -6,8 +6,10 @@ import { MOCK_PRODUCTS } from '../constants';
 import LiveEditable from '../components/admin/LiveEditable';
 import { useAdmin } from '../components/admin/AdminContext';
 import { cmsApi, productsApi } from '../lib/adminApi';
+import { useRouter } from 'next/navigation';
 
 const Shop: React.FC = () => {
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('All');
   const [categories, setCategories] = useState(['All', 'Skin Care', 'Hair Care', 'Wellness', 'Therapeutics', 'Body Care', 'Oral Care & Wellness', 'Digestive Health', 'Immunity', 'Pain Relief']);
   const [products, setProducts] = useState<any[]>(MOCK_PRODUCTS); // Initialize with mock products for instant loading
@@ -97,39 +99,29 @@ const Shop: React.FC = () => {
     };
   }, []);
 
-  const handleAddProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddProduct = async () => {
     setIsAdding(true);
     try {
-      // In a real app, we'd call a dedicated 'products' API
-      // For now, we utilize the CMS API to store it or a separate product API if available
-      // The user wants it to "just work" in the theme.
-      
-      const { data: catData } = await supabase.from('categories').select('id').eq('name', newProduct.category).single();
+      // Find the first available category to assign
+      const { data: catData } = await supabase.from('categories').select('id').limit(1).single();
       
       const res = await productsApi.create({
-        name: newProduct.name,
-        description: newProduct.description,
-        price: newProduct.price,
-        category_id: catData?.id,
-        images: [newProduct.image],
-        status: 'published',
-        active: true
-      });
-      
-      setShowAddModal(false);
-      setNewProduct({
-        name: '',
-        description: '',
+        name: 'New Formulation',
+        description: 'Describe the new formulation...',
+        short_description: 'A traditional remedy.',
         price: 0,
-        category: 'Wellness',
-        image: 'https://images.unsplash.com/photo-1629198688000-71f23e745b6e?q=80&w=800&auto=format&fit=crop'
+        category_id: catData?.id || null,
+        images: ['https://images.unsplash.com/photo-1629198688000-71f23e745b6e?q=80&w=800&auto=format&fit=crop'],
+        status: 'published',
+        active: true,
+        stock_status: 'In Stock'
       });
       
-      // Refresh will be handled by realtime subscription
+      if (res && res.data && res.data.id) {
+         router.push(`/product/${res.data.id}`);
+      }
     } catch (err: any) {
       alert(err.message || "Failed to add product");
-    } finally {
       setIsAdding(false);
     }
   };
@@ -161,11 +153,16 @@ const Shop: React.FC = () => {
             
             {isAdmin && (
               <button
-                onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-2 bg-forest text-white px-6 py-2 rounded-full text-sm font-bold tracking-widest uppercase hover:bg-forest/90 transition-all shadow-lg shrink-0"
+                onClick={handleAddProduct}
+                disabled={isAdding}
+                className="flex items-center gap-2 bg-forest text-white px-6 py-2 rounded-full text-sm font-bold tracking-widest uppercase hover:bg-forest/90 transition-all shadow-lg shrink-0 disabled:opacity-50"
               >
-                <span className="material-symbols-outlined text-[20px]">add_circle</span>
-                Add Product
+                {isAdding ? (
+                   <span className="material-symbols-outlined text-[20px] animate-spin">sync</span>
+                ) : (
+                   <span className="material-symbols-outlined text-[20px]">add_circle</span>
+                )}
+                {isAdding ? 'Creating...' : 'Add Product'}
               </button>
             )}
           </div>
@@ -192,88 +189,6 @@ const Shop: React.FC = () => {
           </div>
         )}
       </main>
-
-      {/* Add Product Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-serif font-bold text-forest">Add New Product</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600">
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
-            
-            <form onSubmit={handleAddProduct} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Product Name</label>
-                <input 
-                  type="text" required
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-primary"
-                  value={newProduct.name}
-                  onChange={e => setNewProduct({...newProduct, name: e.target.value})}
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Price (₹)</label>
-                  <input 
-                    type="number" required
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-primary"
-                    value={newProduct.price}
-                    onChange={e => setNewProduct({...newProduct, price: Number(e.target.value)})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Category</label>
-                  <select 
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-primary"
-                    value={newProduct.category}
-                    onChange={e => setNewProduct({...newProduct, category: e.target.value})}
-                  >
-                    {categories.filter(c => c !== 'All').map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Description</label>
-                <textarea 
-                  required rows={3}
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-primary"
-                  value={newProduct.description}
-                  onChange={e => setNewProduct({...newProduct, description: e.target.value})}
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Image URL</label>
-                <input 
-                  type="text" required
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-primary"
-                  value={newProduct.image}
-                  onChange={e => setNewProduct({...newProduct, image: e.target.value})}
-                />
-              </div>
-
-              <button 
-                type="submit"
-                disabled={isAdding}
-                className="w-full bg-primary text-white font-bold py-4 rounded-xl mt-4 hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2"
-              >
-                {isAdding ? (
-                  <><span className="material-symbols-outlined animate-spin">sync</span> Adding...</>
-                ) : (
-                  <><span className="material-symbols-outlined">add</span> Create Product</>
-                )}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

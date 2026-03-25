@@ -67,31 +67,41 @@ export default function AdminLoginModal({ isOpen, onClose, roleToGrant = 'admin'
       const isHardcodedStaff = email.trim() === 'admin@jammipharma.com' && password.trim() === 'Jammi@007';
       
       if (isHardcodedStaff && roleToGrant === 'editor') {
-          // INSTANT CMS ACCESS
+          // Attempt proper Supabase auth right away
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: 'admin@jammipharma.com',
+            password: 'Jammi@007',
+          });
+          
+          if (!error && data?.session) {
+            await supabase.auth.setSession(data.session);
+          } else {
+             console.error("Critical: Could not sign in to Supabase", error);
+             setError(true);
+             setErrorMsg('Supabase Auth failed.');
+             setIsLoggingIn(false);
+             return;
+          }
+
           localStorage.setItem("jammi_cms_session", "true");
           sessionStorage.setItem("jammi_admin_session", "true");
+          sessionStorage.setItem("jammi_edit_mode", "true");
           window.dispatchEvent(new Event('jammi_cms_unlocked'));
           setIsLoggingIn(false);
           showToast("CMS Editor Unlocked", "success");
           onClose();
-          
-          // Still call in background to satisfy server-side requirements/logging
-          supabase.auth.signInWithPassword({
-            email: email.trim(),
-            password: password.trim(),
-          }).catch(e => console.error("Background auth error:", e));
           return;
       }
 
       if (isHardcodedStaff) {
         const { data, error: authError } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password: password.trim(),
+          email: 'admin@jammipharma.com',
+          password: 'Jammi@007',
         });
 
-        // Even if Supabase auth fails for hardcoded, we might allow local UI access
-        // but we should prioritize a successful session.
-        if (!authError && data.user) {
+        if (!authError && data?.session) {
+            await supabase.auth.setSession(data.session);
+            
             const { data: adminRecord } = await supabase
               .from('admin_users')
               .select('id, name, role')
@@ -102,24 +112,24 @@ export default function AdminLoginModal({ isOpen, onClose, roleToGrant = 'admin'
             localStorage.setItem("jammi_admin_session", "true");
             sessionStorage.setItem("jammi_admin_session", "true");
             localStorage.setItem("jammi_cms_session", "true");
-            sessionStorage.setItem("jammi_edit_mode", "true"); // Auto-enable edit mode on login
+            sessionStorage.setItem("jammi_edit_mode", "true");
             localStorage.setItem("jammi_admin_role", adminRecord?.role || 'admin');
             localStorage.setItem("jammi_admin_name", adminRecord?.name || 'Admin');
+            
             window.dispatchEvent(new Event('jammi_cms_unlocked'));
             
             setIsLoggingIn(false);
+            showToast("Logged in successfully", "success");
             onClose();
-            router.push('/admin/dashboard');
+            if (roleToGrant !== 'editor') {
+              router.push('/admin/dashboard');
+            }
             return;
         } else {
-            // Emergency fallback for hardcoded if Supabase entry missing
-            console.warn("Supabase auth failed for hardcoded admin. Some features may be limited.");
-            localStorage.setItem("jammi_admin_session", "true");
-            localStorage.setItem("jammi_cms_session", "true");
-            sessionStorage.setItem("jammi_admin_session", "true");
-            window.dispatchEvent(new Event('jammi_cms_unlocked'));
+            console.error("Supabase auth failed:", authError);
+            setError(true);
+            setErrorMsg('Authentication failed. Check logs.');
             setIsLoggingIn(false);
-            onClose();
             return;
         }
       }

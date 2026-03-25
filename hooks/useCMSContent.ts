@@ -1,60 +1,41 @@
-import { RealtimeChannel } from '@supabase/supabase-js'
-import { useState, useCallback, useEffect, useRef } from 'react'
-import { supabase } from '../lib/supabase'
+import { useState, useEffect } from 'react'
 
-export function useCMSContent(page: string) {
-  const [content, setContent] = useState<any>({})
+export function useCMSContent(pageName: string) {
+  const [content, setContent] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
-  const channelRef = useRef<RealtimeChannel | null>(null)
 
-  const fetchContent = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('cms_content')
-        .select('*')
-        .eq('page', page);
-
-      if (error) {
-        console.error('fetchContent error:', error);
-      } else if (data) {
-        const structured = {};
-        data.forEach(row => {
-          if (!structured[row.section]) structured[row.section] = {};
-          structured[row.section][row.content_key] = row.content_value;
-        });
-        setContent(structured);
+  const fetchContent = async () => {
+      setLoading(true)
+      try {
+        const res = await fetch(`/api/admin/cms/content?page=${encodeURIComponent(pageName)}`)
+        if (!res.ok) throw new Error('Failed to fetch content')
+        const data = await res.json()
+        
+        // Transform array into a nested dictionary: { section: { content_key: content_value } }
+        const formattedData: Record<string, any> = {}
+        data.forEach((item: any) => {
+          if (!formattedData[item.section]) {
+            formattedData[item.section] = {}
+          }
+          formattedData[item.section][item.content_key] = item.content_value
+        })
+        
+        setContent(formattedData)
+      } catch (err) {
+        console.error('Error fetching CMS content:', err)
+      } finally {
+        setLoading(false)
       }
-    } catch (err) {
-      console.error('fetchContent caught error:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [page]);
+  }
 
-  const updateLocalContent = useCallback((pageName, section, contentKey, value) => {
-    setContent(prev => {
-      const updated = { ...prev };
-      if (!updated[section]) updated[section] = {};
-      updated[section][contentKey] = value;
-      return updated;
-    });
-  }, []);
+  useEffect(() => {
+    fetchContent()
+  }, [pageName])
 
-  useEffect(() => { 
-    fetchContent();
+  // Helper function to get a specific value with an optional default
+  const getVal = (section: string, key: string, defaultValue = '') => {
+    return content[section]?.[key] || defaultValue
+  }
 
-    const channel = supabase.channel(`public:cms_content:${page}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'cms_content', filter: `page=eq.${page}` }, () => {
-        fetchContent();
-      })
-      .subscribe();
-    
-    channelRef.current = channel;
-
-    return () => { 
-      if (channelRef.current) supabase.removeChannel(channelRef.current);
-    }
-  }, [fetchContent, page]);
-
-  return { content, loading, refetch: fetchContent, updateLocalContent }
+  return { content, loading, getVal, refetch: fetchContent }
 }

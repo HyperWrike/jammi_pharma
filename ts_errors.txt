@@ -1,104 +1,98 @@
-_pages_legacy/products/ClearMarks.tsx(126,119): error TS2322: Type '{ children: string; class: string; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>'.
-  Property 'class' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>'. Did you mean 'className'?
-_pages_legacy/products/ClearMarks.tsx(128,119): error TS2322: Type '{ children: string; class: string; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>'.
-  Property 'class' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>'. Did you mean 'className'?
-_pages_legacy/products/ClearMarks.tsx(281,96): error TS2322: Type '{ children: string; class: string; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>'.
-  Property 'class' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>'. Did you mean 'className'?
-_pages_legacy/products/DailyDew.tsx(53,34): error TS2322: Type '{ children: Element; class: string; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'.
-  Property 'class' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'. Did you mean 'className'?
-_pages_legacy/products/Nilomit.tsx(49,68): error TS2322: Type '{ children: string; className: string; to: string; }' is not assignable to type 'IntrinsicAttributes & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps<any>> & LinkProps<...> & { ...; } & RefAttributes<...>'.
-  Property 'to' does not exist on type 'IntrinsicAttributes & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps<any>> & LinkProps<...> & { ...; } & RefAttributes<...>'.
-_pages_legacy/products/Nilomit.tsx(51,68): error TS2322: Type '{ children: string; className: string; to: string; }' is not assignable to type 'IntrinsicAttributes & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps<any>> & LinkProps<...> & { ...; } & RefAttributes<...>'.
-  Property 'to' does not exist on type 'IntrinsicAttributes & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps<any>> & LinkProps<...> & { ...; } & RefAttributes<...>'.
-_pages_legacy/products/TripCaps.tsx(49,76): error TS2322: Type '{ children: string; className: string; to: string; }' is not assignable to type 'IntrinsicAttributes & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps<any>> & LinkProps<...> & { ...; } & RefAttributes<...>'.
-  Property 'to' does not exist on type 'IntrinsicAttributes & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps<any>> & LinkProps<...> & { ...; } & RefAttributes<...>'.
-_pages_legacy/products/TripCaps.tsx(51,76): error TS2322: Type '{ children: string; className: string; to: string; }' is not assignable to type 'IntrinsicAttributes & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps<any>> & LinkProps<...> & { ...; } & RefAttributes<...>'.
-  Property 'to' does not exist on type 'IntrinsicAttributes & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps<any>> & LinkProps<...> & { ...; } & RefAttributes<...>'.
-_pages_legacy/products/Yummunity.tsx(83,35): error TS2322: Type '{ children: string; class: string; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>'.
-  Property 'class' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>'. Did you mean 'className'?
-App.tsx(3,66): error TS2307: Cannot find module 'react-router-dom' or its corresponding type declarations.
-App.tsx(8,32): error TS2307: Cannot find module './pages/Home' or its corresponding type declarations.
-App.tsx(9,32): error TS2307: Cannot find module './pages/Shop' or its corresponding type declarations.
-App.tsx(10,37): error TS2307: Cannot find module './pages/DoctorHub' or its corresponding type declarations.
-App.tsx(11,41): error TS2307: Cannot find module './pages/ProductDetail' or its corresponding type declarations.
-App.tsx(12,36): error TS2307: Cannot find module './pages/Checkout' or its corresponding type declarations.
-App.tsx(13,33): error TS2307: Cannot find module './pages/Admin' or its corresponding type declarations.
-App.tsx(14,36): error TS2307: Cannot find module './pages/Heritage' or its corresponding type declarations.
-App.tsx(15,36): error TS2307: Cannot find module './pages/Partners' or its corresponding type declarations.
-App.tsx(16,38): error TS2307: Cannot find module './pages/Federation' or its corresponding type declarations.
-App.tsx(17,40): error TS2307: Cannot find module './pages/Consultation' or its corresponding type declarations.
-App.tsx(18,42): error TS2307: Cannot find module './pages/products/TriphalaChurna' or its corresponding type declarations.
-App.tsx(19,37): error TS2307: Cannot find module './pages/products/Yummunity' or its corresponding type declarations.
-App.tsx(20,36): error TS2307: Cannot find module './pages/products/TripCaps' or its corresponding type declarations.
-App.tsx(21,36): error TS2307: Cannot find module './pages/products/ZeerAlka' or its corresponding type declarations.
-App.tsx(22,39): error TS2307: Cannot find module './pages/products/WidariForte' or its corresponding type declarations.
-App.tsx(23,37): error TS2307: Cannot find module './pages/products/ThyroGard' or its corresponding type declarations.
-App.tsx(24,37): error TS2307: Cannot find module './pages/products/Suventris' or its corresponding type declarations.
-App.tsx(25,34): error TS2307: Cannot find module './pages/products/Redema' or its corresponding type declarations.
-App.tsx(26,35): error TS2307: Cannot find module './pages/products/PyrilDS' or its corresponding type declarations.
-App.tsx(27,39): error TS2307: Cannot find module './pages/products/OrthoRaksha' or its corresponding type declarations.
-App.tsx(28,40): error TS2307: Cannot find module './pages/products/Mahanarayana' or its corresponding type declarations.
-App.tsx(29,35): error TS2307: Cannot find module './pages/products/Nilomit' or its corresponding type declarations.
-App.tsx(30,36): error TS2307: Cannot find module './pages/products/DailyDew' or its corresponding type declarations.
-App.tsx(31,44): error TS2307: Cannot find module './pages/products/MadhuchariChurna' or its corresponding type declarations.
-App.tsx(32,42): error TS2307: Cannot find module './pages/products/LakshaCapsules' or its corresponding type declarations.
-App.tsx(33,42): error TS2307: Cannot find module './pages/products/HepableenSyrup' or its corresponding type declarations.
-App.tsx(34,44): error TS2307: Cannot find module './pages/products/HepableenTablets' or its corresponding type declarations.
-App.tsx(35,37): error TS2307: Cannot find module './pages/products/Livercure' or its corresponding type declarations.
-App.tsx(36,37): error TS2307: Cannot find module './pages/products/Combifore' or its corresponding type declarations.
-App.tsx(37,44): error TS2307: Cannot find module './pages/products/GTPMentalFitness' or its corresponding type declarations.
-App.tsx(38,34): error TS2307: Cannot find module './pages/products/AACaps' or its corresponding type declarations.
-App.tsx(39,33): error TS2307: Cannot find module './pages/products/DTabs' or its corresponding type declarations.
-App.tsx(40,36): error TS2307: Cannot find module './pages/products/CystEvit' or its corresponding type declarations.
-App.tsx(41,35): error TS2307: Cannot find module './pages/products/BFFBalm' or its corresponding type declarations.
-App.tsx(42,43): error TS2307: Cannot find module './pages/products/UVSafeSunscreen' or its corresponding type declarations.
-App.tsx(43,46): error TS2307: Cannot find module './pages/products/TimelessAntiAgeing' or its corresponding type declarations.
-App.tsx(44,36): error TS2307: Cannot find module './pages/products/SoftLips' or its corresponding type declarations.
-App.tsx(45,42): error TS2307: Cannot find module './pages/products/KumkumadiSerum' or its corresponding type declarations.
-App.tsx(46,38): error TS2307: Cannot find module './pages/products/KeshProOil' or its corresponding type declarations.
-App.tsx(47,47): error TS2307: Cannot find module './pages/products/GlowComplexionCream' or its corresponding type declarations.
-App.tsx(48,40): error TS2307: Cannot find module './pages/products/FlawlessPack' or its corresponding type declarations.
-App.tsx(49,39): error TS2307: Cannot find module './pages/products/CrushNBrush' or its corresponding type declarations.
-App.tsx(50,38): error TS2307: Cannot find module './pages/products/ClearMarks' or its corresponding type declarations.
-app/(public)/checkout/page.tsx(1,22): error TS2307: Cannot find module '../../_pages_legacy/Checkout' or its corresponding type declarations.
-app/(public)/consultation/page.tsx(1,26): error TS2307: Cannot find module '../../_pages_legacy/Consultation' or its corresponding type declarations.
-app/(public)/doctors/page.tsx(1,23): error TS2307: Cannot find module '../../_pages_legacy/DoctorHub' or its corresponding type declarations.
-app/(public)/federation/page.tsx(1,24): error TS2307: Cannot find module '../../_pages_legacy/Federation' or its corresponding type declarations.
-app/(public)/heritage/page.tsx(1,22): error TS2307: Cannot find module '../../_pages_legacy/Heritage' or its corresponding type declarations.
-app/(public)/page.tsx(1,18): error TS2307: Cannot find module '../_pages_legacy/Home' or its corresponding type declarations.
-app/(public)/partners/page.tsx(1,22): error TS2307: Cannot find module '../../_pages_legacy/Partners' or its corresponding type declarations.
-app/(public)/product/[id]/page.tsx(1,28): error TS2307: Cannot find module '../../../_pages_legacy/ProductDetail' or its corresponding type declarations.
-app/(public)/product/aa-caps/page.tsx(1,21): error TS2307: Cannot find module '../../../_pages_legacy/products/AACaps ' or its corresponding type declarations.
-app/(public)/product/bff-balm/page.tsx(1,22): error TS2307: Cannot find module '../../../_pages_legacy/products/BFFBalm ' or its corresponding type declarations.
-app/(public)/product/clear-marks/page.tsx(1,25): error TS2307: Cannot find module '../../../_pages_legacy/products/ClearMarks ' or its corresponding type declarations.
-app/(public)/product/combifore/page.tsx(1,24): error TS2307: Cannot find module '../../../_pages_legacy/products/Combifore ' or its corresponding type declarations.
-app/(public)/product/crush-n-brush/page.tsx(1,26): error TS2307: Cannot find module '../../../_pages_legacy/products/CrushNBrush ' or its corresponding type declarations.
-app/(public)/product/cyst-evit/page.tsx(1,23): error TS2307: Cannot find module '../../../_pages_legacy/products/CystEvit ' or its corresponding type declarations.
-app/(public)/product/d-tabs/page.tsx(1,20): error TS2307: Cannot find module '../../../_pages_legacy/products/DTabs ' or its corresponding type declarations.
-app/(public)/product/daily-dew/page.tsx(1,23): error TS2307: Cannot find module '../../../_pages_legacy/products/DailyDew ' or its corresponding type declarations.
-app/(public)/product/flawless-pack/page.tsx(1,27): error TS2307: Cannot find module '../../../_pages_legacy/products/FlawlessPack ' or its corresponding type declarations.
-app/(public)/product/glow-complexion-cream/page.tsx(1,34): error TS2307: Cannot find module '../../../_pages_legacy/products/GlowComplexionCream ' or its corresponding type declarations.
-app/(public)/product/gtp-mental-fitness/page.tsx(1,31): error TS2307: Cannot find module '../../../_pages_legacy/products/GTPMentalFitness ' or its corresponding type declarations.
-app/(public)/product/hepableen-syrup/page.tsx(1,29): error TS2307: Cannot find module '../../../_pages_legacy/products/HepableenSyrup ' or its corresponding type declarations.
-app/(public)/product/hepableen-tablets/page.tsx(1,31): error TS2307: Cannot find module '../../../_pages_legacy/products/HepableenTablets ' or its corresponding type declarations.
-app/(public)/product/keshpro-oil/page.tsx(1,25): error TS2307: Cannot find module '../../../_pages_legacy/products/KeshProOil ' or its corresponding type declarations.
-app/(public)/product/kumkumadi-serum/page.tsx(1,29): error TS2307: Cannot find module '../../../_pages_legacy/products/KumkumadiSerum ' or its corresponding type declarations.
-app/(public)/product/laksha-capsules/page.tsx(1,29): error TS2307: Cannot find module '../../../_pages_legacy/products/LakshaCapsules ' or its corresponding type declarations.
-app/(public)/product/livercure/page.tsx(1,24): error TS2307: Cannot find module '../../../_pages_legacy/products/Livercure ' or its corresponding type declarations.
-app/(public)/product/madhuchari-churna/page.tsx(1,31): error TS2307: Cannot find module '../../../_pages_legacy/products/MadhuchariChurna ' or its corresponding type declarations.
-app/(public)/product/mahanarayana/page.tsx(1,27): error TS2307: Cannot find module '../../../_pages_legacy/products/Mahanarayana ' or its corresponding type declarations.
-app/(public)/product/nilomit/page.tsx(1,22): error TS2307: Cannot find module '../../../_pages_legacy/products/Nilomit ' or its corresponding type declarations.
-app/(public)/product/orthoraksha/page.tsx(1,26): error TS2307: Cannot find module '../../../_pages_legacy/products/OrthoRaksha ' or its corresponding type declarations.
-app/(public)/product/pyril-ds/page.tsx(1,22): error TS2307: Cannot find module '../../../_pages_legacy/products/PyrilDS ' or its corresponding type declarations.
-app/(public)/product/redema/page.tsx(1,21): error TS2307: Cannot find module '../../../_pages_legacy/products/Redema ' or its corresponding type declarations.
-app/(public)/product/soft-lips/page.tsx(1,23): error TS2307: Cannot find module '../../../_pages_legacy/products/SoftLips ' or its corresponding type declarations.
-app/(public)/product/suventris/page.tsx(1,24): error TS2307: Cannot find module '../../../_pages_legacy/products/Suventris ' or its corresponding type declarations.
-app/(public)/product/thyrogard/page.tsx(1,24): error TS2307: Cannot find module '../../../_pages_legacy/products/ThyroGard ' or its corresponding type declarations.
-app/(public)/product/timeless-anti-ageing/page.tsx(1,33): error TS2307: Cannot find module '../../../_pages_legacy/products/TimelessAntiAgeing ' or its corresponding type declarations.
-app/(public)/product/trip-caps/page.tsx(1,23): error TS2307: Cannot find module '../../../_pages_legacy/products/TripCaps ' or its corresponding type declarations.
-app/(public)/product/triphala-churna/page.tsx(1,29): error TS2307: Cannot find module '../../../_pages_legacy/products/TriphalaChurna ' or its corresponding type declarations.
-app/(public)/product/uvsafe-sunscreen/page.tsx(1,30): error TS2307: Cannot find module '../../../_pages_legacy/products/UVSafeSunscreen ' or its corresponding type declarations.
-app/(public)/product/widari-forte/page.tsx(1,26): error TS2307: Cannot find module '../../../_pages_legacy/products/WidariForte ' or its corresponding type declarations.
-app/(public)/product/yummunity/page.tsx(1,24): error TS2307: Cannot find module '../../../_pages_legacy/products/Yummunity ' or its corresponding type declarations.
-app/(public)/product/zeer-alka/page.tsx(1,23): error TS2307: Cannot find module '../../../_pages_legacy/products/ZeerAlka ' or its corresponding type declarations.
-app/(public)/shop/page.tsx(1,18): error TS2307: Cannot find module '../../_pages_legacy/Shop' or its corresponding type declarations.
+_pages_legacy/Checkout.tsx(34,9): error TS2322: Type '{ children: any; cmsKey: { page: string; section: any; content_key: any; }; multiline: any; inputType: any; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+_pages_legacy/Consultation.tsx(29,19): error TS2322: Type '{ children: any; cmsKey: { page: string; section: any; content_key: any; }; inputType: any; multiline: any; className: string; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+_pages_legacy/Consultation.tsx(35,19): error TS2322: Type '{ children: any; cmsKey: { page: string; section: any; content_key: any; }; inputType: "image"; className: string; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+_pages_legacy/DoctorHub.tsx(20,9): error TS2322: Type '{ children: any; cmsKey: { page: string; section: any; content_key: any; }; multiline: any; inputType: any; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+_pages_legacy/Federation.tsx(58,23): error TS2322: Type '{ children: any; cmsKey: { page: string; section: any; content_key: any; }; inputType: any; multiline: any; className: string; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+_pages_legacy/Journal.tsx(31,9): error TS2322: Type '{ children: any; cmsKey: { page: string; section: any; content_key: any; }; multiline: any; inputType: any; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+_pages_legacy/Partners.tsx(40,23): error TS2322: Type '{ children: any; cmsKey: { page: string; section: any; content_key: any; }; inputType: any; multiline: any; className: string; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+app/_admin/cms/about/page.tsx(8,20): error TS2339: Property 'refetch' does not exist on type '{ content: Record<string, any>; loading: boolean; getVal: (section: string, key: string, defaultValue?: string) => any; }'.
+app/_admin/cms/federation/page.tsx(8,20): error TS2339: Property 'refetch' does not exist on type '{ content: Record<string, any>; loading: boolean; getVal: (section: string, key: string, defaultValue?: string) => any; }'.
+app/_admin/cms/founders/page.tsx(8,20): error TS2339: Property 'refetch' does not exist on type '{ content: Record<string, any>; loading: boolean; getVal: (section: string, key: string, defaultValue?: string) => any; }'.
+app/_admin/cms/home/page.tsx(8,20): error TS2339: Property 'refetch' does not exist on type '{ content: Record<string, any>; loading: boolean; getVal: (section: string, key: string, defaultValue?: string) => any; }'.
+app/_admin/cms/legacy/page.tsx(8,20): error TS2339: Property 'refetch' does not exist on type '{ content: Record<string, any>; loading: boolean; getVal: (section: string, key: string, defaultValue?: string) => any; }'.
+app/_admin/cms/shop/page.tsx(8,20): error TS2339: Property 'refetch' does not exist on type '{ content: Record<string, any>; loading: boolean; getVal: (section: string, key: string, defaultValue?: string) => any; }'.
+components/federation/Benefits.tsx(45,35): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/federation/Benefits.tsx(61,47): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/federation/Benefits.tsx(64,47): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; multiline: true; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/federation/ClosingQuote.tsx(21,35): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; multiline: true; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/federation/ClosingQuote.tsx(25,35): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/federation/Hero.tsx(101,35): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; multiline: true; className: string; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/federation/Hero.tsx(112,35): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/federation/Mandate.tsx(22,39): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/federation/Mandate.tsx(25,39): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; multiline: true; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/federation/Mandate.tsx(41,39): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/federation/Mandate.tsx(44,39): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; multiline: true; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/federation/Mandate.tsx(60,39): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/federation/Mandate.tsx(63,39): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; multiline: true; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/federation/Partner.tsx(73,39): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/federation/Partner.tsx(76,39): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/federation/Partner.tsx(79,39): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; multiline: true; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Footer.tsx(65,28): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; multiline: true; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Footer.tsx(87,150): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Footer.tsx(88,150): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Footer.tsx(89,146): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Footer.tsx(90,150): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Footer.tsx(91,152): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Footer.tsx(92,149): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Footer.tsx(101,29): error TS2322: Type '{ children: (string | Element)[]; cmsKey: { page: string; section: string; content_key: string; }; multiline: true; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Footer.tsx(104,146): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Footer.tsx(105,141): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Navbar.tsx(35,29): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Navbar.tsx(38,29): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Navbar.tsx(45,29): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Navbar.tsx(48,29): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Navbar.tsx(51,29): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Navbar.tsx(54,29): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Navbar.tsx(112,29): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Navbar.tsx(115,29): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Navbar.tsx(118,29): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Navbar.tsx(121,29): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Navbar.tsx(125,29): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Navbar.tsx(128,29): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.
+components/Navbar.tsx(134,29): error TS2322: Type '{ children: string; cmsKey: { page: string; section: string; content_key: string; }; }' is not assignable to type 'IntrinsicAttributes & LiveEditableProps'.
+  Property 'cmsKey' does not exist on type 'IntrinsicAttributes & LiveEditableProps'.

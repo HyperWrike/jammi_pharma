@@ -258,14 +258,16 @@ export const useFederationStore = create<FederationStore>((set, get) => {
                 // Hardcoded check
                 const isHardcoded = username.trim() === 'admin@jammipharma.com' && pass.trim() === 'Jammi@007';
                 
-                // Always attempt Supabase login for the token
-                const email = username.includes('@') ? username : `${username}@jammi.com`;
+                // Handle hardcoded staff login by STILL calling Supabase
+                const email = username.includes('@') ? username : `${username}@jammipharma.com`;
                 const { data, error } = await supabase.auth.signInWithPassword({ 
                     email: isHardcoded ? 'admin@jammipharma.com' : email, 
                     password: pass 
                 });
                 
-                if (!error && data.session) {
+                // If Supabase auth succeeds, set session and return true
+                if (!error && data?.session) {
+                    await supabase.auth.setSession(data.session);
                     set({ isAdminLoggedIn: true, sanctumModalOpen: false });
                     localStorage.setItem("jammi_admin_session", "true");
                     localStorage.setItem("jammi_cms_session", "true");
@@ -273,10 +275,9 @@ export const useFederationStore = create<FederationStore>((set, get) => {
                     return true;
                 }
                 
-                // Fallback for hardcoded ONLY if Supabase fails (e.g. user doesn't exist yet)
-                // BUT warn that saving might fail
+                // Fallback ONLY for emergency if hardcoded credentials are used but Supabase fails
                 if (isHardcoded) {
-                    console.warn("Supabase auth failed for hardcoded admin. Save operations may fail.");
+                    console.warn("Supabase auth failed for hardcoded admin. Save operations WILL fail until user is created in Supabase.");
                     set({ isAdminLoggedIn: true, sanctumModalOpen: false });
                     localStorage.setItem("jammi_admin_session", "true");
                     localStorage.setItem("jammi_cms_session", "true");

@@ -26,9 +26,15 @@ const Home: React.FC = () => {
   }, []);
 
   const CMS = ({ section, field, fallback, inputType = 'text', multiline = false, className = '' }: any) => (
-    <LiveEditable cmsKey={{ page: 'homepage', section, content_key: field }} inputType={inputType} multiline={multiline} className={`inline-block ${className}`}>
-        {(content as any)?.[section]?.[field] || fallback}
-    </LiveEditable>
+    <LiveEditable 
+      page="homepage" 
+      section={section} 
+      contentKey={field} 
+      initialContent={(content as any)?.[section]?.[field] || fallback}
+      type={inputType} 
+      multiline={multiline} 
+      className={`inline-block ${className}`} 
+    />
   );
 
   const heroBgImage = activeBanner?.imageUrl || "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=1920";

@@ -16,14 +16,43 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     // Check for admin session and edit mode on mount
-    const session = sessionStorage.getItem("jammi_admin_session");
-    if (session === "true") {
-      setIsAdmin(true);
-      const editMode = sessionStorage.getItem("jammi_edit_mode");
-      if (editMode === "true") {
-        setIsEditMode(true);
+    const checkState = async () => {
+      const { data: { session } } = await import('../../lib/supabase').then(m => m.supabase.auth.getSession());
+      const hasLocalSession = sessionStorage.getItem("jammi_admin_session") === "true";
+      
+      if (session || hasLocalSession) {
+        setIsAdmin(true);
+        const editMode = sessionStorage.getItem("jammi_edit_mode");
+        if (editMode === "true") {
+          setIsEditMode(true);
+        }
+      } else {
+        setIsAdmin(false);
+        setIsEditMode(false);
       }
-    }
+    };
+
+    checkState();
+
+    let authListener: any = null;
+    import('../../lib/supabase').then(({ supabase }) => {
+       const { data } = supabase.auth.onAuthStateChange((event, session) => {
+          if (session) {
+             setIsAdmin(true);
+          } else {
+             // Only log out if there's no UI local override for edge cases
+             if (sessionStorage.getItem("jammi_admin_session") !== "true") {
+                setIsAdmin(false);
+                setIsEditMode(false);
+             }
+          }
+       });
+       authListener = data.subscription;
+    });
+
+    return () => {
+       if (authListener) authListener.unsubscribe();
+    };
   }, []);
 
   const handleSetEditMode = (val: boolean) => {
