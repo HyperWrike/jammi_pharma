@@ -3,6 +3,15 @@ export const dynamic = 'force-dynamic';
 import { supabaseAdmin } from '../../../lib/supabase';
 import { generateCustomerId } from '../../../lib/customers';
 import { rateLimit, getClientIp } from '../../../lib/rateLimit';
+import { Resend } from 'resend';
+import { OrderConfirmationEmail } from '../../../components/emails/OrderConfirmationEmail';
+import { OrderConfirmationInternal } from '../../../components/emails/OrderConfirmationInternal';
+
+function getResend() {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return null;
+  return new Resend(key);
+}
 
 export async function POST(req: NextRequest) {
   // ── Rate Limiting: 10 requests per minute per IP ──────────────────────────
@@ -61,7 +70,18 @@ export async function POST(req: NextRequest) {
         name: customerName,
         email: customerEmail,
         phone: customerPhone || '',
+        address: shippingAddress?.address || '',
+        city: shippingAddress?.city || '',
+        pincode: shippingAddress?.pincode || '',
       });
+    } else {
+      // Update existing customer profile with the latest shipping address
+      await supabaseAdmin.from('customers').update({
+        phone: customerPhone || '',
+        address: shippingAddress?.address || '',
+        city: shippingAddress?.city || '',
+        pincode: shippingAddress?.pincode || '',
+      }).eq('id', customerId);
     }
 
     // ── Generate human-readable order number ───────────────────────────────
@@ -100,6 +120,60 @@ export async function POST(req: NextRequest) {
         { error: 'Database error saving order', detail: orderError.message },
         { status: 500 }
       );
+    }
+
+    // ── Send Emails (Non-blocking) ─────────────────────────────────────────
+    try {
+      const resend = getResend();
+      if (resend) {
+        // Customer Email
+        await resend.emails.send({
+          from: 'Jammi Pharmaceuticals <orders@updates.jammi.in>',
+          to: [customerEmail],
+          subject: `Order Confirmed: ${order.order_number}`,
+          react: OrderConfirmationEmail({
+            customerName,
+            orderNumber: order.order_number,
+            items: items.map((i: any) => ({
+              name: i.name || i.productName,
+              quantity: i.quantity,
+              price: i.price,
+            })),
+            subtotal,
+            discount,
+            total,
+            shippingAddress: typeof shippingAddress === 'string' ? shippingAddress : Object.values(shippingAddress).join(', '),
+            phone: customerPhone,
+          }),
+        });
+
+        // Internal Email
+        await resend.emails.send({
+          from: 'Jammi Store <orders@updates.jammi.in>',
+          to: ['frontdesk@jammi.org', 'njammi@gmail.com'],
+          subject: `🚨 New Order: ${order.order_number} (₹${total})`,
+          react: OrderConfirmationInternal({
+            customerName,
+            customerEmail,
+            customerPhone,
+            orderNumber: order.order_number,
+            items: items.map((i: any) => ({
+              name: i.name || i.productName,
+              quantity: i.quantity,
+              price: i.price,
+            })),
+            subtotal,
+            discount,
+            total,
+            shippingAddress: typeof shippingAddress === 'string' ? shippingAddress : Object.values(shippingAddress).join(', '),
+            paymentMethod: 'Razorpay',
+            orderedAt: new Date().toISOString(),
+          }),
+        });
+      }
+    } catch (e) {
+      console.error('[create-order] Email trigger failed:', e);
+      // Suppress error - order was still created successfully
     }
 
     return NextResponse.json(

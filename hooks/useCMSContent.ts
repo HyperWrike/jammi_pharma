@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { adminFetch } from '../lib/adminFetch'
 
 export function useCMSContent(pageName: string) {
   const [content, setContent] = useState<Record<string, any>>({})
@@ -7,7 +8,7 @@ export function useCMSContent(pageName: string) {
   const fetchContent = async () => {
       setLoading(true)
       try {
-        const res = await fetch(`/api/admin/cms/content?page=${encodeURIComponent(pageName)}`)
+        const res = await adminFetch(`/api/admin/cms/content?page=${encodeURIComponent(pageName)}`)
         if (!res.ok) throw new Error('Failed to fetch content')
         const data = await res.json()
         

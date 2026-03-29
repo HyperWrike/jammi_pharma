@@ -41,11 +41,10 @@ const Shop: React.FC = () => {
       const allProducts = [...currentProducts, ...missingMockProducts];
       setProducts(allProducts);
       
-      const initialCategories = ['All', 'Skin Care', 'Hair Care', 'Wellness', 'Therapeutics', 'Body Care', 'Oral Care & Wellness', 'Digestive Health', 'Immunity', 'Pain Relief'];
+      const initialCategories = ['All'];
       const fetchedCategoryNames = currentCategories.map((cat: any) => cat.name);
-      const dynamicCategoryNames = allProducts.map(p => p.category).filter(Boolean);
       
-      const uniqueCategories = new Set([...initialCategories, ...fetchedCategoryNames, ...dynamicCategoryNames]);
+      const uniqueCategories = new Set([...initialCategories, ...fetchedCategoryNames]);
       setCategories(Array.from(uniqueCategories));
       setIsLoading(false);
     };
@@ -56,13 +55,12 @@ const Shop: React.FC = () => {
       const { data: prodData } = await supabase
         .from('products')
         .select(`
-          id, name, description, short_description, price, images, status, active,
+          id, name, description, short_description, price, discount_price, images, status,
           categories(name)
         `)
-        .eq('active', true)
-        .eq('status', 'published') // Aligning with DB constraint
+        .eq('status', 'published')
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(50);
 
       if (prodData) {
         currentProducts = prodData.map((prod: any) => ({
@@ -78,7 +76,7 @@ const Shop: React.FC = () => {
       }
 
       // Fetch Categories
-      const { data: catData } = await supabase.from('categories').select('name').eq('active', true).order('display_order');
+      const { data: catData } = await supabase.from('categories').select('name').order('display_order');
       if (catData) {
         currentCategories = catData;
       }
@@ -113,8 +111,7 @@ const Shop: React.FC = () => {
         category_id: catData?.id || null,
         images: ['https://images.unsplash.com/photo-1629198688000-71f23e745b6e?q=80&w=800&auto=format&fit=crop'],
         status: 'published',
-        active: true,
-        stock_status: 'In Stock'
+        stock: 100
       });
       
       if (res && res.data && res.data.id) {

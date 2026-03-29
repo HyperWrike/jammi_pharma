@@ -148,12 +148,19 @@ function CouponModal({ coupon, onClose, onUpdate }: any) {
     e.preventDefault();
     setSaving(true);
     try {
+      // Clean up payload: map empty strings to null for integers
+      const payload = {
+        ...formData,
+        usage_limit: formData.usage_limit === '' ? null : Number(formData.usage_limit),
+        max_discount_amount: formData.max_discount_amount === '' ? null : Number(formData.max_discount_amount)
+      };
+
       const url = coupon ? `/api/admin/coupons/${coupon.id}` : '/api/admin/coupons';
       const method = coupon ? 'PUT' : 'POST';
       await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       onUpdate();
       onClose();

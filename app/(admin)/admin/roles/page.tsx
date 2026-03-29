@@ -12,6 +12,7 @@ export default function RolesPage() {
   const [permissions, setPermissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null); // To handle password changes
 
   const fetchData = async () => {
     setLoading(true);
@@ -21,8 +22,8 @@ export default function RolesPage() {
         fetch('/api/admin/roles/permissions')
       ]);
       const [uData, pData] = await Promise.all([uRes.json(), pRes.json()]);
-      setUsers(uData || []);
-      setPermissions(pData || []);
+      setUsers(uData?.data || (Array.isArray(uData) ? uData : []));
+      setPermissions(pData?.data || (Array.isArray(pData) ? pData : []));
     } catch (err) {
       console.error(err);
     } finally {
@@ -118,6 +119,7 @@ export default function RolesPage() {
                             <th className="py-4 px-4">Role</th>
                             <th className="py-4 px-4">Status</th>
                             <th className="py-4 px-4 text-right">Added</th>
+                            <th className="py-4 px-4 text-center">Actions</th>
                          </tr>
                       </thead>
                       <tbody className="text-sm divide-y divide-white/5">
@@ -138,6 +140,29 @@ export default function RolesPage() {
                                   </span>
                                </td>
                                <td className="py-4 px-4 text-right text-slate-500 text-xs">{new Date(user.created_at).toLocaleDateString()}</td>
+                               <td className="py-4 px-4 text-center">
+                                  <div className="flex items-center justify-center gap-2">
+                                     <button 
+                                        onClick={() => setEditingUser(user)}
+                                        className="size-7 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition flex items-center justify-center border border-blue-500/20"
+                                        title="Change Password"
+                                     >
+                                        <span className="material-symbols-outlined text-[14px]">key</span>
+                                     </button>
+                                     <button 
+                                        onClick={async () => {
+                                           if (confirm(`Are you sure you want to delete ${user.name}?`)) {
+                                              await fetch(`/api/admin/roles/users/${user.id}`, { method: 'DELETE' });
+                                              fetchData();
+                                           }
+                                        }}
+                                        className="size-7 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition flex items-center justify-center border border-red-500/20"
+                                        title="Delete User"
+                                     >
+                                        <span className="material-symbols-outlined text-[14px]">delete</span>
+                                     </button>
+                                  </div>
+                               </td>
                             </tr>
                          ))}
                       </tbody>
@@ -202,6 +227,9 @@ export default function RolesPage() {
         {showUserModal && (
            <NewUserModal onClose={() => setShowUserModal(false)} onUpdate={fetchData} />
         )}
+        {editingUser && (
+           <PasswordResetModal user={editingUser} onClose={() => setEditingUser(null)} onUpdate={fetchData} />
+        )}
       </div>
     </AdminLayout>
   );
@@ -258,6 +286,51 @@ function NewUserModal({ onClose, onUpdate }: any) {
             <button type="button" onClick={onClose} className="flex-grow py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-black uppercase tracking-widest transition">Cancel</button>
             <button type="submit" disabled={saving} className="flex-grow py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-green-500/20 active:scale-95">
                {saving ? 'Registering...' : 'Provision Access'}
+            </button>
+         </div>
+      </form>
+    </div>
+  );
+}
+
+function PasswordResetModal({ user, onClose, onUpdate }: any) {
+  const [password, setPassword] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await fetch(`/api/admin/roles/users/${user.id}`, { 
+        method: 'PUT', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ password }) 
+      });
+      onUpdate();
+      onClose();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <form onSubmit={handleSubmit} className="relative w-full max-w-sm bg-[#111118] border border-white/10 rounded-3xl shadow-2xl p-8 animate-in fade-in zoom-in-95 duration-300">
+         <h2 className="text-xl font-black text-white mb-6 uppercase tracking-tight italic">Reset Password</h2>
+         <p className="text-xs text-slate-400 mb-6">Changing access for <strong>{user.name}</strong> ({user.email}).</p>
+         
+         <div className="mb-8">
+             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">New Password</label>
+             <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500/50 transition-all font-mono" placeholder="••••••••" />
+         </div>
+
+         <div className="flex gap-4">
+            <button type="button" onClick={onClose} className="flex-grow py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-black uppercase tracking-widest transition">Cancel</button>
+            <button type="submit" disabled={saving} className="flex-grow py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-500/20 active:scale-95">
+               {saving ? 'Saving...' : 'Update credentials'}
             </button>
          </div>
       </form>

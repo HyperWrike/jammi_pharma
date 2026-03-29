@@ -1,0 +1,51 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyAdmin, supabaseAdmin, unauthorized, serverError } from '@/lib/adminAuth';
+
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const admin = await verifyAdmin(req);
+  if (!admin) return unauthorized();
+
+  try {
+    const { id } = await params;
+    const body = await req.json();
+    const { data, error } = await supabaseAdmin
+      .from('cms_blogs')
+      .update({ ...body, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+      
+    if (error) return serverError(error);
+    return NextResponse.json({ data });
+  } catch (error) {
+    return serverError(error);
+  }
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const admin = await verifyAdmin(req);
+  if (!admin) return unauthorized();
+
+  try {
+    const { id } = await params;
+    const { data: blog } = await supabaseAdmin
+      .from('cms_blogs')
+      .select('featured_image')
+      .eq('id', id)
+      .single();
+      
+    if (blog && blog.featured_image) {
+      const path = blog.featured_image.split('/blog-images/')[1];
+      if (path) {
+        await supabaseAdmin.storage.from('blog-images').remove([path]);
+      }
+    }
+    
+    const { error } = await supabaseAdmin.from('cms_blogs').delete().eq('id', id);
+    if (error) return serverError(error);
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return serverError(error);
+  }
+}

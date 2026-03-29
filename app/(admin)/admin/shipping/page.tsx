@@ -142,12 +142,18 @@ function ShippingModal({ method, onClose, onUpdate }: any) {
     e.preventDefault();
     setSaving(true);
     try {
+      // Map empty strings to null for numeric database fields
+      const payload = {
+        ...formData,
+        free_above_amount: formData.free_above_amount === '' ? null : Number(formData.free_above_amount)
+      };
+
       const url = method ? `/api/admin/shipping/${method.id}` : '/api/admin/shipping';
       const verb = method ? 'PUT' : 'POST';
       await fetch(url, {
         method: verb,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       onUpdate();
       onClose();

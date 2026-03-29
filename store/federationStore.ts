@@ -156,16 +156,35 @@ export const useFederationStore = create<FederationStore>((set, get) => {
         createDoctorProfile: async (profileData) => {
             const { userUID } = get();
             try {
-                const newProfile = {
-                    ...profileData,
-                    verified: false,
-                    timestamp: new Date().toISOString(),
-                };
-                if (userUID) {
-                    await supabase.from('doctor_profiles').upsert({ id: userUID, ...newProfile });
-                    set({ currentUserProfile: { id: userUID, ...newProfile } as DoctorProfile });
-                } else {
-                    await supabase.from('doctor_profiles').insert(newProfile);
+                // Call the API route which inserts into DB AND sends an email notification
+                const res = await fetch('/api/doctor-application', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(profileData)
+                });
+                
+                const text = await res.text();
+                let data = {} as any;
+                try {
+                    data = text ? JSON.parse(text) : {};
+                } catch (e) {
+                    console.error("Non-JSON returned by /api/doctor-application:", text);
+                }
+                
+                if (res.ok) {
+                    const newProfileTemplate = {
+                        ...profileData,
+                        verified: false,
+                        timestamp: new Date().toISOString(),
+                    };
+                    
+                    if (userUID) {
+                        // If they are logged in, we also upsert locally/link ID
+                        await supabase.from('doctor_profiles').upsert({ id: userUID, ...newProfileTemplate });
+                        set({ currentUserProfile: { id: userUID, ...newProfileTemplate } as DoctorProfile });
+                    } else if (data.id) {
+                        set({ currentUserProfile: { id: data.id, ...newProfileTemplate } as DoctorProfile });
+                    }
                 }
             } catch (error) {
                 console.error("Error creating doctor profile:", error);

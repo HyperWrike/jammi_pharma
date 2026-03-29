@@ -13,6 +13,7 @@ export default function BundleFormModal({ bundle, onClose, onUpdate }: any) {
   const [products, setProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [productSearch, setProductSearch] = useState('');
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -86,11 +87,24 @@ export default function BundleFormModal({ bundle, onClose, onUpdate }: any) {
             </div>
 
             <div>
-               <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Included Products ({formData.product_ids.length})</label>
+               <div className="flex items-center justify-between mb-2">
+                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Included Products ({formData.product_ids.length})</label>
+                 <div className="relative w-1/2">
+                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-[14px]">search</span>
+                   <input 
+                     type="text" 
+                     placeholder="Search products..." 
+                     value={productSearch}
+                     onChange={(e) => setProductSearch(e.target.value)}
+                     className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-green-500/50"
+                   />
+                 </div>
+               </div>
+               
                <div className="grid grid-cols-2 gap-2 bg-white/[0.02] p-4 rounded-2xl border border-white/5 max-h-[300px] overflow-y-auto custom-scrollbar">
                   {loadingProducts ? (
                      <div className="col-span-2 py-10 text-center text-slate-500 text-[10px] font-black uppercase tracking-widest">Sychronizing Inventory...</div>
-                  ) : products.map(p => (
+                  ) : products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).map(p => (
                      <div 
                        key={p.id} 
                        onClick={() => toggleProduct(p.id)}

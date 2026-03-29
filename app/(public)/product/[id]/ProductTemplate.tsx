@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { subscribeToDocument, subscribeToCollection, createDocument } from '../../../../lib/adminDb';
+import { subscribeToDocument, subscribeToCollection } from '../../../../lib/adminDb';
 import { MOCK_PRODUCTS } from '../../../../constants';
 import { uploadFile } from '../../../../lib/storage';
 import { useCart } from '../../../../hooks/useCart';
@@ -83,6 +83,18 @@ export default function ProductTemplate({ productId, initialData }: { productId:
             setIsLoading(false);
         });
 
+        // Fetch Reviews once via standard API
+        const fetchReviews = async () => {
+             try {
+                 const res = await fetch(`/api/reviews?productId=${productId}`);
+                 if (res.ok) {
+                     const data = await res.json();
+                     setReviews(data);
+                 }
+             } catch (e) { console.error('Failed to load reviews', e); }
+        };
+        fetchReviews();
+
 
         const unsubReviews = subscribeToCollection('reviews', (r) => {
             setReviews(r.filter(review => review.productId === productId && review.status === 'Approved').sort((a,b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()));
@@ -94,7 +106,6 @@ export default function ProductTemplate({ productId, initialData }: { productId:
 
         return () => {
             unsubProduct();
-            unsubReviews();
             unsubBundles();
         };
     }, [productId]);
@@ -119,15 +130,19 @@ export default function ProductTemplate({ productId, initialData }: { productId:
                 }
             }
 
-            await createDocument('reviews', {
+            const newReview = {
                 productId: product.id,
                 productName: product.name,
                 customerName: reviewName,
                 rating: reviewRating,
                 comment: reviewComment,
                 imageUrl: imageUrl,
-                status: 'Pending',
-                createdAt: new Date().toISOString()
+            };
+
+            await fetch('/api/reviews', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newReview)
             });
             setReviewSuccess(true);
             setReviewName(''); setReviewRating(5); setReviewComment(''); setReviewImage(null);

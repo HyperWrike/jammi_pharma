@@ -50,6 +50,12 @@ export default function ProductFormModal({ product, categories, onClose, onSucce
         ...formData,
         ...product,
         category_id: product.category_id || '',
+        sku: product.sku || '',
+        slug: product.slug || '',
+        name: product.name || '',
+        meta_title: product.meta_title || '',
+        meta_description: product.meta_description || '',
+        shortDesc: product.shortDesc || product.short_description || '',
         banner: product.banner || { subtitle: '', title: '', desc: '', image: '', stats: [] },
         quote: product.quote || { text: '', author: '' }
       });

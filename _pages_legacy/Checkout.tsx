@@ -69,13 +69,20 @@ const Checkout: React.FC = () => {
   useEffect(() => {
     const fetchPromotions = async () => {
       try {
-        const { fetchCollection } = await import('../lib/adminDb');
-
-        const couponsData = await fetchCollection('coupons');
-        setCoupons(couponsData.filter((c: any) => c.active));
-
-        const bundlesData = await fetchCollection('bundles');
-        setBundles(bundlesData.filter((b: any) => b.active));
+        const [couponsRes, bundlesRes] = await Promise.all([
+          fetch('/api/admin/coupons'),
+          fetch('/api/admin/bundles')
+        ]);
+        
+        if (couponsRes.ok) {
+          const couponsData = await couponsRes.json();
+          setCoupons(couponsData.filter((c: any) => c.status === 'active'));
+        }
+        
+        if (bundlesRes.ok) {
+          const bundlesData = await bundlesRes.json();
+          setBundles(bundlesData.filter((b: any) => b.status === 'active'));
+        }
       } catch (err) {
         console.error("Failed to fetch promotions", err);
       }
@@ -109,12 +116,12 @@ const Checkout: React.FC = () => {
 
         let bundlePriceSum = 0;
         bundleProductIds.forEach((id: string) => {
-          const item = cartItems.find(cItem => cItem.product_id === id);
-          // Assuming bundles apply once per unique item matched.
+          const item = cartItems.find(cItem => (cItem.product_id || cItem.id) === id);
           if (item?.product?.price) bundlePriceSum += item.product.price;
+          else if (item?.price) bundlePriceSum += item.price;
         });
 
-        totalBundleDiscount += (bundlePriceSum * bundle.discount_percent) / 100;
+        totalBundleDiscount += (bundlePriceSum * bundle.extra_discount_percent) / 100;
       }
     } else if (isPartiallyMatched) {
       // Suggest missing products
@@ -125,7 +132,7 @@ const Checkout: React.FC = () => {
           suggestedBundleProducts.push({
             ...prod,
             suggestedByBundle: bundle.name,
-            discountPercentage: bundle.discount_percent
+            discountPercentage: bundle.extra_discount_percent
           });
         }
       });
@@ -135,10 +142,10 @@ const Checkout: React.FC = () => {
   // Calculate totals
   let couponDiscountAmount = 0;
   if (appliedCoupon) {
-    if (appliedCoupon.discountType === 'percentage') {
-      couponDiscountAmount = Math.round((subtotal * appliedCoupon.discountValue) / 100);
+    if (appliedCoupon.discount_type === 'percentage') {
+      couponDiscountAmount = Math.round((subtotal * appliedCoupon.discount_value) / 100);
     } else {
-      couponDiscountAmount = appliedCoupon.discountValue;
+      couponDiscountAmount = appliedCoupon.discount_value;
     }
   }
 
@@ -156,7 +163,7 @@ const Checkout: React.FC = () => {
     // Auto-remove coupon if minimum requirement failure
     if (appliedCoupon) {
       const newSubtotal = cartItems.filter(i => i.product_id !== productId).reduce((acc, item) => acc + (item.product?.price || 0) * item.quantity, 0);
-      if (newSubtotal < appliedCoupon.minOrderAmount) {
+      if (newSubtotal < appliedCoupon.min_order_value) {
         setAppliedCoupon(null);
         setCouponError('Coupon removed: Order sum fell below minimum required.');
       }
@@ -180,8 +187,8 @@ const Checkout: React.FC = () => {
       return;
     }
 
-    if (subtotal < foundCoupon.minOrderAmount) {
-      setCouponError(`Minimum order amount of ₹${foundCoupon.minOrderAmount} required.`);
+    if (subtotal < foundCoupon.min_order_value) {
+      setCouponError(`Minimum order amount of ₹${foundCoupon.min_order_value} required.`);
       return;
     }
 
