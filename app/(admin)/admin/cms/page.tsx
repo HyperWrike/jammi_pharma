@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
 
 const CMS_TABS = [
   { id: 'pages', label: 'Pages Content', icon: 'article' },
@@ -40,7 +39,7 @@ export default function CMSPage() {
   }, [activeTab, selectedPage]);
 
   return (
-    <AdminLayout>
+    
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -153,15 +152,5 @@ export default function CMSPage() {
         )}
       </div>
 
-      <style jsx global>{`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
-    </AdminLayout>
   );
 }

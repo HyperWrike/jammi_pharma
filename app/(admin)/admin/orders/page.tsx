@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
 import OrderDetailModal from './OrderDetailModal';
 
 export default function OrdersPage() {
@@ -41,7 +40,7 @@ export default function OrdersPage() {
   };
 
   return (
-    <AdminLayout>
+    
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -151,6 +150,6 @@ export default function OrdersPage() {
           />
         )}
       </div>
-    </AdminLayout>
+    
   );
 }

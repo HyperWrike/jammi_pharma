@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
 import { supabase } from '@/lib/supabase';
 import CategoryFormModal from './CategoryFormModal';
 
@@ -39,7 +38,7 @@ export default function CategoriesPage() {
   };
 
   return (
-    <AdminLayout>
+    
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -111,6 +110,6 @@ export default function CategoriesPage() {
           />
         )}
       </div>
-    </AdminLayout>
+    
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
 
 export default function FederationPage() {
   const [activeTab, setActiveTab] = useState('posts');
@@ -46,7 +45,7 @@ export default function FederationPage() {
   };
 
   return (
-    <AdminLayout>
+    
       <div className="space-y-6 font-medium">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -197,6 +196,6 @@ export default function FederationPage() {
            </div>
         )}
       </div>
-    </AdminLayout>
+    
   );
 }

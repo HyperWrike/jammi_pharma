@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import AdminLayout from '@/components/admin/AdminLayout';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area
 } from 'recharts';
@@ -31,11 +30,11 @@ export default function DashboardPage() {
 
   if (loading || !data) {
     return (
-      <AdminLayout>
+      
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="w-12 h-12 border-4 border-green-500/20 border-t-green-500 rounded-full animate-spin" />
         </div>
-      </AdminLayout>
+      
     );
   }
 
@@ -47,7 +46,7 @@ export default function DashboardPage() {
   } = data || {};
 
   return (
-    <AdminLayout>
+    
       <div className="space-y-8 animate-in fade-in duration-700">
         
         {/* Stat Cards */}
@@ -218,7 +217,7 @@ export default function DashboardPage() {
         </div>
 
       </div>
-    </AdminLayout>
+    
   );
 }
 
