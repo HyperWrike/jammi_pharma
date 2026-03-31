@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
 
 const MODULES = ['dashboard', 'products', 'categories', 'orders', 'customers', 'coupons', 'shipping', 'reviews', 'cms', 'roles', 'bundles', 'federation'];
 const ROLES = ['super_admin', 'manager', 'staff'];
@@ -60,7 +59,7 @@ export default function RolesPage() {
   };
 
   return (
-    <AdminLayout>
+    
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -231,7 +230,7 @@ export default function RolesPage() {
            <PasswordResetModal user={editingUser} onClose={() => setEditingUser(null)} onUpdate={fetchData} />
         )}
       </div>
-    </AdminLayout>
+    
   );
 }
 

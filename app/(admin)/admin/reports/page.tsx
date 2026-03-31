@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   AreaChart, Area, LineChart, Line, PieChart, Pie, Cell 
@@ -27,16 +26,16 @@ export default function ReportsPage() {
   }, []);
 
   if (loading) return (
-    <AdminLayout>
+    
        <div className="py-40 flex flex-col items-center justify-center">
           <div className="w-12 h-12 border-2 border-green-500/20 border-t-green-500 rounded-full animate-spin" />
           <div className="mt-6 text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]">Compiling Analytics Ledger...</div>
        </div>
-    </AdminLayout>
+    
   );
 
   return (
-    <AdminLayout>
+    
       <div className="space-y-8 animate-in fade-in duration-700">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -142,6 +141,6 @@ export default function ReportsPage() {
            </div>
         </div>
       </div>
-    </AdminLayout>
+    
   );
 }
