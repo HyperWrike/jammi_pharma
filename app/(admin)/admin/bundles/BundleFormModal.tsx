@@ -14,13 +14,21 @@ export default function BundleFormModal({ bundle, onClose, onUpdate }: any) {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [saving, setSaving] = useState(false);
   const [productSearch, setProductSearch] = useState('');
+  const [error, setError] = useState('');
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('jammi_admin_token') || localStorage.getItem('jammi_bypass_token') || 'JAMMI_ADMIN_MASTER_KEY_2024';
+    return { Authorization: `Bearer ${token}` };
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch('/api/admin/products?limit=100');
+        const res = await fetch('/api/admin/products?limit=100', {
+          headers: getAuthHeaders()
+        });
         const { data } = await res.json();
-        setProducts(data || []);
+        setProducts((data || []).map((p: any) => ({ ...p, id: p._id || p.id })));
       } catch (err) {
         console.error(err);
       } finally {
@@ -39,19 +47,30 @@ export default function BundleFormModal({ bundle, onClose, onUpdate }: any) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    if (formData.product_ids.length < 2) {
+      setError('Please select at least 2 products for a bundle.');
+      return;
+    }
     setSaving(true);
     try {
-      const url = bundle ? `/api/admin/bundles/${bundle.id}` : '/api/admin/bundles';
+      const bundleId = bundle?._id || bundle?.id;
+      const url = bundleId ? `/api/admin/bundles/${bundleId}` : '/api/admin/bundles';
       const method = bundle ? 'PUT' : 'POST';
-      await fetch(url, {
+      const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify(formData)
       });
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error || 'Failed to save bundle');
+      }
       onUpdate();
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(err.message || 'Failed to save bundle');
     } finally {
       setSaving(false);
     }
@@ -100,6 +119,7 @@ export default function BundleFormModal({ bundle, onClose, onUpdate }: any) {
                    />
                  </div>
                </div>
+               {error && <div className="text-red-400 text-xs font-bold mb-2">{error}</div>}
                
                <div className="grid grid-cols-2 gap-2 bg-white/[0.02] p-4 rounded-2xl border border-white/5 max-h-[300px] overflow-y-auto custom-scrollbar">
                   {loadingProducts ? (

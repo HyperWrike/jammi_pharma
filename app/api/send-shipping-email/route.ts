@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { Resend } from 'resend';
-import { supabaseAdmin } from '../../../lib/supabase';
+import { convexQuery } from '../../../lib/convexServer';
 import { rateLimit, getClientIp } from '../../../lib/rateLimit';
 import { OrderShippedEmail } from '../../../components/emails/OrderShippedEmail';
 
-// Lazy initialization — avoids build failures when RESEND_API_KEY is not set
 function getResend() {
   const key = process.env.RESEND_API_KEY;
   if (!key) return null;
@@ -13,7 +12,6 @@ function getResend() {
 }
 
 export async function POST(req: NextRequest) {
-  // ── Rate Limiting: 5 requests per minute per IP ───────────────────────────
   const ip = getClientIp(req);
   const { allowed, remaining, resetAt } = rateLimit(`send-shipping-email:${ip}`, 5, 60_000);
 
@@ -37,53 +35,43 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'orderId is required' }, { status: 400 });
     }
 
-    // ── Fetch order from Supabase ──────────────────────────────────────────
-    const { data: order, error: fetchError } = await supabaseAdmin
-      .from('orders')
-      .select('order_number, customer_name, customer_email, items, total, shipping_address')
-      .eq('id', orderId)
-      .single();
+    // Fetch order from Convex
+    const order = await convexQuery("functions/orders.js:getOrder", { id: orderId });
 
-    if (fetchError || !order) {
+    if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    // ── Normalize items ────────────────────────────────────────────────────
-    const items: { name: string; quantity: number; price: number }[] =
-      Array.isArray(order.items)
-        ? order.items.map((item: any) => ({
-            name: item.name || item.productName || 'Product',
-            quantity: Number(item.quantity) || 1,
-            price: Number(item.price) || 0,
-          }))
-        : [];
+    const items = Array.isArray(order.items)
+      ? order.items.map((item: any) => ({
+          name: item.name || item.productName || 'Product',
+          quantity: Number(item.quantity) || 1,
+          price: Number(item.price) || 0,
+        }))
+      : [];
 
     const shippingAddress =
       typeof order.shipping_address === 'object'
-        ? [
-            order.shipping_address.address,
-            order.shipping_address.city,
-            order.shipping_address.pincode,
-          ]
+        ? [order.shipping_address.address, order.shipping_address.city, order.shipping_address.pincode]
             .filter(Boolean)
             .join(', ')
         : String(order.shipping_address || '');
 
-    // ── Send shipping email to customer ───────────────────────────────────
     const resend = getResend();
     if (!resend) {
       console.warn('[send-shipping-email] RESEND_API_KEY not set — skipping email');
       return NextResponse.json({ success: true, message: 'Email skipped (no API key)' });
     }
+
     const { error: emailError } = await resend.emails.send({
       from: 'Jammi Pharmaceuticals <onboarding@resend.dev>',
       to: [order.customer_email],
-      subject: `🎉 Your Jammi order ${order.order_number} is on its way!`,
+      subject: `Your Jammi order ${order.order_number} is on its way!`,
       react: OrderShippedEmail({
         customerName: order.customer_name,
         orderNumber: order.order_number,
         items,
-        total: Number(order.total),
+        total: Number(order.total_amount),
         shippingAddress,
         courierName,
         trackingId,

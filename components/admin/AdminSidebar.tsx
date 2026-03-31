@@ -16,7 +16,6 @@ const navItems = [
   { name: 'Shipping', path: '/admin/shipping', icon: 'local_shipping' },
   { name: 'Reviews', path: '/admin/reviews', icon: 'reviews' },
   { name: 'Reports', path: '/admin/reports', icon: 'analytics' },
-  { name: 'CMS Content', path: '/admin/cms', icon: 'edit_document' },
   { name: 'Federation', path: '/admin/federation', icon: 'forum' },
   { name: 'Partners', path: '/admin/partners', icon: 'handshake' },
   { name: 'Roles', path: '/admin/roles', icon: 'manage_accounts' },
@@ -33,17 +32,17 @@ export default function AdminSidebar() {
   }, []);
 
   const handleLogout = async () => {
-    const { supabase } = await import('../../lib/supabase');
-    await supabase.auth.signOut();
     localStorage.removeItem("jammi_admin_session");
     localStorage.removeItem("jammi_admin_role");
     localStorage.removeItem("jammi_admin_name");
+    localStorage.removeItem("jammi_admin_token");
     localStorage.removeItem("jammi_cms_session");
+    localStorage.removeItem("jammi_bypass_token");
     sessionStorage.removeItem("jammi_admin_session");
-    
-    // Notify all components that session is cleared
+    sessionStorage.removeItem("jammi_edit_mode");
+
     window.dispatchEvent(new Event('jammi_cms_unlocked'));
-    
+
     router.push('/');
   };
 

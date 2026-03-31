@@ -1,20 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdmin, supabaseAdmin, unauthorized, serverError } from '@/lib/adminAuth';
+import { convexMutation, convexQuery } from '@/lib/convexServer';
+import { verifyAdmin, unauthorized } from '@/lib/adminAuth';
+
+function cleanArgs(args: any) {
+  const cleaned: any = {};
+  Object.keys(args).forEach(key => {
+    if (args[key] !== null && args[key] !== undefined && args[key] !== '') {
+      cleaned[key] = args[key];
+    }
+  });
+  return cleaned;
+}
+
+function sanitizeBundlePayload(input: any) {
+  return cleanArgs({
+    name: input?.name,
+    description: input?.description,
+    image_url: input?.image_url,
+    extra_discount_percent: input?.extra_discount_percent !== undefined ? Number(input.extra_discount_percent) : undefined,
+    show_in_shop: typeof input?.show_in_shop === 'boolean' ? input.show_in_shop : undefined,
+  });
+}
 
 export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) return unauthorized();
 
   try {
-    const { data, error } = await supabaseAdmin
-      .from('bundles')
-      .select('*, bundle_products(product_id, products(id, name, images, price))')
-      .order('created_at', { ascending: false });
-      
-    if (error) return serverError(error);
+    const data = await convexQuery("functions/bundles.js:listBundles", {});
     return NextResponse.json({ data });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -25,23 +41,20 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { product_ids, ...bundleData } = body;
-
-    const { data: bundle, error } = await supabaseAdmin
-      .from('bundles')
-      .insert(bundleData)
-      .select()
-      .single();
-      
-    if (error) return serverError(error);
-
-    if (product_ids && product_ids.length > 0) {
-      await supabaseAdmin.from('bundle_products').insert(
-        product_ids.map((pid: string) => ({ bundle_id: bundle.id, product_id: pid }))
-      );
+    const productIds = Array.isArray(product_ids) ? product_ids : [];
+    if (productIds.length < 2) {
+      return NextResponse.json({ error: 'Bundle must include at least 2 products.' }, { status: 400 });
     }
 
-    return NextResponse.json({ data: bundle }, { status: 201 });
-  } catch (error) {
-    return serverError(error);
+    const bundleId = await convexMutation("functions/bundles.js:createBundle", sanitizeBundlePayload(bundleData));
+
+    await convexMutation("functions/bundles.js:setBundleProducts", {
+      bundle_id: bundleId,
+      product_ids: productIds
+    });
+
+    return NextResponse.json({ data: { _id: bundleId, ...bundleData } }, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

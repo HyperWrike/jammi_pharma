@@ -1,4 +1,8 @@
-import { supabase } from './supabase';
+/**
+ * Storage utilities for image handling.
+ * Currently uses URL-based approach.
+ * For image upload, use the /api/admin/images/upload API route.
+ */
 
 export type Bucket =
   | 'product-images'
@@ -11,35 +15,24 @@ export type Bucket =
   | 'reports';
 
 /**
- * Upload a file to Supabase Storage.
- * Returns the permanent public URL.
- * All uploads go through this function — no exceptions.
+ * Upload a file. Returns a data URL.
+ * For external storage, use the /api/admin/images/upload API route.
  */
 export async function uploadFile(
-  file: File,
+  file: File | Blob,
   bucket: Bucket,
   folder: string = ''
 ): Promise<string> {
-  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const path = folder ? `${folder.replace(/\/$/, '')}/${filename}` : filename;
-
-  const { error } = await supabase.storage
-    .from(bucket)
-    .upload(path, file, {
-      cacheControl: '31536000',   // 1 year CDN cache
-      upsert: false,
-      contentType: file.type,
-    });
-
-  if (error) throw new Error(`Upload failed: ${error.message}`);
-
-  return getPublicUrl(bucket, path);
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file as File);
+  });
 }
 
 /**
- * Replace an existing file (delete old, upload new).
- * Pass the old URL to clean up storage.
+ * Replace an existing file.
  */
 export async function replaceFile(
   file: File,
@@ -47,15 +40,11 @@ export async function replaceFile(
   folder: string,
   oldUrl?: string
 ): Promise<string> {
-  // Delete the old file first (fire and forget — don't block the upload)
-  if (oldUrl) {
-    deleteFile(oldUrl).catch(() => {}); // non-blocking
-  }
   return uploadFile(file, bucket, folder);
 }
 
 /**
- * Upload multiple files at once. Returns array of public URLs.
+ * Upload multiple files at once.
  */
 export async function uploadMultiple(
   files: File[],
@@ -66,60 +55,21 @@ export async function uploadMultiple(
 }
 
 /**
- * Delete a file by its public URL.
+ * Delete a file by its public URL. No-op for data URLs.
  */
 export async function deleteFile(publicUrl: string): Promise<void> {
-  const { bucket, path } = parseStorageUrl(publicUrl);
-  if (!bucket || !path) return;
-
-  const { error } = await supabase.storage.from(bucket).remove([path]);
-  if (error) console.warn('Delete failed (non-critical):', error.message);
+  // Data URLs don't need deletion
 }
 
 /**
- * Get the public URL for a stored file path.
+ * Get public URL (returns the path as-is for data URLs).
  */
 export function getPublicUrl(bucket: Bucket, path: string): string {
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-  return data.publicUrl;
-}
-
-/**
- * Parse a Supabase Storage public URL back into bucket + path.
- * Used for deletion and replacement.
- */
-export function parseStorageUrl(url: string): { bucket: string; path: string } | { bucket: null; path: null } {
-  try {
-    // Supabase public URLs look like:
-    // https://xxx.supabase.co/storage/v1/object/public/BUCKET/path/to/file.jpg
-    const match = url.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)/);
-    if (!match) return { bucket: null, path: null };
-    return { bucket: match[1], path: match[2] };
-  } catch {
-    return { bucket: null, path: null };
-  }
-}
-
-/**
- * Create a temporary signed URL for private files (e.g., reports).
- * Expires in 60 minutes by default.
- */
-export async function getSignedUrl(
-  bucket: Bucket,
-  path: string,
-  expiresInSeconds: number = 3600
-): Promise<string> {
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .createSignedUrl(path, expiresInSeconds);
-
-  if (error || !data?.signedUrl) throw new Error('Could not generate signed URL');
-  return data.signedUrl;
+  return path;
 }
 
 /**
  * Validate file before upload.
- * Call this before every upload to give users clear error messages.
  */
 export function validateFile(
   file: File,
@@ -139,4 +89,17 @@ export function validateFile(
   }
 
   return { valid: true };
+}
+
+/**
+ * Parse a storage URL to extract bucket and path components.
+ */
+export function parseStorageUrl(url: string): { bucket: string; path: string } | { bucket: null; path: null } {
+  try {
+    const match = url.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)/);
+    if (!match) return { bucket: null, path: null };
+    return { bucket: match[1], path: match[2] };
+  } catch {
+    return { bucket: null, path: null };
+  }
 }

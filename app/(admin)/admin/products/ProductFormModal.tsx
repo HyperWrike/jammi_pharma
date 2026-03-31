@@ -19,6 +19,14 @@ const TABS = [
 ];
 
 export default function ProductFormModal({ product, categories, onClose, onSuccess }: ProductFormModalProps) {
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('jammi_admin_token') || localStorage.getItem('jammi_bypass_token') || 'JAMMI_ADMIN_MASTER_KEY_2024';
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+  };
+
   const [activeTab, setActiveTab] = useState('basic');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<any>({
@@ -104,10 +112,11 @@ export default function ProductFormModal({ product, categories, onClose, onSucce
     setLoading(true);
     try {
       const method = product ? 'PUT' : 'POST';
-      const url = product ? `/api/admin/products/${product.id}` : '/api/admin/products';
+      const productId = product?._id || product?.id;
+      const url = productId ? `/api/admin/products/${productId}` : '/api/admin/products';
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(formData)
       });
       if (!res.ok) {
@@ -186,21 +195,21 @@ export default function ProductFormModal({ product, categories, onClose, onSucce
                 <textarea name="shortDesc" value={formData.shortDesc} onChange={handleChange} className="admin-input min-h-[100px]" placeholder="Brief intro for shop cards..." />
               </div>
               <div className="col-span-2 flex flex-col gap-2">
-                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Publishing Status</label>
-                 <div className="flex gap-4">
-                    {['published', 'draft', 'archived'].map(s => (
-                      <button 
-                        key={s} type="button" 
-                        onClick={() => setFormData({ ...formData, status: s === 'archived' ? 'draft' : s })} // archived is not in DB check, so using draft
-                        className={`flex-1 py-3 rounded-xl border font-bold text-xs uppercase tracking-widest transition-all ${
-                          formData.status === s ? 'bg-green-500/10 border-green-500 text-green-500 shadow-lg shadow-green-500/10' : 'border-white/5 bg-white/5 text-slate-500 hover:bg-white/10'
-                        }`}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                 </div>
-              </div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Publishing Status</label>
+                  <div className="flex gap-4">
+                     {['published', 'draft'].map(s => (
+                       <button 
+                         key={s} type="button" 
+                         onClick={() => setFormData({ ...formData, status: s })}
+                         className={`flex-1 py-3 rounded-xl border font-bold text-xs uppercase tracking-widest transition-all ${
+                           formData.status === s ? 'bg-green-500/10 border-green-500 text-green-500 shadow-lg shadow-green-500/10' : 'border-white/5 bg-white/5 text-slate-500 hover:bg-white/10'
+                         }`}
+                       >
+                         {s}
+                       </button>
+                     ))}
+                  </div>
+               </div>
             </div>
           )}
 

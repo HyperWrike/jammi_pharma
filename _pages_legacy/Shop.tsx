@@ -1,12 +1,13 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import ProductCard from '../components/ProductCard';
-import { supabase } from '../lib/supabase';
 import { MOCK_PRODUCTS } from '../constants';
 import LiveEditable from '../components/admin/LiveEditable';
 import { useAdmin } from '../components/admin/AdminContext';
-import { cmsApi, productsApi } from '../lib/adminApi';
+import { productsApi } from '../lib/adminApi';
 import { useRouter } from 'next/navigation';
+
+const CONVEX_URL = 'https://cheerful-rhinoceros-28.convex.cloud';
 
 const Shop: React.FC = () => {
   const router = useRouter();
@@ -49,66 +50,78 @@ const Shop: React.FC = () => {
       setIsLoading(false);
     };
 
-    const fetchShopData = async () => {
-      // Fetch Products (limit 20, specific columns)
-      // Using 'active' check and 'published' status
-      const { data: prodData } = await supabase
-        .from('products')
-        .select(`
-          id, name, description, short_description, price, discount_price, images, status,
-          categories(name)
-        `)
-        .eq('status', 'published')
-        .order('created_at', { ascending: false })
-        .limit(50);
+    const convexQuery = async (path: string, args: any = {}) => {
+      const res = await fetch(`${CONVEX_URL}/api/query`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path, args, format: 'json' }),
+      });
+      const result = await res.json();
+      if (result.status === 'error') {
+        throw new Error(result.errorMessage || 'Convex query failed');
+      }
+      return result.value;
+    };
 
-      if (prodData) {
-        currentProducts = prodData.map((prod: any) => ({
-          id: prod.id,
+    const fetchShopData = async () => {
+      const catData = await convexQuery('functions/categories.js:listCategories', {});
+      currentCategories = Array.isArray(catData) ? catData : [];
+      const categoryNameById = new Map(
+        currentCategories.map((cat: any) => [cat._id || cat.id, cat.name]),
+      );
+
+      const prodResult = await convexQuery('functions/products.js:listProducts', {
+        status: 'published',
+        page: 1,
+        limit: 50,
+      });
+      const prodData = prodResult?.data || [];
+
+      currentProducts = prodData.map((prod: any) => {
+        const id = prod._id || prod.id;
+        const categoryName = categoryNameById.get(prod.category_id) || 'Wellness';
+        return {
+          id,
           name: prod.name,
-          label: prod.categories?.name || 'Wellness',
+          label: categoryName,
           shortDesc: prod.short_description || (prod.description ? prod.description.replace(/<[^>]+>/g, '').substring(0, 100) : 'Traditional formulation.'),
           price: prod.price || 0,
           image: prod.images?.[0] || 'https://images.unsplash.com/photo-1629198688000-71f23e745b6e?q=80&w=800&auto=format&fit=crop',
-          category: prod.categories?.name || 'Wellness',
+          category: categoryName,
           status: prod.status
-        }));
-      }
-
-      // Fetch Categories
-      const { data: catData } = await supabase.from('categories').select('name').order('display_order');
-      if (catData) {
-        currentCategories = catData;
-      }
+        };
+      });
 
       updateState();
     };
 
     fetchShopData();
 
-    // Setup realtime specifically for shop data refresh
-    const channel = supabase.channel('shop_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => fetchShopData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => fetchShopData())
-      .subscribe();
+    // Supabase realtime is removed; poll Convex-backed data periodically.
+    const intervalId = window.setInterval(fetchShopData, 15000);
 
     return () => {
-      supabase.removeChannel(channel);
+      window.clearInterval(intervalId);
     };
   }, []);
 
   const handleAddProduct = async () => {
     setIsAdding(true);
     try {
-      // Find the first available category to assign
-      const { data: catData } = await supabase.from('categories').select('id').limit(1).single();
+      const catResult = await fetch(`${CONVEX_URL}/api/query`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: 'functions/categories.js:listCategories', args: {}, format: 'json' }),
+      });
+      const catJson = await catResult.json();
+      const firstCategory = Array.isArray(catJson?.value) ? catJson.value[0] : null;
       
       const res = await productsApi.create({
         name: 'New Formulation',
         description: 'Describe the new formulation...',
         short_description: 'A traditional remedy.',
         price: 0,
-        category_id: catData?.id || null,
+        category_id: firstCategory?._id || firstCategory?.id || null,
         images: ['https://images.unsplash.com/photo-1629198688000-71f23e745b6e?q=80&w=800&auto=format&fit=crop'],
         status: 'published',
         stock: 100

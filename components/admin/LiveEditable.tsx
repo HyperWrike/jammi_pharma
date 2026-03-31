@@ -174,8 +174,22 @@ export default function LiveEditable({
 
   const InputComponent = multiline || effectiveType === 'textarea' || effectiveType === 'html' ? 'textarea' : 'input';
 
+  if (multiline || effectiveType === 'textarea') {
+    return (
+      <textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        onBlur={() => handleSave(content)}
+        title={`Editing: ${page || collection} -> ${section || 'doc'} -> ${contentKey || field}`}
+        className={`w-full bg-transparent outline-none border-b-2 border-dashed border-[#22c55e]/50 focus:border-[#22c55e] focus:bg-[#22c55e]/10 transition-colors ${className}`}
+        style={{ resize: 'vertical' }}
+        rows={4}
+      />
+    );
+  }
+
   return (
-    <div className={`relative inline-block ${effectiveType === 'textarea' ? 'w-full' : ''} ${className}`}>
+    <span className={`relative inline-block ${className}`}>
       <InputComponent
         value={content}
         onChange={(e) => setContent(e.target.value)}
@@ -183,9 +197,8 @@ export default function LiveEditable({
         type={effectiveType === 'number' ? 'number' : 'text'}
         title={`Editing: ${page || collection} -> ${section || 'doc'} -> ${contentKey || field}`}
         className={`w-full bg-transparent outline-none border-b-2 border-dashed border-[#22c55e]/50 focus:border-[#22c55e] focus:bg-[#22c55e]/10 transition-colors ${className}`}
-        style={{ resize: multiline ? 'vertical' : 'none' }}
-        rows={multiline ? 4 : undefined}
+        style={{ resize: 'none' }}
       />
-    </div>
+    </span>
   );
 }

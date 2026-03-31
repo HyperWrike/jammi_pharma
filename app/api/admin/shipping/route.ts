@@ -1,20 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdmin, supabaseAdmin, unauthorized, serverError } from '@/lib/adminAuth';
+import { convexMutation, convexQuery } from '@/lib/convexServer';
+import { verifyAdmin, unauthorized } from '@/lib/adminAuth';
 
 export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) return unauthorized();
 
   try {
-    const { data, error } = await supabaseAdmin
-      .from('shipping_methods')
-      .select('*')
-      .order('created_at', { ascending: true });
-      
-    if (error) return serverError(error);
+    const data = await convexQuery("functions/cms.js:listShippingMethods", {});
     return NextResponse.json({ data });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -24,15 +20,9 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { data, error } = await supabaseAdmin
-      .from('shipping_methods')
-      .insert(body)
-      .select()
-      .single();
-      
-    if (error) return serverError(error);
+    const data = await convexMutation("functions/cms.js:createShippingMethod", body);
     return NextResponse.json({ data }, { status: 201 });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

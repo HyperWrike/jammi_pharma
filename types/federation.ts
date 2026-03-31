@@ -75,12 +75,12 @@ export interface FederationStore {
     // Actions
     approvePost: (id: string) => Promise<void>;
     rejectPost: (id: string) => Promise<void>;
-    submitPost: (post: Omit<ForumPost, 'id' | 'upvotes' | 'comments' | 'commentsList' | 'status' | 'timestamp'>) => Promise<void>;
+    submitPost: (post: { title: string; content: string; author: string; specialty: string; category: string }) => Promise<{ success: boolean; error?: string }>;
     upvotePost: (id: string) => Promise<void>;
     submitComment: (postId: string, commentData: { author: string, content: string }) => Promise<void>;
     
     // Doctor Actions
-    createDoctorProfile: (profile: Omit<DoctorProfile, 'id' | 'verified' | 'timestamp'>) => Promise<void>;
+    createDoctorProfile: (profile: { name: string; specialty: string; bio: string }) => Promise<{ success: boolean; error?: string }>;
     verifyDoctor: (id: string) => Promise<void>;
     
     // Partner Actions

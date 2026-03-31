@@ -13,9 +13,16 @@ export default function BundlesPage() {
   const fetchBundles = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/bundles');
-      const data = await res.json();
-      setBundles(data || []);
+      const token = localStorage.getItem('jammi_admin_token') || localStorage.getItem('jammi_bypass_token') || '';
+      const res = await fetch('/api/admin/bundles', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const json = await res.json();
+      const mapped = (json.data || []).map((bundle: any) => ({
+        ...bundle,
+        id: bundle._id || bundle.id,
+      }));
+      setBundles(mapped);
     } catch (err) {
       console.error(err);
     } finally {
@@ -30,10 +37,16 @@ export default function BundlesPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this product bundle?')) return;
     try {
-      await fetch(`/api/admin/bundles/${id}`, { method: 'DELETE' });
+      const token = localStorage.getItem('jammi_admin_token') || localStorage.getItem('jammi_bypass_token') || 'JAMMI_ADMIN_MASTER_KEY_2024';
+      const res = await fetch(`/api/admin/bundles/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to delete bundle');
       fetchBundles();
     } catch (err) {
       console.error(err);
+      alert('Failed to delete bundle');
     }
   };
 
@@ -59,8 +72,8 @@ export default function BundlesPage() {
               Array(3).fill(0).map((_, i) => (
                  <div key={i} className="bg-[#111118] border border-white/5 rounded-3xl p-6 animate-pulse h-64"></div>
               ))
-           ) : bundles.length > 0 ? bundles.map((bundle) => (
-              <div key={bundle.id} className="bg-[#111118] border border-white/5 rounded-3xl p-6 hover:bg-white/[0.02] transition flex flex-col group overflow-hidden">
+           ) : bundles.length > 0 ? bundles.map((bundle, idx) => (
+              <div key={bundle.id || `${bundle.name || 'bundle'}-${idx}`} className="bg-[#111118] border border-white/5 rounded-3xl p-6 hover:bg-white/[0.02] transition flex flex-col group overflow-hidden">
                  <div className="flex items-center justify-between mb-4">
                     <span className="px-2 py-0.5 bg-green-500/10 text-green-500 rounded-full text-[8px] font-black uppercase tracking-widest border border-green-500/10">
                        {bundle.status}

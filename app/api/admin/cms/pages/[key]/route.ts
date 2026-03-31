@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdmin, supabaseAdmin, unauthorized, serverError } from '@/lib/adminAuth';
+import { convexMutation, convexQuery } from '@/lib/convexServer';
+import { verifyAdmin, unauthorized } from '@/lib/adminAuth';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ key: string }> }) {
   const admin = await verifyAdmin(req);
@@ -7,16 +8,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ key:
 
   try {
     const { key } = await params;
-    const { data, error } = await supabaseAdmin
-      .from('cms_static_pages')
-      .select('*')
-      .eq('page_key', key)
-      .single();
-      
-    if (error) return serverError(error);
+    const data = await convexQuery("functions/cms.js:getPage", { key });
     return NextResponse.json({ data });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -27,16 +22,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ key:
   try {
     const { key } = await params;
     const { content } = await req.json();
-    const { data, error } = await supabaseAdmin
-      .from('cms_static_pages')
-      .update({ content, updated_at: new Date().toISOString() })
-      .eq('page_key', key)
-      .select()
-      .single();
-      
-    if (error) return serverError(error);
+    const data = await convexMutation("functions/cms.js:updatePage", { key, content });
     return NextResponse.json({ data });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

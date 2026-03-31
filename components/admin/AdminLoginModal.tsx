@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../../lib/supabase';
 
 interface AdminLoginModalProps {
   isOpen: boolean;
@@ -31,7 +30,7 @@ export default function AdminLoginModal({ isOpen, onClose, roleToGrant = 'admin'
 
   const showToast = (message: string, type: 'success' | 'error') => {
     const toast = document.createElement('div');
-    toast.innerHTML = type === 'success' 
+    toast.innerHTML = type === 'success'
       ? `<span style="color: #22c55e; margin-right: 8px;">✓</span>${message}`
       : `<span style="color: #ef4444; margin-right: 8px;">✕</span>${message}`;
     toast.style.cssText = `
@@ -64,119 +63,44 @@ export default function AdminLoginModal({ isOpen, onClose, roleToGrant = 'admin'
     setError(false);
 
     try {
-      const isHardcodedStaff = email.trim() === 'admin@jammipharma.com' && password.trim() === 'Jammi@007';
-      
-      if (isHardcodedStaff && roleToGrant === 'editor') {
-          // Attempt proper Supabase auth right away
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email: 'admin@jammipharma.com',
-            password: 'Jammi@007',
-          });
-          
-          if (!error && data?.session) {
-            await supabase.auth.setSession(data.session);
-          } else {
-             console.warn("Supabase auth failed for editor. Using offline bypass mode.");
-             localStorage.setItem('jammi_bypass_token', 'JAMMI_ADMIN_MASTER_KEY_2024');
-          }
-
-          localStorage.setItem("jammi_cms_session", "true");
-          sessionStorage.setItem("jammi_admin_session", "true");
-          sessionStorage.setItem("jammi_edit_mode", "true");
-          window.dispatchEvent(new Event('jammi_cms_unlocked'));
-          setIsLoggingIn(false);
-          showToast("CMS Editor Unlocked", "success");
-          onClose();
-          return;
-      }
-
-      if (isHardcodedStaff) {
-        const { data, error: authError } = await supabase.auth.signInWithPassword({
-          email: 'admin@jammipharma.com',
-          password: 'Jammi@007',
-        });
-
-        if (!authError && data?.session) {
-            await supabase.auth.setSession(data.session);
-            
-            const { data: adminRecord } = await supabase
-              .from('admin_users')
-              .select('id, name, role')
-              .eq('auth_user_id', data.user.id)
-              .eq('status', 'active')
-              .single();
-
-            localStorage.setItem("jammi_admin_role", adminRecord?.role || 'admin');
-            localStorage.setItem("jammi_admin_name", adminRecord?.name || 'Admin');
-        } else {
-            console.warn("Supabase auth failed for hardcoded admin. Using offline bypass mode.");
-            localStorage.setItem('jammi_bypass_token', 'JAMMI_ADMIN_MASTER_KEY_2024');
-            localStorage.setItem("jammi_admin_role", "admin");
-            localStorage.setItem("jammi_admin_name", "Super Admin");
-        }
-        
-        localStorage.setItem("jammi_admin_session", "true");
-        sessionStorage.setItem("jammi_admin_session", "true");
-        localStorage.setItem("jammi_cms_session", "true");
-        sessionStorage.setItem("jammi_edit_mode", "true");
-        
-        window.dispatchEvent(new Event('jammi_cms_unlocked'));
-        
-        setIsLoggingIn(false);
-        showToast("Logged in successfully", "success");
-        onClose();
-        if (roleToGrant !== 'editor') {
-          router.push('/admin/dashboard');
-        }
-        return;
-      }
-
-      // Normal login flow
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password.trim(),
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
       });
 
-      if (authError || !data.user) {
+      const text = await res.text();
+      let data;
+      try { data = text ? JSON.parse(text) : {}; } catch { throw new Error('Login failed'); }
+
+      if (!res.ok || !data.token) {
         setError(true);
-        setErrorMsg('Invalid credentials.');
+        setErrorMsg(data.error || 'Invalid credentials.');
         setIsLoggingIn(false);
         return;
       }
+
+      localStorage.setItem('jammi_admin_token', data.token);
+      localStorage.setItem('jammi_admin_session', 'true');
+      sessionStorage.setItem('jammi_admin_session', 'true');
+      localStorage.setItem('jammi_admin_name', data.email || 'Admin');
 
       if (roleToGrant === 'editor') {
         localStorage.setItem("jammi_cms_session", "true");
-        sessionStorage.setItem("jammi_admin_session", "true");
+        sessionStorage.setItem("jammi_edit_mode", "true");
         window.dispatchEvent(new Event('jammi_cms_unlocked'));
-        setIsLoggingIn(false);
         showToast("CMS Editor Unlocked", "success");
-        onClose();
-        return;
-      }
-
-      const { data: adminRecord } = await supabase
-        .from('admin_users')
-        .select('id, name, role')
-        .eq('auth_user_id', data.user.id)
-        .eq('status', 'active')
-        .single();
-
-      if (!adminRecord) {
-        await supabase.auth.signOut();
-        setError(true);
-        setErrorMsg('No admin access.');
-        setIsLoggingIn(false);
-        return;
+      } else {
+        localStorage.setItem("jammi_admin_role", "admin");
+        showToast("Logged in successfully", "success");
       }
 
       setIsLoggingIn(false);
-      localStorage.setItem("jammi_admin_session", "true");
-      sessionStorage.setItem("jammi_admin_session", "true");
-      localStorage.setItem("jammi_admin_role", adminRecord.role);
-      localStorage.setItem("jammi_admin_name", adminRecord.name);
       onClose();
-      router.push('/admin/dashboard');
 
+      if (roleToGrant !== 'editor') {
+        router.push('/admin/dashboard');
+      }
     } catch (err: any) {
       setError(true);
       setErrorMsg(err.message || 'Error occurred.');
@@ -190,27 +114,27 @@ export default function AdminLoginModal({ isOpen, onClose, roleToGrant = 'admin'
         @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
       `}</style>
       <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-md px-4">
-        <div 
-          className="absolute inset-0 cursor-pointer" 
-          onClick={onClose} 
+        <div
+          className="absolute inset-0 cursor-pointer"
+          onClick={onClose}
         />
-        <div 
+        <div
           className={`relative z-10 w-full max-w-md ${roleToGrant === 'editor' ? 'bg-[#1a1a2e]' : 'bg-[#0a0a0f]'} p-8 rounded-2xl shadow-2xl border ${roleToGrant === 'editor' ? 'border-[#22c55e]/30' : 'border-[#22c55e]/20'}`}
           style={{
             animation: 'slideIn 0.3s ease'
           }}
         >
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="absolute top-4 right-4 text-[#94a3b8] hover:text-white transition-colors"
             aria-label="Close"
           >
             <span className="material-symbols-outlined">close</span>
           </button>
-          
+
           <div className="text-center mb-8">
             <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${roleToGrant === 'editor' ? 'bg-[#22c55e]/20' : 'bg-[#22c55e]/10'}`}>
-              <span className={`material-symbols-outlined text-3xl ${roleToGrant === 'editor' ? 'text-[#22c55e]' : 'text-[#22c55e]'}`}>
+              <span className={`material-symbols-outlined text-3xl text-[#22c55e]`}>
                 {roleToGrant === 'editor' ? 'edit_note' : 'admin_panel_settings'}
               </span>
             </div>
@@ -221,15 +145,15 @@ export default function AdminLoginModal({ isOpen, onClose, roleToGrant = 'admin'
               {roleToGrant === 'editor' ? 'Enter credentials to unlock content editing' : 'Enter credentials to access the admin panel'}
             </p>
           </div>
-          
+
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div>
               <label className="block text-[#94a3b8] text-xs font-semibold uppercase tracking-wider mb-2">
-                Username
+                Email
               </label>
-              <input 
-                type="text" 
-                placeholder="admin@jammipharma.com"
+              <input
+                type="email"
+                placeholder="admin@jammi.in"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 className="w-full bg-[#111118] border border-[#16161f] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#22c55e] transition-colors"
@@ -240,8 +164,8 @@ export default function AdminLoginModal({ isOpen, onClose, roleToGrant = 'admin'
               <label className="block text-[#94a3b8] text-xs font-semibold uppercase tracking-wider mb-2">
                 Password
               </label>
-              <input 
-                type="password" 
+              <input
+                type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -249,15 +173,15 @@ export default function AdminLoginModal({ isOpen, onClose, roleToGrant = 'admin'
                 required
               />
             </div>
-            
+
             {error && (
               <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-red-400 text-sm">
                 {errorMsg}
               </div>
             )}
-            
-            <button 
-              type="submit" 
+
+            <button
+              type="submit"
               disabled={isLoggingIn}
               className="w-full bg-[#22c55e] text-white font-bold py-3 rounded-lg mt-2 hover:bg-[#16a34a] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
             >
@@ -274,7 +198,7 @@ export default function AdminLoginModal({ isOpen, onClose, roleToGrant = 'admin'
               )}
             </button>
           </form>
-          
+
           <div className="mt-6 text-center">
             <p className="text-[#94a3b8] text-xs">
               Secure access only. All actions are logged.

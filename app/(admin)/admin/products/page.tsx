@@ -2,52 +2,39 @@
 
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { supabase } from '@/lib/supabase';
+import { useProducts, useCategories, useDeleteProduct } from '@/hooks/useConvex';
 import { imagesApi } from '@/lib/adminApi';
 import ProductFormModal from './ProductFormModal';
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
 
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      let url = `/api/admin/products?search=${search}&category=${categoryFilter}`;
-      const res = await fetch(url);
-      const { data } = await res.json();
-      setProducts(data || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: productsData, loading: productsLoading, refetch: refetchProducts } = useProducts({
+    search: search || undefined,
+    category: categoryFilter || undefined,
+  });
 
-  const fetchCategories = async () => {
-    const { data } = await supabase.from('categories').select('*').order('name');
-    setCategories(data || []);
-  };
+  const { data: categoriesData, loading: categoriesLoading } = useCategories();
+  const deleteProduct = useDeleteProduct();
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(fetchProducts, 300);
-    return () => clearTimeout(timer);
-  }, [search, categoryFilter]);
+  const products = (productsData?.data || []).map((p: any) => ({
+    ...p,
+    id: p._id || p.id
+  }));
+  const categories = (categoriesData || []).map((c: any) => ({
+    id: c._id || c.id,
+    name: c.name
+  }));
+  const loading = productsLoading || categoriesLoading;
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
     try {
-      const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
-      if (res.ok) fetchProducts();
+      await deleteProduct.mutate({ id });
+      refetchProducts();
     } catch (err) {
       alert('Failed to delete product');
     }
@@ -189,7 +176,7 @@ export default function ProductsPage() {
             product={editingProduct} 
             categories={categories}
             onClose={() => setIsModalOpen(false)} 
-            onSuccess={() => { setIsModalOpen(false); fetchProducts(); }} 
+            onSuccess={() => { setIsModalOpen(false); refetchProducts(); }} 
           />
         )}
       </div>

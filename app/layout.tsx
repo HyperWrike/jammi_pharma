@@ -40,6 +40,7 @@ import { CartProvider } from '../context/CartContext';
 import { ToastProvider } from '../components/Toast';
 import EditModeToggle from '../components/admin/EditModeToggle';
 import JammiToast from '../components/ui/JammiToast';
+import { ConvexClientProvider } from '../components/ConvexClientProvider';
 
 export const metadata: Metadata = {
     title: 'Jammi Pharmaceuticals',
@@ -57,17 +58,19 @@ export default function RootLayout({
                 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
             </head>
             <body suppressHydrationWarning className={`${plusJakarta.variable} ${cormorantSC.variable} ${playfairDisplay.variable} ${ebGaramond.variable} ${cinzel.variable} ${dmMono.variable} font-sans antialiased min-h-screen flex flex-col bg-background-light text-[#1a150f]`}>
-                <JammiToast />
-                <ToastProvider>
-                    <CartProvider>
-                        <AdminProvider>
-                            <main className="flex-grow">
-                                {children}
-                            </main>
-                            <EditModeToggle />
-                        </AdminProvider>
-                    </CartProvider>
-                </ToastProvider>
+                <ConvexClientProvider>
+                    <JammiToast />
+                    <ToastProvider>
+                        <CartProvider>
+                            <AdminProvider>
+                                <main className="flex-grow">
+                                    {children}
+                                </main>
+                                <EditModeToggle />
+                            </AdminProvider>
+                        </CartProvider>
+                    </ToastProvider>
+                </ConvexClientProvider>
             </body>
         </html>
     );

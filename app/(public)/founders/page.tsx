@@ -37,9 +37,9 @@ export default function FoundersPage() {
                 <h1 className="font-display text-5xl md:text-7xl text-secondary font-bold leading-tight mb-8">
                     <CMS field="title" fallback="Meet Our Founders" />
                 </h1>
-                <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed border-b border-primary/20 pb-12">
+                <div className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed border-b border-primary/20 pb-12">
                     <CMS field="heroDesc" multiline fallback="Carrying forward a 128-year legacy, Dr. Narasimham Jammi and Dr. Anitha Balachander merge the ancient wisdom of Ayurveda with the rigor of modern molecular science to heal humanity." />
-                </p>
+                </div>
             </section>
 
             {/* Dr. Narasimham Jammi */}

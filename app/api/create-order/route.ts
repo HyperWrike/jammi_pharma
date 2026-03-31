@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
-import { supabaseAdmin } from '../../../lib/supabase';
-import { generateCustomerId } from '../../../lib/customers';
+import { convexMutation } from '../../../lib/convexServer';
 import { rateLimit, getClientIp } from '../../../lib/rateLimit';
 import { Resend } from 'resend';
 import { OrderConfirmationEmail } from '../../../components/emails/OrderConfirmationEmail';
@@ -14,7 +13,6 @@ function getResend() {
 }
 
 export async function POST(req: NextRequest) {
-  // ── Rate Limiting: 10 requests per minute per IP ──────────────────────────
   const ip = getClientIp(req);
   const { allowed, remaining, resetAt } = rateLimit(`create-order:${ip}`, 10, 60_000);
 
@@ -44,9 +42,9 @@ export async function POST(req: NextRequest) {
       discount = 0,
       couponCode,
       total,
+      paymentMethod = 'UPI',
     } = body;
 
-    // ── Validate required fields ───────────────────────────────────────────
     if (!customerName || !customerEmail || !shippingAddress || !items?.length || !total) {
       return NextResponse.json(
         { error: 'Missing required fields: customerName, customerEmail, shippingAddress, items, total' },
@@ -54,86 +52,65 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── Get or Create Customer ID ───────────────────────────────────────────
-    const { data: existingCustomer } = await supabaseAdmin
-      .from('customers')
-      .select('id')
-      .eq('email', customerEmail)
-      .single();
+    // Upsert customer in Convex
+    await convexMutation("functions/orders.js:upsertCustomer", {
+      email: customerEmail,
+      name: customerName,
+      phone: customerPhone || '',
+      address: shippingAddress?.address || '',
+      city: shippingAddress?.city || '',
+      pincode: shippingAddress?.pincode || '',
+    });
 
-    let customerId = existingCustomer?.id;
-
-    if (!customerId) {
-      customerId = await generateCustomerId();
-      await supabaseAdmin.from('customers').insert({
-        id: customerId,
-        name: customerName,
-        email: customerEmail,
-        phone: customerPhone || '',
-        address: shippingAddress?.address || '',
-        city: shippingAddress?.city || '',
-        pincode: shippingAddress?.pincode || '',
-      });
-    } else {
-      // Update existing customer profile with the latest shipping address
-      await supabaseAdmin.from('customers').update({
-        phone: customerPhone || '',
-        address: shippingAddress?.address || '',
-        city: shippingAddress?.city || '',
-        pincode: shippingAddress?.pincode || '',
-      }).eq('id', customerId);
-    }
-
-    // ── Generate human-readable order number ───────────────────────────────
-    // Format: JMP-YYYYMMDD-XXXX (e.g. JMP-20260317-1042)
+    // Generate order number
     const now = new Date();
     const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
     const randSuffix = String(1000 + Math.floor(Math.random() * 8999));
     const orderNumber = `JMP-${dateStr}-${randSuffix}`;
 
-    // ── Insert pending order into Supabase ─────────────────────────────────
-    const { data: order, error: orderError } = await supabaseAdmin
-      .from('orders')
-      .insert({
-        order_number: orderNumber,
-        customer_id: customerId,
-        customer_name: customerName,
-        customer_email: customerEmail,
-        customer_phone: customerPhone || '',
-        shipping_address: shippingAddress,
-        items: items,
-        subtotal: subtotal,
-        discount: discount,
-        coupon_code: couponCode || null,
-        total: total,
-        payment_status: 'pending',
-        order_status: 'processing',  // Default to processing as per spec
-      })
-      .select('id, order_number')
-      .single();
+    // Create order in Convex
+    const orderId = await convexMutation("functions/orders.js:createOrder", {
+      order_number: orderNumber,
+      customer_name: customerName,
+      customer_email: customerEmail,
+      customer_phone: customerPhone || '',
+      shipping_address: shippingAddress,
+      items: items,
+      subtotal: subtotal,
+      discount_amount: discount,
+      coupon_code: couponCode || undefined,
+      total_amount: total,
+      payment_method: paymentMethod,
+      payment_status: paymentMethod === 'COD' ? 'pending' : 'pending',
+      order_status: paymentMethod === 'COD' ? 'pending' : 'processing',
+    });
 
-    if (orderError) {
-      console.error('[create-order] Supabase insert error:', orderError);
-      // Still return success to client; the order flow must not block
-      // (Razorpay link is the source of truth)
-      return NextResponse.json(
-        { error: 'Database error saving order', detail: orderError.message },
-        { status: 500 }
-      );
+    // Create order items
+    for (const item of items) {
+      await convexMutation("functions/orders.js:createOrderItem", {
+        order_id: orderId,
+        product_id: item.productId || item.product_id,
+        product_name: item.name || item.productName || 'Product',
+        product_image: item.image || item.product_image,
+        quantity: item.quantity || 1,
+        unit_price: item.price || item.unit_price || 0,
+        line_total: (item.price || 0) * (item.quantity || 1),
+      });
     }
 
-    // ── Send Emails (Non-blocking) ─────────────────────────────────────────
+    // Send Emails (Non-blocking)
     try {
       const resend = getResend();
       if (resend) {
-        // Customer Email
+        const addressStr = typeof shippingAddress === 'string' ? shippingAddress : Object.values(shippingAddress).filter(Boolean).join(', ');
+
         await resend.emails.send({
-          from: 'Jammi Pharmaceuticals <orders@updates.jammi.in>',
+          from: 'Jammi Pharma <orders@updates.jammi.in>',
           to: [customerEmail],
-          subject: `Order Confirmed: ${order.order_number}`,
+          subject: `Order Confirmed: ${orderNumber}`,
           react: OrderConfirmationEmail({
             customerName,
-            orderNumber: order.order_number,
+            orderNumber,
             items: items.map((i: any) => ({
               name: i.name || i.productName,
               quantity: i.quantity,
@@ -142,21 +119,20 @@ export async function POST(req: NextRequest) {
             subtotal,
             discount,
             total,
-            shippingAddress: typeof shippingAddress === 'string' ? shippingAddress : Object.values(shippingAddress).join(', '),
+            shippingAddress: addressStr,
             phone: customerPhone,
           }),
         });
 
-        // Internal Email
         await resend.emails.send({
-          from: 'Jammi Store <orders@updates.jammi.in>',
+          from: 'Jammi Pharma <orders@updates.jammi.in>',
           to: ['frontdesk@jammi.org', 'njammi@gmail.com'],
-          subject: `🚨 New Order: ${order.order_number} (₹${total})`,
+          subject: `New Order: ${orderNumber} (₹${total})`,
           react: OrderConfirmationInternal({
             customerName,
             customerEmail,
             customerPhone,
-            orderNumber: order.order_number,
+            orderNumber,
             items: items.map((i: any) => ({
               name: i.name || i.productName,
               quantity: i.quantity,
@@ -165,22 +141,21 @@ export async function POST(req: NextRequest) {
             subtotal,
             discount,
             total,
-            shippingAddress: typeof shippingAddress === 'string' ? shippingAddress : Object.values(shippingAddress).join(', '),
-            paymentMethod: 'Razorpay',
+            shippingAddress: addressStr,
+            paymentMethod,
             orderedAt: new Date().toISOString(),
           }),
         });
       }
     } catch (e) {
       console.error('[create-order] Email trigger failed:', e);
-      // Suppress error - order was still created successfully
     }
 
     return NextResponse.json(
       {
         success: true,
-        orderNumber: order.order_number,
-        orderId: order.id,
+        orderNumber,
+        orderId,
       },
       {
         headers: {

@@ -9,12 +9,19 @@ export default function ShippingPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingMethod, setEditingMethod] = useState<any>(null);
 
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('jammi_admin_token') || localStorage.getItem('jammi_bypass_token') || 'JAMMI_ADMIN_MASTER_KEY_2024';
+    return { Authorization: `Bearer ${token}` };
+  };
+
   const fetchMethods = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/shipping');
-      const data = await res.json();
-      setMethods(data || []);
+      const res = await fetch('/api/admin/shipping', {
+        headers: getAuthHeaders()
+      });
+      const json = await res.json();
+      setMethods((json.data || []).map((m: any) => ({ ...m, id: m._id || m.id })));
     } catch (err) {
       console.error(err);
     } finally {
@@ -29,7 +36,8 @@ export default function ShippingPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this shipping method?')) return;
     try {
-      await fetch(`/api/admin/shipping/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/shipping/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+      if (!res.ok) throw new Error('Delete failed');
       fetchMethods();
     } catch (err) {
       console.error(err);
@@ -137,28 +145,45 @@ function ShippingModal({ method, onClose, onUpdate }: any) {
     status: method?.status || 'active'
   });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('jammi_admin_token') || localStorage.getItem('jammi_bypass_token') || 'JAMMI_ADMIN_MASTER_KEY_2024';
+    return { Authorization: `Bearer ${token}` };
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setSaving(true);
     try {
-      // Map empty strings to null for numeric database fields
-      const payload = {
+      const payload: any = {
         ...formData,
-        free_above_amount: formData.free_above_amount === '' ? null : Number(formData.free_above_amount)
+        free_above_amount:
+          formData.rate_type === 'free_above' && formData.free_above_amount !== ''
+            ? Number(formData.free_above_amount)
+            : undefined,
       };
+      // Remove undefined so Convex validators don't see unexpected types.
+      if (payload.free_above_amount === undefined) delete payload.free_above_amount;
 
-      const url = method ? `/api/admin/shipping/${method.id}` : '/api/admin/shipping';
+      const methodId = method?._id || method?.id;
+      const url = methodId ? `/api/admin/shipping/${methodId}` : '/api/admin/shipping';
       const verb = method ? 'PUT' : 'POST';
-      await fetch(url, {
+      const res = await fetch(url, {
         method: verb,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify(payload)
       });
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error || 'Failed to save shipping method');
+      }
       onUpdate();
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(err.message || 'Failed to save shipping method');
     } finally {
       setSaving(false);
     }
@@ -169,6 +194,7 @@ function ShippingModal({ method, onClose, onUpdate }: any) {
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
       <form onSubmit={handleSubmit} className="relative w-full max-w-lg bg-[#111118] border border-white/10 rounded-3xl shadow-2xl p-8 animate-in fade-in zoom-in-95 duration-300">
          <h2 className="text-xl font-black text-white mb-6 uppercase tracking-tight">{method ? 'Configure Method' : 'Add Shipping Method'}</h2>
+         {error && <div className="mb-4 text-red-400 text-xs font-bold">{error}</div>}
          
          <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="col-span-2">

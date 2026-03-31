@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdmin, supabaseAdmin, unauthorized, serverError } from '@/lib/adminAuth';
+import { convexQuery } from '@/lib/convexServer';
+import { verifyAdmin, unauthorized } from '@/lib/adminAuth';
+
+function cleanArgs(args: any) {
+  const cleaned: any = {};
+  Object.keys(args || {}).forEach((key) => {
+    if (args[key] !== null && args[key] !== undefined && args[key] !== '') {
+      cleaned[key] = args[key];
+    }
+  });
+  return cleaned;
+}
 
 export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req);
@@ -12,31 +23,9 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    let query = supabaseAdmin
-      .from('site_users')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range((page - 1) * limit, page * limit - 1);
-
-    if (search) query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,user_code.ilike.%${search}%`);
-    if (status) query = query.eq('status', status);
-
-    const { data, error, count } = await query;
-    if (error) return serverError(error);
-
-    // For each customer get order count
-    const enriched = await Promise.all(
-      (data || []).map(async (u) => {
-        const { count: orderCount } = await supabaseAdmin
-          .from('orders')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', u.id);
-        return { ...u, order_count: orderCount || 0 };
-      })
-    );
-
-    return NextResponse.json({ data: enriched, total: count });
-  } catch (error) {
-    return serverError(error);
+    const result = await convexQuery("functions/orders.js:listCustomers", cleanArgs({ search, status, page, limit }));
+    return NextResponse.json(result);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

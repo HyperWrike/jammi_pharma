@@ -14,9 +14,12 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/orders?search=${search}&order_status=${statusFilter}`);
-      const { data } = await res.json();
-      setOrders(data || []);
+      const token = localStorage.getItem('jammi_admin_token') || localStorage.getItem('jammi_bypass_token') || '';
+      const res = await fetch(`/api/admin/orders?search=${search}&status=${statusFilter}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const json = await res.json();
+      setOrders((json.data || []).map((o: any) => ({ ...o, id: o._id || o.id })));
     } catch (err) {
       console.error(err);
     } finally {

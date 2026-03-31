@@ -46,6 +46,7 @@ const Checkout: React.FC = () => {
   const [isPlacing, setIsPlacing] = useState(false);
   const [orderConfirmed, setOrderConfirmed] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'CARD' | 'COD'>('UPI');
 
   // Promotions states
   const [coupons, setCoupons] = useState<any[]>([]);
@@ -70,18 +71,20 @@ const Checkout: React.FC = () => {
     const fetchPromotions = async () => {
       try {
         const [couponsRes, bundlesRes] = await Promise.all([
-          fetch('/api/admin/coupons'),
-          fetch('/api/admin/bundles')
+          fetch('/api/coupons'),
+          fetch('/api/bundles')
         ]);
         
         if (couponsRes.ok) {
           const couponsData = await couponsRes.json();
-          setCoupons(couponsData.filter((c: any) => c.status === 'active'));
+          const couponList = Array.isArray(couponsData) ? couponsData : (couponsData?.data || []);
+          setCoupons(couponList.filter((c: any) => c.status === 'active'));
         }
         
         if (bundlesRes.ok) {
           const bundlesData = await bundlesRes.json();
-          setBundles(bundlesData.filter((b: any) => b.status === 'active'));
+          const bundleList = Array.isArray(bundlesData) ? bundlesData : (bundlesData?.data || []);
+          setBundles(bundleList.filter((b: any) => b.status === 'active'));
         }
       } catch (err) {
         console.error("Failed to fetch promotions", err);
@@ -143,9 +146,9 @@ const Checkout: React.FC = () => {
   let couponDiscountAmount = 0;
   if (appliedCoupon) {
     if (appliedCoupon.discount_type === 'percentage') {
-      couponDiscountAmount = Math.round((subtotal * appliedCoupon.discount_value) / 100);
+      couponDiscountAmount = Math.round((subtotal * Number(appliedCoupon.discount_value || 0)) / 100);
     } else {
-      couponDiscountAmount = appliedCoupon.discount_value;
+      couponDiscountAmount = Number(appliedCoupon.discount_value || 0);
     }
   }
 
@@ -180,15 +183,17 @@ const Checkout: React.FC = () => {
 
     if (!couponCode.trim()) return;
 
-    const foundCoupon = coupons.find(c => c.code === couponCode.trim().toUpperCase());
+    const normalizedCode = couponCode.trim().toUpperCase();
+    const foundCoupon = coupons.find((c) => String(c.code || '').trim().toUpperCase() === normalizedCode);
 
     if (!foundCoupon) {
       setCouponError('Invalid coupon code.');
       return;
     }
 
-    if (subtotal < foundCoupon.min_order_value) {
-      setCouponError(`Minimum order amount of ₹${foundCoupon.min_order_value} required.`);
+    const minOrderValue = Number(foundCoupon.min_order_value || 0);
+    if (subtotal < minOrderValue) {
+      setCouponError(`Minimum order amount of ₹${minOrderValue} required.`);
       return;
     }
 
@@ -236,6 +241,7 @@ const Checkout: React.FC = () => {
           discount: totalDiscount,
           couponCode: appliedCoupon?.code || null,
           total,
+          paymentMethod,
           guestId, // Include guestId in the payload
         }),
       });
@@ -257,7 +263,11 @@ const Checkout: React.FC = () => {
       setOrderConfirmed(true);
       await clearCart(); // Remove from Supabase
 
-      window.location.href = "https://rzp.io/rzp/ZJ3foBWO";
+      // Only redirect to Razorpay for online payments.
+      // COD should stay on-site and rely on confirmation + email.
+      if (paymentMethod !== 'COD') {
+        window.location.href = "https://rzp.io/rzp/ZJ3foBWO";
+      }
 
     } catch (err) {
       console.error("Error placing order:", err);
@@ -356,11 +366,21 @@ const Checkout: React.FC = () => {
               </div>
             </div>
             <div className="space-y-4">
-              {['UPI (GPay, PhonePe)', 'Credit / Debit Cards', 'Cash on Delivery'].map((method, idx) => (
-                <label key={method} className={`flex items-center justify-between p-5 border rounded-xl cursor-pointer transition-all ${idx === 0 ? 'border-primary bg-primary/5 shadow-sm' : 'border-slate-200 hover:border-primary/50'}`}>
+              {[
+                { label: 'UPI (GPay, PhonePe)', value: 'UPI' as const },
+                { label: 'Credit / Debit Cards', value: 'CARD' as const },
+                { label: 'Cash on Delivery', value: 'COD' as const },
+              ].map((method) => (
+                <label key={method.value} className={`flex items-center justify-between p-5 border rounded-xl cursor-pointer transition-all ${paymentMethod === method.value ? 'border-primary bg-primary/5 shadow-sm' : 'border-slate-200 hover:border-primary/50'}`}>
                   <div className="flex items-center gap-4">
-                    <input defaultChecked={idx === 0} name="payment" type="radio" className="w-5 h-5 text-primary focus:ring-primary border-slate-300" />
-                    <p className="font-bold text-slate-800">{method}</p>
+                    <input
+                      checked={paymentMethod === method.value}
+                      onChange={() => setPaymentMethod(method.value)}
+                      name="payment"
+                      type="radio"
+                      className="w-5 h-5 text-primary focus:ring-primary border-slate-300"
+                    />
+                    <p className="font-bold text-slate-800">{method.label}</p>
                   </div>
                 </label>
               ))}

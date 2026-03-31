@@ -10,20 +10,26 @@ export function useCMSContent(pageName: string) {
       try {
         const res = await adminFetch(`/api/admin/cms/content?page=${encodeURIComponent(pageName)}`)
         if (!res.ok) throw new Error('Failed to fetch content')
-        const data = await res.json()
+        const json = await res.json()
+        
+        // Handle both { data: [...] } and direct array responses
+        const data = json.data || json
         
         // Transform array into a nested dictionary: { section: { content_key: content_value } }
         const formattedData: Record<string, any> = {}
-        data.forEach((item: any) => {
-          if (!formattedData[item.section]) {
-            formattedData[item.section] = {}
-          }
-          formattedData[item.section][item.content_key] = item.content_value
-        })
+        if (Array.isArray(data)) {
+          data.forEach((item: any) => {
+            if (!formattedData[item.section]) {
+              formattedData[item.section] = {}
+            }
+            formattedData[item.section][item.content_key] = item.content_value
+          })
+        }
         
         setContent(formattedData)
       } catch (err) {
         console.error('Error fetching CMS content:', err)
+        setContent({})
       } finally {
         setLoading(false)
       }

@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '../../../lib/supabase';
+import { convexMutation, convexQuery } from '@/lib/convexServer';
+
+function cleanArgs(args: any) {
+  const cleaned: any = {};
+  Object.keys(args).forEach(key => {
+    if (args[key] !== null && args[key] !== undefined && args[key] !== '') {
+      cleaned[key] = args[key];
+    }
+  });
+  return cleaned;
+}
 
 // GET public reviews for a product
 export async function GET(req: NextRequest) {
@@ -7,21 +17,22 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const productId = searchParams.get('productId');
 
-    let query = supabaseAdmin.from('reviews').select('*').eq('status', 'Approved').order('createdAt', { ascending: false });
-    
-    if (productId) {
-      query = query.eq('productId', productId);
-    }
+    const reviews = await convexQuery("functions/reviews.js:listReviews", cleanArgs({ productId, status: 'approved' }));
 
-    const { data: reviews, error } = await query;
+    const mapped = (reviews || []).map((r: any) => ({
+      id: r._id,
+      productId: r.product_id,
+      productName: r.product_name,
+      customerName: r.reviewer_name,
+      rating: r.rating,
+      comment: r.review_text,
+      imageUrl: r.image_url,
+      createdAt: r.created_at
+    }));
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json(reviews);
-  } catch (err) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(mapped);
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -35,28 +46,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const { data: review, error } = await supabaseAdmin
-      .from('reviews')
-      .insert({
-        productId,
-        productName,
-        customerName,
-        rating,
-        comment,
-        imageUrl,
-        status: 'Pending',
-      })
-      .select('id')
-      .single();
+    const reviewId = await convexMutation("functions/reviews.js:createReview", cleanArgs({
+      product_id: productId,
+      reviewer_name: customerName,
+      rating: parseInt(rating),
+      review_text: comment || '',
+    }));
 
-    if (error) {
-      console.error('[reviews POST] Database error:', error);
-      return NextResponse.json({ error: 'Failed to save review' }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true, id: review.id });
-  } catch (err) {
-    console.error('[reviews POST] Unexpected error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ success: true, id: reviewId });
+  } catch (err: any) {
+    console.error('[reviews POST] Error:', err);
+    return NextResponse.json({ error: 'Failed to save review' }, { status: 500 });
   }
 }

@@ -1,42 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdmin, supabaseAdmin, unauthorized, serverError } from '@/lib/adminAuth';
+import { convexQuery, convexMutation } from '@/lib/convexServer';
+import { verifyAdmin, unauthorized } from '@/lib/adminAuth';
+
+function cleanArgs(args: any) {
+  const cleaned: any = {};
+  Object.keys(args).forEach(key => {
+    if (args[key] !== null && args[key] !== undefined && args[key] !== '') {
+      cleaned[key] = args[key];
+    }
+  });
+  return cleaned;
+}
 
 export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) return unauthorized();
-
   try {
     const searchParams = req.nextUrl.searchParams;
-    const status = searchParams.get('status') || 'pending';
-    const product = searchParams.get('product');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const rawStatus = searchParams.get('status') || undefined;
+    const status = rawStatus === 'all' ? undefined : rawStatus;
+    const product = searchParams.get('product') || undefined;
 
-    let query = supabaseAdmin
-      .from('reviews')
-      .select('*, products!inner(name, images)', { count: 'exact' })
-      .order('createdAt', { ascending: false })
-      .range((page - 1) * limit, page * limit - 1);
+    const result = await convexQuery("functions/reviews.js:listReviews", cleanArgs({ status, productId: product }));
+    return NextResponse.json({ data: result || [], total: (result || []).length });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+  }
+}
 
-    if (status !== 'all') {
-      const matchStatus = status === 'pending' ? 'Pending' : (status === 'approved' ? 'Approved' : 'Rejected');
-      query = query.eq('status', matchStatus);
-    }
-    if (product) query = query.eq('productId', product);
-
-    const { data: rawData, error, count } = await query;
-    if (error) return serverError(error);
-    
-    // map to UI expectations
-    const data = rawData.map((r: any) => ({
-      ...r,
-      review_text: r.comment,
-      reviewer_name: r.customerName,
-      status: r.status.toLowerCase(),
-    }));
-    
-    return NextResponse.json({ data, total: count });
-  } catch (error) {
-    return serverError(error);
+export async function POST(req: NextRequest) {
+  const admin = await verifyAdmin(req);
+  if (!admin) return unauthorized();
+  try {
+    const body = await req.json();
+    const result = await convexMutation("functions/reviews.js:createReview", cleanArgs(body));
+    return NextResponse.json({ data: result }, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

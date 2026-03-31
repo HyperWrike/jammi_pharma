@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdmin, supabaseAdmin, unauthorized, serverError } from '@/lib/adminAuth';
+import { convexMutation } from '@/lib/convexServer';
+import { verifyAdmin, unauthorized } from '@/lib/adminAuth';
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const admin = await verifyAdmin(req);
@@ -8,18 +9,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
     const body = await req.json();
-    
-    const { data, error } = await supabaseAdmin
-      .from('reviews')
-      .update({ status: body.status })
-      .eq('id', id)
-      .select()
-      .single();
-      
-    if (error) return serverError(error);
+    const data = await convexMutation("functions/reviews.js:updateReview", { id, status: body.status });
     return NextResponse.json({ data });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -29,11 +22,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   try {
     const { id } = await params;
-    const { error } = await supabaseAdmin.from('reviews').delete().eq('id', id);
-    if (error) return serverError(error);
-    
+    await convexMutation("functions/reviews.js:deleteReview", { id });
     return NextResponse.json({ success: true });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

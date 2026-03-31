@@ -17,9 +17,12 @@ export default function RolesPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
+      const token = localStorage.getItem('jammi_admin_token') || localStorage.getItem('jammi_bypass_token') || '';
+      const fetchOptions = token ? { headers: { 'Authorization': `Bearer ${token}` } } : {};
+      
       const [uRes, pRes] = await Promise.all([
-        fetch('/api/admin/roles/users'),
-        fetch('/api/admin/roles/permissions')
+        fetch('/api/admin/roles/users', fetchOptions),
+        fetch('/api/admin/roles/permissions', fetchOptions)
       ]);
       const [uData, pData] = await Promise.all([uRes.json(), pRes.json()]);
       setUsers(uData?.data || (Array.isArray(uData) ? uData : []));

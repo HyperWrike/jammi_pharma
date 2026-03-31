@@ -1,5 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdmin, supabaseAdmin, unauthorized, serverError } from '@/lib/adminAuth';
+import { convexMutation, convexQuery } from '@/lib/convexServer';
+import { verifyAdmin, unauthorized } from '@/lib/adminAuth';
+
+function cleanArgs(args: any) {
+  const cleaned: any = {};
+  Object.keys(args || {}).forEach((key) => {
+    if (args[key] !== null && args[key] !== undefined && args[key] !== '') {
+      cleaned[key] = args[key];
+    }
+  });
+  return cleaned;
+}
+
+function sanitizeProductUpdate(input: any) {
+  return cleanArgs({
+    name: input?.name,
+    slug: input?.slug,
+    description: input?.description,
+    short_description: input?.short_description ?? input?.shortDesc,
+    price: input?.price !== undefined ? Number(input.price) : undefined,
+    discount_price: input?.discount_price ?? (input?.compare_at_price !== undefined ? Number(input.compare_at_price) : undefined),
+    stock: input?.stock !== undefined ? Number(input.stock) : undefined,
+    sku: input?.sku,
+    category_id: input?.category_id,
+    images: Array.isArray(input?.images) ? input.images : undefined,
+    tags: Array.isArray(input?.tags) ? input.tags : undefined,
+    status: input?.status,
+    is_featured: typeof input?.is_featured === 'boolean' ? input.is_featured : undefined,
+  });
+}
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const admin = await verifyAdmin(req);
@@ -7,16 +36,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   try {
     const { id } = await params;
-    const { data, error } = await supabaseAdmin
-      .from('products')
-      .select('*, categories(name), product_variants(*)')
-      .eq('id', id)
-      .single();
-      
-    if (error) return serverError(error);
+    const data = await convexQuery("functions/products.js:getProduct", { id });
     return NextResponse.json({ data });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -27,17 +50,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
     const body = await req.json();
-    const { data, error } = await supabaseAdmin
-      .from('products')
-      .update({ ...body, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select()
-      .single();
-      
-    if (error) return serverError(error);
+    const data = await convexMutation("functions/products_mutations.js:updateProduct", { id, ...sanitizeProductUpdate(body) });
     return NextResponse.json({ data });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -47,29 +63,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   try {
     const { id } = await params;
-    
-    // First get product images to delete from storage
-    const { data: product } = await supabaseAdmin
-      .from('products')
-      .select('images')
-      .eq('id', id)
-      .single();
-
-    // Delete all product images from storage
-    if (product?.images?.length) {
-      for (const url of product.images) {
-        const path = url.split('/product-images/')[1];
-        if (path) {
-          await supabaseAdmin.storage.from('product-images').remove([path]);
-        }
-      }
-    }
-
-    const { error } = await supabaseAdmin.from('products').delete().eq('id', id);
-    if (error) return serverError(error);
-    
+    await convexMutation("functions/products_mutations.js:deleteProduct", { id });
     return NextResponse.json({ success: true });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { createDocument } from '../../lib/adminDb';
 import LiveEditable from '../admin/LiveEditable';
 
 const formSchema = z.object({
@@ -31,19 +30,26 @@ export default function Partner() {
     const onSubmit = async (data: FormData) => {
         setIsSubmitting(true);
         try {
-            await createDocument('partner_requests', {
-                name: data.fullName,
-                email: data.email,
-                contact: data.phone,
-                clinicName: data.institution,
-                qualifications: `${data.designation} - ${data.specialization}`,
-                experience: parseInt(data.yearsPractice, 10) || 0,
-                address: data.location,
-                status: 'New',
-                message: data.reason
+            const res = await fetch('/api/partner-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    full_name: data.fullName,
+                    organization: data.institution,
+                    specialization: `${data.designation} — ${data.specialization}`,
+                    email: data.email,
+                    phone: data.phone,
+                    city: data.location,
+                    message: `${data.reason}\n\nYears in practice: ${data.yearsPractice}`,
+                }),
             });
-            setToast("Application received. Council reviews within 7 working days.");
-            reset();
+            const json = await res.json().catch(() => ({}));
+            if (res.ok && json.success !== false) {
+                setToast("Application received. Council reviews within 7 working days.");
+                reset();
+            } else {
+                setToast(json.error || "Submission failed. Please try again.");
+            }
             setTimeout(() => setToast(''), 5000);
         } catch (error) {
             console.error("Submission failed", error);

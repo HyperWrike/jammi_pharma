@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdmin, supabaseAdmin, unauthorized, serverError } from '@/lib/adminAuth';
+import { convexQuery } from '@/lib/convexServer';
+import { verifyAdmin, unauthorized } from '@/lib/adminAuth';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const admin = await verifyAdmin(req);
@@ -7,15 +8,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   try {
     const { id } = await params;
-    const { data, error } = await supabaseAdmin
-      .from('orders')
-      .select('*, order_items(*), site_users(user_code, name, email, phone)')
-      .eq('id', id)
-      .single();
-      
-    if (error) return serverError(error);
+    const data = await convexQuery("functions/orders.js:getOrder", { id });
     return NextResponse.json({ data });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

@@ -1,20 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdmin, supabaseAdmin, unauthorized, serverError } from '@/lib/adminAuth';
+import { convexMutation, convexQuery } from '@/lib/convexServer';
+import { verifyAdmin, unauthorized } from '@/lib/adminAuth';
+
+function cleanArgs(args: any) {
+  const cleaned: any = {};
+  Object.keys(args).forEach(key => {
+    if (args[key] !== null && args[key] !== undefined && args[key] !== '') {
+      cleaned[key] = args[key];
+    }
+  });
+  return cleaned;
+}
 
 export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) return unauthorized();
 
   try {
-    const { data, error } = await supabaseAdmin
-      .from('cms_blogs')
-      .select('*')
-      .order('created_at', { ascending: false });
-      
-    if (error) return serverError(error);
+    const data = await convexQuery("functions/cms.js:listBlogs", {});
     return NextResponse.json({ data });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -24,15 +30,9 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { data, error } = await supabaseAdmin
-      .from('cms_blogs')
-      .insert(body)
-      .select()
-      .single();
-      
-    if (error) return serverError(error);
+    const data = await convexMutation("functions/cms.js:createBlog", cleanArgs(body));
     return NextResponse.json({ data }, { status: 201 });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

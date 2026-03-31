@@ -45,10 +45,34 @@ export default function Forum() {
 
     const handleDoctorJoin = async (e: React.FormEvent) => {
         e.preventDefault();
-        await createDoctorProfile({ name: docName, specialty: docSpecialty, bio: docBio });
-        setShowJoinModal(false);
-        setToast('Profile created! You can now start posting.');
-        setTimeout(() => setToast(''), 3000);
+        if (!docName || !docSpecialty || !docBio) {
+            setToast('Please fill in all fields');
+            setTimeout(() => setToast(''), 3000);
+            return;
+        }
+        try {
+            const res = await fetch('/api/doctor-application', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: docName, specialty: docSpecialty, bio: docBio })
+            });
+            const json = await res.json();
+            if (res.ok && json.success) {
+                setShowJoinModal(false);
+                setDocName('');
+                setDocSpecialty('');
+                setDocBio('');
+                setToast('Profile created! You can now start posting.');
+                setTimeout(() => setToast(''), 5000);
+            } else {
+                setToast(json.error || 'Failed to create profile');
+                setTimeout(() => setToast(''), 5000);
+            }
+        } catch (error) {
+            console.error('Doctor join error:', error);
+            setToast('An error occurred. Please try again.');
+            setTimeout(() => setToast(''), 5000);
+        }
     };
 
     const { scrollYProgress } = useScroll();
@@ -58,16 +82,37 @@ export default function Forum() {
         ['#FAF8F2', '#FDF6E8']
     );
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!title || !content || !author || !specialty) return;
-        submitPost({ title, content, author, specialty, category });
-        setTitle('');
-        setContent('');
-        setAuthor('');
-        setSpecialty('');
-        setToast('Your post is under review. When verified, it will be allowed to post.');
-        setTimeout(() => setToast(''), 5000);
+        if (!title || !content || !author || !specialty) {
+            setToast('Please fill in all fields');
+            setTimeout(() => setToast(''), 3000);
+            return;
+        }
+        try {
+            const result = await submitPost({
+                title,
+                content,
+                author,
+                specialty,
+                category,
+            });
+            if (result?.success) {
+                setTitle('');
+                setContent('');
+                setAuthor('');
+                setSpecialty('');
+                setToast('Your post is under review. When verified, it will appear after approval.');
+                setTimeout(() => setToast(''), 5000);
+            } else {
+                setToast((result as any)?.error || 'Failed to submit post');
+                setTimeout(() => setToast(''), 5000);
+            }
+        } catch (error) {
+            console.error('Submit post error:', error);
+            setToast('An error occurred. Please try again.');
+            setTimeout(() => setToast(''), 5000);
+        }
     };
 
     const handleCommentSubmit = (e: React.FormEvent, postId: string) => {

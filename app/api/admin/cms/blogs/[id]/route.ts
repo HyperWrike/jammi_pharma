@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdmin, supabaseAdmin, unauthorized, serverError } from '@/lib/adminAuth';
+import { convexMutation } from '@/lib/convexServer';
+import { verifyAdmin, unauthorized } from '@/lib/adminAuth';
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const admin = await verifyAdmin(req);
@@ -8,17 +9,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
     const body = await req.json();
-    const { data, error } = await supabaseAdmin
-      .from('cms_blogs')
-      .update({ ...body, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select()
-      .single();
-      
-    if (error) return serverError(error);
+    const data = await convexMutation("functions/cms.js:updateBlog", { id, ...body });
     return NextResponse.json({ data });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -28,24 +22,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   try {
     const { id } = await params;
-    const { data: blog } = await supabaseAdmin
-      .from('cms_blogs')
-      .select('featured_image')
-      .eq('id', id)
-      .single();
-      
-    if (blog && blog.featured_image) {
-      const path = blog.featured_image.split('/blog-images/')[1];
-      if (path) {
-        await supabaseAdmin.storage.from('blog-images').remove([path]);
-      }
-    }
-    
-    const { error } = await supabaseAdmin.from('cms_blogs').delete().eq('id', id);
-    if (error) return serverError(error);
-    
+    await convexMutation("functions/cms.js:deleteBlog", { id });
     return NextResponse.json({ success: true });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

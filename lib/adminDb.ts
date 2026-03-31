@@ -1,28 +1,81 @@
-import { supabase } from './supabase';
+import set from 'lodash/set';
 
-// Generic real-time subscription helper
+const CONVEX_URL = "https://cheerful-rhinoceros-28.convex.cloud";
+
+async function convexQuery(path: string, args?: any) {
+  const response = await fetch(`${CONVEX_URL}/api/query`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path, args: args || {}, format: "json" }),
+  });
+  const result = await response.json();
+  if (result.status === "error") throw new Error(result.errorMessage);
+  return result.value;
+}
+
+async function convexMutation(path: string, args?: any) {
+  const response = await fetch(`${CONVEX_URL}/api/mutation`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path, args: args || {}, format: "json" }),
+  });
+  const result = await response.json();
+  if (result.status === "error") throw new Error(result.errorMessage);
+  return result.value;
+}
+
+// Map collection names to Convex function prefixes
+const collectionMap: Record<string, string> = {
+  content: "functions/cms.js",
+  products: "functions/products.js",
+  categories: "functions/categories.js",
+  orders: "functions/orders.js",
+  reviews: "functions/reviews.js",
+  bundles: "functions/bundles.js",
+  coupons: "functions/coupons.js",
+  federation_posts: "functions/federation_posts.js",
+  doctor_profiles: "functions/doctor_profiles.js",
+  cms_banners: "functions/cms.js",
+  cms_blogs: "functions/cms.js",
+};
+
+// Generic real-time subscription helper (polling-based for Convex)
 export const subscribeToCollection = (
     collectionName: string, 
     callback: (data: any[]) => void
 ) => {
-    // Initial fetch
-    supabase.from(collectionName).select('*').then(({ data, error }) => {
-        if (!error && data) callback(data);
-    });
+  let cancelled = false;
+  const pollInterval = 3000;
 
-    // Realtime subscription
-    const channel = supabase.channel(`public:${collectionName}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: collectionName }, (payload) => {
-            // Re-fetch everything on change for simplicity, or we could mutate state
-            supabase.from(collectionName).select('*').then(({ data, error }) => {
-                if (!error && data) callback(data);
-            });
-        })
-        .subscribe();
+  const poll = async () => {
+    if (cancelled) return;
+    try {
+      const prefix = collectionMap[collectionName] || "functions/products.js";
+      const listFn = `${prefix}:listProducts`;
+      let data;
+      if (collectionName === "content") {
+        data = await convexQuery("functions/cms.js:getCmsContent", {});
+      } else if (collectionName === "categories") {
+        data = await convexQuery("functions/categories.js:listCategories", {});
+      } else if (collectionName === "products") {
+        data = await convexQuery("functions/products.js:listProducts", {});
+        data = data?.data || data;
+      } else if (collectionName === "orders") {
+        data = await convexQuery("functions/orders.js:listOrders", {});
+        data = data?.data || data;
+      } else {
+        data = await convexQuery("functions/products.js:listProducts", {});
+        data = data?.data || data;
+      }
+      if (!cancelled && data) callback(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.warn(`subscribeToCollection error for ${collectionName}:`, e);
+    }
+    setTimeout(poll, pollInterval);
+  };
 
-    return () => {
-        supabase.removeChannel(channel);
-    };
+  poll();
+  return () => { cancelled = true; };
 };
 
 // Generic real-time document subscription helper
@@ -31,108 +84,107 @@ export const subscribeToDocument = (
     id: string,
     callback: (data: any) => void
 ) => {
-    supabase.from(collectionName).select('*').eq('id', id).single().then(({ data, error }) => {
-        if (!error && data) callback(data);
-        else callback(null);
-    });
+  let cancelled = false;
+  const pollInterval = 2000;
 
-    const channel = supabase.channel(`public:${collectionName}:${id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: collectionName, filter: `id=eq.${id}` }, (payload) => {
-            if (payload.eventType === 'DELETE') {
-                 callback(null);
-            } else {
-                 callback(payload.new);
-            }
-        })
-        .subscribe();
+  const poll = async () => {
+    if (cancelled) return;
+    try {
+      if (collectionName === "content") {
+        // CMS content - fetch by page/section
+        const data = await convexQuery("functions/cms.js:getCmsContent", { page: id });
+        if (!cancelled) {
+          if (data && Array.isArray(data)) {
+            const doc: any = {};
+            data.forEach((item: any) => {
+              doc[item.content_key] = item.content_value;
+            });
+            callback(doc);
+          } else {
+            callback(null);
+          }
+        }
+      } else {
+        callback(null);
+      }
+    } catch (e) {
+      console.warn(`subscribeToDocument error for ${collectionName}/${id}:`, e);
+    }
+    setTimeout(poll, pollInterval);
+  };
 
-    return () => {
-        supabase.removeChannel(channel);
-    };
+  poll();
+  return () => { cancelled = true; };
 };
 
 // Generic CRUD helpers
 export const fetchCollection = async (collectionName: string) => {
-    const { data, error } = await supabase.from(collectionName).select('*');
-    if (error) {
-        console.error(`fetchCollection error for ${collectionName}:`, error);
-        return [];
+  try {
+    if (collectionName === "content") {
+      return await convexQuery("functions/cms.js:getCmsContent", {});
+    } else if (collectionName === "categories") {
+      return await convexQuery("functions/categories.js:listCategories", {});
+    } else if (collectionName === "products") {
+      const result = await convexQuery("functions/products.js:listProducts", {});
+      return result?.data || result || [];
     }
-    return data || [];
+    return [];
+  } catch (err) {
+    console.warn(`fetchCollection error for ${collectionName}:`, err);
+    return [];
+  }
 };
 
 export const fetchDocument = async (collectionName: string, id: string) => {
-    const { data, error } = await supabase.from(collectionName).select('*').eq('id', id).single();
-    if (error) {
-        console.error(`fetchDocument error for ${collectionName}/${id}:`, error);
-        return null;
+  try {
+    if (collectionName === "content") {
+      const data = await convexQuery("functions/cms.js:getCmsContent", { page: id });
+      if (data && Array.isArray(data)) {
+        const doc: any = {};
+        data.forEach((item: any) => {
+          doc[item.content_key] = item.content_value;
+        });
+        return doc;
+      }
     }
-    return data;
+    return null;
+  } catch (err) {
+    console.error(`fetchDocument error for ${collectionName}/${id}:`, err);
+    return null;
+  }
 };
 
 export const createDocument = async (collectionName: string, data: any) => {
-    const { data: insertedData, error } = await supabase.from(collectionName).insert([{
-        ...data
-    }]).select('id').single();
-    
-    if (error) throw new Error(error.message);
-    return insertedData?.id;
+  if (collectionName === "content") {
+    return await convexMutation("functions/cms.js:setCmsContent", data);
+  }
+  throw new Error(`createDocument not supported for ${collectionName}`);
 };
 
-import set from 'lodash/set';
-
 export const updateDocument = async (collectionName: string, id: string, data: any) => {
-    // Check if we are doing a nested update (keys contain dots or brackets)
-    const hasNested = Object.keys(data).some(key => key.includes('.') || key.includes('['));
-
-    let finalData = { ...data };
-
-    if (hasNested) {
-        // Fetch current document to perform a partial JSONB update
-        const { data: existing, error: fetchError } = await supabase
-            .from(collectionName)
-            .select('*')
-            .eq('id', id)
-            .single();
-
-        if (fetchError) throw new Error(`Fetch for update failed: ${fetchError.message}`);
-
-        const updatedDoc = { ...existing };
-        Object.entries(data).forEach(([path, value]) => {
-            set(updatedDoc, path, value);
-        });
-
-        // We only want to send the columns that were actually hit by the nested update 
-        // OR we can just send the whole updated doc. For reliability with RLS and speed, 
-        // let's identify the top-level keys that changed.
-        const topLevelKeys = new Set(Object.keys(data).map(path => path.split(/[.[]/)[0]));
-        finalData = {};
-        topLevelKeys.forEach(key => {
-            finalData[key] = updatedDoc[key];
-        });
+  if (collectionName === "content") {
+    // CMS content - save each field as a separate content entry
+    for (const [key, value] of Object.entries(data)) {
+      await convexMutation("functions/cms.js:setCmsContent", {
+        page: id,
+        section: "content",
+        content_key: key,
+        content_value: value as string,
+      });
     }
-
-    const { error } = await supabase.from(collectionName).update({
-        ...finalData,
-        updatedAt: new Date().toISOString()
-    }).eq('id', id);
-    
-    if (error) throw new Error(error.message);
+    return;
+  }
+  throw new Error(`updateDocument not supported for ${collectionName}`);
 };
 
 export const deleteDocument = async (collectionName: string, id: string) => {
-    const { error } = await supabase.from(collectionName).delete().eq('id', id);
-    if (error) throw new Error(error.message);
+  throw new Error(`deleteDocument not supported for ${collectionName}`);
 };
 
-// Sequential Order ID Generator - since we use uuids for orders, this logic might need changes
-// but we will maintain the API.
 export const getNextOrderNumber = async () => {
-    // In Supabase, usually you'd use a sequence or RPC for atomic increments.
-    // For now, fallback to timestamp for simplicity unless an RPC is created.
-    return `Jammi-${Date.now().toString().slice(-6)}`;
+  return `Jammi-${Date.now().toString().slice(-6)}`;
 };
 
 export const runTransaction = async (updateFunction: (transaction: any) => Promise<any>) => {
-    throw new Error("runTransaction is not directly supported in Supabase JS client. Use RPC instead.");
+  throw new Error("runTransaction is not directly supported in Convex. Use mutations instead.");
 };

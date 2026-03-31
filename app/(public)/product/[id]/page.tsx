@@ -2,25 +2,21 @@ import React from 'react';
 import ProductTemplate from './ProductTemplate';
 import { Metadata, ResolvingMetadata } from 'next';
 import { MOCK_PRODUCTS } from '../../../../constants';
-import { supabaseAdmin } from '../../../../lib/adminAuth';
+import { convexQuery } from '../../../../lib/convexServer';
 
 type Props = {
   params: Promise<{ id: string }>
 }
 
 async function getProduct(slug: string) {
-  const { data, error } = await supabaseAdmin
-    .from('products')
-    .select('*')
-    .eq('slug', slug)
-    .single();
-  
-  if (error || !data) {
-    // Fallback to MOCK_PRODUCTS for now if not found in DB
-    return MOCK_PRODUCTS.find(p => p.id === slug) || null;
+  try {
+    const product = await convexQuery("functions/products.js:getProductsBySlug", { slug });
+    if (product) return product;
+  } catch (e) {
+    // Convex query failed, fall through to mock
   }
-  
-  return data;
+
+  return MOCK_PRODUCTS.find(p => p.id === slug) || null;
 }
 
 export async function generateMetadata(
@@ -45,7 +41,6 @@ export async function generateMetadata(
 export default async function ProductPage({ params }: Props) {
   const { id } = await params;
   const initialProduct = await getProduct(id);
-  
+
   return <ProductTemplate productId={id} initialData={initialProduct} />;
 }
-

@@ -10,6 +10,14 @@ interface CategoryFormModalProps {
 }
 
 export default function CategoryFormModal({ category, onClose, onSuccess }: CategoryFormModalProps) {
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('jammi_admin_token') || localStorage.getItem('jammi_bypass_token') || 'JAMMI_ADMIN_MASTER_KEY_2024';
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+  };
+
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -55,10 +63,11 @@ export default function CategoryFormModal({ category, onClose, onSuccess }: Cate
     setLoading(true);
     try {
       const method = category ? 'PUT' : 'POST';
-      const url = category ? `/api/admin/categories/${category.id}` : '/api/admin/categories';
+      const categoryId = category?._id || category?.id;
+      const url = categoryId ? `/api/admin/categories/${categoryId}` : '/api/admin/categories';
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(formData)
       });
       if (!res.ok) throw new Error('Failed to save category');

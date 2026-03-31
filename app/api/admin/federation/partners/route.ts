@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdmin, supabaseAdmin, unauthorized, serverError } from '@/lib/adminAuth';
+import { convexQuery } from '@/lib/convexServer';
+import { verifyAdmin, unauthorized } from '@/lib/adminAuth';
 
 export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req);
@@ -11,18 +12,9 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    let query = supabaseAdmin
-      .from('partner_requests')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range((page - 1) * limit, page * limit - 1);
-
-    if (status !== 'all') query = query.eq('status', status);
-
-    const { data, error, count } = await query;
-    if (error) return serverError(error);
-    return NextResponse.json({ data, total: count });
-  } catch (error) {
-    return serverError(error);
+    const result = await convexQuery("functions/federation_posts.js:listPartners", { status, page, limit });
+    return NextResponse.json(result);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

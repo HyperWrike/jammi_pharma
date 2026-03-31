@@ -14,9 +14,18 @@ export default function CustomersPage() {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/customers?search=${search}&status=${statusFilter}`);
-      const { data } = await res.json();
-      setCustomers(data || []);
+      const token = localStorage.getItem('jammi_admin_token') || localStorage.getItem('jammi_bypass_token') || '';
+      const res = await fetch(`/api/admin/customers?search=${search}&status=${statusFilter}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const json = await res.json();
+      const mapped = (json.data || []).map((c: any) => ({
+        ...c,
+        id: c._id || c.id,
+        status: c.status || 'active',
+        order_count: c.order_count ?? c.total_orders ?? 0,
+      }));
+      setCustomers(mapped);
     } catch (err) {
       console.error(err);
     } finally {

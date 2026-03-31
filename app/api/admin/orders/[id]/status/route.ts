@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdmin, supabaseAdmin, unauthorized, serverError } from '@/lib/adminAuth';
+import { convexMutation, convexQuery } from '@/lib/convexServer';
+import { verifyAdmin, unauthorized } from '@/lib/adminAuth';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const admin = await verifyAdmin(req);
@@ -10,40 +11,28 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const body = await req.json();
     const { order_status, payment_status, tracking_number, courier_name, admin_notes } = body;
 
-    const updates: any = { updated_at: new Date().toISOString() };
-    if (order_status) updates.order_status = order_status;
-    if (payment_status) updates.payment_status = payment_status;
-    if (tracking_number !== undefined) updates.tracking_number = tracking_number;
-    if (courier_name !== undefined) updates.courier_name = courier_name;
-    if (admin_notes !== undefined) updates.admin_notes = admin_notes;
+    // Get current order to check previous status
+    const currentOrder = await convexQuery("functions/orders.js:getOrder", { id });
 
-    // First get the current order to check previous status
-    const { data: currentOrder } = await supabaseAdmin
-      .from('orders')
-      .select('order_status')
-      .eq('id', id)
-      .single();
-
-    const { data, error } = await supabaseAdmin
-      .from('orders')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) return serverError(error);
+    const data = await convexMutation("functions/orders.js:updateOrderStatus", {
+      id,
+      order_status,
+      payment_status,
+      tracking_number,
+      courier_name,
+      admin_notes
+    });
 
     // Trigger shipping email if status changed to 'completed'
     if (
-      order_status === 'completed' && 
+      order_status === 'completed' &&
       currentOrder?.order_status !== 'completed'
     ) {
       try {
-        // Construct absolute URL for the fetch call since this is server-side
         const protocol = req.headers.get('x-forwarded-proto') || 'http';
         const host = req.headers.get('host');
         const baseUrl = `${protocol}://${host}`;
-        
+
         await fetch(`${baseUrl}/api/send-shipping-email`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -58,9 +47,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       }
     }
 
-    if (error) return serverError(error);
     return NextResponse.json({ data });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

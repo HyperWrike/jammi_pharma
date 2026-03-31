@@ -1,9 +1,0 @@
-﻿app/_admin/products/[productId]/edit/page.tsx(7,13): error TS2339: Property 'productId' does not exist on type 'Record<string, string | string[]> | null'.
-app/api/_admin/reports/dashboard/route.ts(51,22): error TS2345: Argument of type '{ label: string; revenue: number; }' is not assignable to parameter of type 'never'.
-components/admin/CMSContext.tsx(57,5): error TS2322: Type 'RealtimeChannel' is not assignable to type 'null'.
-hooks/useAdminSave.ts(40,16): error TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<null>'.
-hooks/useAdminSave.ts(70,16): error TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<null>'.
-hooks/useAdminSave.ts(100,16): error TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<null>'.
-hooks/useAdminSave.ts(130,16): error TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<null>'.
-old_editable.tsx(3,26): error TS2307: Cannot find module './AdminContext' or its corresponding type declarations.
-old_editable.tsx(4,32): error TS2307: Cannot find module '../../lib/adminDb' or its corresponding type declarations.

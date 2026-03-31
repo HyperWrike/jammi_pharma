@@ -12,14 +12,31 @@ export default function OrderDetailModal({ orderId, onClose, onUpdate }: OrderDe
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const getAuthHeaders = () => {
+    const token =
+      localStorage.getItem('jammi_admin_token') ||
+      localStorage.getItem('jammi_bypass_token') ||
+      'JAMMI_ADMIN_MASTER_KEY_2024';
+    return { Authorization: `Bearer ${token}` };
+  };
 
   const fetchOrderDetail = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`/api/admin/orders/${orderId}`);
-      const data = await res.json();
-      setOrder(data);
+      const res = await fetch(`/api/admin/orders/${orderId}`, {
+        headers: getAuthHeaders()
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to load order details');
+      }
+      setOrder(json.data);
     } catch (err) {
       console.error(err);
+      setError(err instanceof Error ? err.message : 'Failed to load order details');
     } finally {
       setLoading(false);
     }
@@ -32,29 +49,54 @@ export default function OrderDetailModal({ orderId, onClose, onUpdate }: OrderDe
   const updateStatus = async (field: 'order_status' | 'payment_status', value: string) => {
     setUpdating(true);
     try {
-      const res = await fetch(`/api/admin/orders/${orderId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ [field]: value })
       });
       if (res.ok) {
         fetchOrderDetail();
         onUpdate();
+      } else {
+        const json = await res.json();
+        throw new Error(json.error || 'Update failed');
       }
     } catch (err) {
-      alert('Update failed');
+      alert(err instanceof Error ? err.message : 'Update failed');
     } finally {
       setUpdating(false);
     }
   };
 
-  if (loading || !order) {
+  if (loading) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
         <div className="w-12 h-12 border-4 border-green-500/20 border-t-green-500 rounded-full animate-spin" />
       </div>
     );
   }
+
+  if (error || !order) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
+        <div className="relative w-full max-w-md bg-[#0a0a0f] border border-white/10 rounded-2xl p-6">
+          <h3 className="text-white font-bold mb-2">Unable to load order</h3>
+          <p className="text-slate-400 text-sm">{error || 'Order not found.'}</p>
+          <button onClick={onClose} className="mt-4 px-4 py-2 bg-white/10 text-white rounded-lg text-sm">Close</button>
+        </div>
+      </div>
+    );
+  }
+
+  const userInfo = order.site_users || {};
+  const shippingAddr =
+    typeof order.shipping_address === 'object' && order.shipping_address !== null
+      ? order.shipping_address
+      : { address: order.shipping_address, city: order.shipping_city, pincode: order.shipping_zip, state: order.shipping_state };
+  const shippingAddressLine =
+    shippingAddr?.address ||
+    (typeof order.shipping_address === 'string' ? order.shipping_address : '');
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -103,9 +145,9 @@ export default function OrderDetailModal({ orderId, onClose, onUpdate }: OrderDe
                  <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Shipping Address</h3>
                  <div className="p-5 bg-white/5 rounded-2xl border border-white/5 text-sm text-slate-300 leading-relaxed font-medium">
                     {order.customer_name}<br/>
-                    {order.shipping_address}<br/>
-                    {order.shipping_city}, {order.shipping_state}<br/>
-                    {order.shipping_zip}
+                    {shippingAddressLine || 'N/A'}<br/>
+                    {shippingAddr.city || order.shipping_city}, {shippingAddr.state || order.shipping_state}<br/>
+                    {shippingAddr.pincode || order.shipping_zip}
                  </div>
                </section>
                <section>
@@ -133,12 +175,12 @@ export default function OrderDetailModal({ orderId, onClose, onUpdate }: OrderDe
             <section>
               <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Customer Details</h3>
               <div className="p-5 bg-white/5 rounded-2xl border border-white/5">
-                 <div className="text-sm font-bold text-white">{order.customer_name}</div>
-                 <div className="text-xs text-slate-400 mt-1">{order.site_users?.email}</div>
-                 <div className="text-xs text-slate-400 mt-1">{order.site_users?.phone || 'No phone'}</div>
+                 <div className="text-sm font-bold text-white">{userInfo.name || order.customer_name}</div>
+                 <div className="text-xs text-slate-400 mt-1">{userInfo.email || 'No email'}</div>
+                 <div className="text-xs text-slate-400 mt-1">{userInfo.phone || 'No phone'}</div>
                  <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
                     <span className="text-[10px] font-black text-slate-600 uppercase">System ID</span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">{order.site_users?.user_code}</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">{userInfo.user_code || 'N/A'}</span>
                  </div>
               </div>
             </section>

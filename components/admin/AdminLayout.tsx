@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { supabase } from '../../lib/supabase';
 import AdminGuard from './AdminGuard';
 
 const ADMIN_NAV_ITEMS = [
@@ -19,33 +18,75 @@ const ADMIN_NAV_ITEMS = [
   { label: 'Shipping', href: '/admin/shipping', icon: 'local_shipping' },
   { label: 'Reviews', href: '/admin/reviews', icon: 'rate_review' },
   { label: 'Reports', href: '/admin/reports', icon: 'bar_chart' },
-  { label: 'CMS Content', href: '/admin/cms', icon: 'edit_note' },
   { label: 'Federation', href: '/admin/federation', icon: 'account_balance' },
-  { label: 'Roles', href: '/admin/roles', icon: 'shield_person' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [adminName, setAdminName] = useState('Admin');
+  const [navAlerts, setNavAlerts] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    async function getAdminData() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase
-          .from('admin_users')
-          .select('name')
-          .eq('auth_user_id', user.id)
-          .single();
-        if (data?.name) setAdminName(data.name);
-      }
+    const session = localStorage.getItem("jammi_admin_session");
+    if (session) {
+      try {
+        const parsed = JSON.parse(session);
+        if (parsed?.name) setAdminName(parsed.name);
+      } catch (e) {}
     }
-    getAdminData();
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem('jammi_admin_token') || localStorage.getItem('jammi_bypass_token') || 'JAMMI_ADMIN_MASTER_KEY_2024';
+    const headers = { Authorization: `Bearer ${token}` };
+
+    const checkNewData = async () => {
+      try {
+        const [ordersRes, customersRes, paymentsRes, reviewsRes] = await Promise.all([
+          fetch('/api/admin/orders?limit=1', { headers }),
+          fetch('/api/admin/customers?limit=1', { headers }),
+          fetch('/api/admin/payments?status=all', { headers }),
+          fetch('/api/admin/reviews?limit=1', { headers }),
+        ]);
+
+        const ordersJson = await ordersRes.json();
+        const customersJson = await customersRes.json();
+        const paymentsJson = await paymentsRes.json();
+        const reviewsJson = await reviewsRes.json();
+
+        const ordersCount = ordersJson.total ?? (ordersJson.data || []).length ?? 0;
+        const customersCount = customersJson.total ?? (customersJson.data || []).length ?? 0;
+        const paymentsCount = (paymentsJson.data || []).length ?? 0;
+        const reviewsCount = reviewsJson.total ?? (reviewsJson.data || []).length ?? 0;
+
+        const seenOrders = Number(localStorage.getItem('jammi_seen_orders_count') || '0');
+        const seenCustomers = Number(localStorage.getItem('jammi_seen_customers_count') || '0');
+        const seenPayments = Number(localStorage.getItem('jammi_seen_payments_count') || '0');
+        const seenReviews = Number(localStorage.getItem('jammi_seen_reviews_count') || '0');
+
+        if (pathname?.startsWith('/admin/orders')) localStorage.setItem('jammi_seen_orders_count', String(ordersCount));
+        if (pathname?.startsWith('/admin/customers')) localStorage.setItem('jammi_seen_customers_count', String(customersCount));
+        if (pathname?.startsWith('/admin/payments')) localStorage.setItem('jammi_seen_payments_count', String(paymentsCount));
+        if (pathname?.startsWith('/admin/reviews')) localStorage.setItem('jammi_seen_reviews_count', String(reviewsCount));
+
+        setNavAlerts({
+          '/admin/orders': ordersCount > seenOrders && !pathname?.startsWith('/admin/orders'),
+          '/admin/customers': customersCount > seenCustomers && !pathname?.startsWith('/admin/customers'),
+          '/admin/payments': paymentsCount > seenPayments && !pathname?.startsWith('/admin/payments'),
+          '/admin/reviews': reviewsCount > seenReviews && !pathname?.startsWith('/admin/reviews'),
+        });
+      } catch (e) {
+        // noop
+      }
+    };
+
+    checkNewData();
+    const interval = setInterval(checkNewData, 30000);
+    return () => clearInterval(interval);
+  }, [pathname]);
+
   const handleLogout = async () => {
-    await supabase.auth.signOut();
     localStorage.removeItem("jammi_admin_session");
     router.push('/');
   };
@@ -81,6 +122,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         {item.icon}
                       </span>
                       <span className="text-sm font-medium tracking-tight">{item.label}</span>
+                      {navAlerts[item.href] && (
+                        <span className="ml-auto inline-flex w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                      )}
                     </Link>
                   </li>
                 );

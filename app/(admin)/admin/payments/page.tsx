@@ -12,9 +12,21 @@ export default function PaymentsPage() {
   const fetchPayments = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/payments?status=${statusFilter}&search=${search}`);
-      const { data } = await res.json();
-      setPayments(data || []);
+      const token = localStorage.getItem('jammi_admin_token') || localStorage.getItem('jammi_bypass_token') || '';
+      const res = await fetch(`/api/admin/payments?status=${statusFilter}&search=${search}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const json = await res.json();
+      const mapped = (json.data || []).map((p: any) => ({
+        ...p,
+        id: p._id || p.id,
+        order_number: p.order_number || p.razorpay_order_id || p.order_id || p.transaction_id || 'N/A',
+        customer_name: p.customer_name || 'N/A',
+        payment_method: p.payment_method || p.method || 'N/A',
+        total_amount: p.total_amount ?? p.amount ?? 0,
+        payment_status: p.payment_status || p.status || 'pending',
+      }));
+      setPayments(mapped);
     } catch (err) {
       console.error(err);
     } finally {

@@ -96,10 +96,6 @@ export default function ProductTemplate({ productId, initialData }: { productId:
         fetchReviews();
 
 
-        const unsubReviews = subscribeToCollection('reviews', (r) => {
-            setReviews(r.filter(review => review.productId === productId && review.status === 'Approved').sort((a,b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()));
-        });
-
         const unsubBundles = subscribeToCollection('bundles', (b) => {
             setBundles(b.filter(bundle => bundle.active && (bundle.product_ids || []).includes(productId)));
         });

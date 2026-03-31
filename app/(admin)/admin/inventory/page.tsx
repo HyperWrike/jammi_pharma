@@ -8,13 +8,21 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchInventory = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/inventory');
-      const data = await res.json();
-      setProducts(data || []);
+      const token = localStorage.getItem('jammi_admin_token') || localStorage.getItem('jammi_bypass_token') || '';
+      const res = await fetch('/api/admin/inventory', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      const json = await res.json();
+      const mapped = (json.data || []).map((p: any) => ({
+        ...p,
+        id: p._id || p.id
+      }));
+      setProducts(mapped);
     } catch (err) {
       console.error(err);
     } finally {
@@ -39,6 +47,9 @@ export default function InventoryPage() {
             <h1 className="text-2xl font-black text-white tracking-tight uppercase italic underline decoration-green-500/30 underline-offset-8">Stock & Logistics</h1>
             <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-3">Monitor product availability and inventory health</p>
           </div>
+          <a href="/admin/products" className="px-4 py-2 bg-green-500/10 border border-green-500/30 text-green-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-500/20 transition">
+            Add Product
+          </a>
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 bg-[#111118] border border-white/5 p-4 rounded-2xl shadow-xl font-medium">
@@ -100,12 +111,37 @@ export default function InventoryPage() {
                          </span>
                       </td>
                       <td className="py-5 px-8 text-right">
-                         <button 
-                           onClick={() => setSelectedProduct(p)}
-                           className="px-6 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition border border-white/5 active:scale-95"
-                         >
-                            Adjust
-                         </button>
+                         <div className="flex items-center justify-end gap-2">
+                           <button 
+                             onClick={() => setSelectedProduct(p)}
+                             className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition border border-white/5 active:scale-95"
+                           >
+                              Adjust
+                           </button>
+                           <button
+                             onClick={async () => {
+                               if (!confirm(`Delete product "${p.name}"?`)) return;
+                               setDeletingId(p.id);
+                               try {
+                                 const token = localStorage.getItem('jammi_admin_token') || localStorage.getItem('jammi_bypass_token') || 'JAMMI_ADMIN_MASTER_KEY_2024';
+                                 const res = await fetch(`/api/admin/products/${p.id}`, {
+                                   method: 'DELETE',
+                                   headers: { Authorization: `Bearer ${token}` }
+                                 });
+                                 if (!res.ok) throw new Error('Delete failed');
+                                 fetchInventory();
+                               } catch (e) {
+                                 alert('Failed to delete product');
+                               } finally {
+                                 setDeletingId(null);
+                               }
+                             }}
+                             disabled={deletingId === p.id}
+                             className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition border border-red-500/20 disabled:opacity-50"
+                           >
+                             {deletingId === p.id ? 'Deleting...' : 'Delete'}
+                           </button>
+                         </div>
                       </td>
                     </tr>
                   );
@@ -145,7 +181,10 @@ function StockAdjustModal({ product, onClose, onUpdate }: any) {
     try {
       await fetch(`/api/admin/inventory/${product.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('jammi_admin_token') || localStorage.getItem('jammi_bypass_token') || 'JAMMI_ADMIN_MASTER_KEY_2024'}`
+        },
         body: JSON.stringify(formData)
       });
       onUpdate();

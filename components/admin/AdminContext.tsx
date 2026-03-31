@@ -15,14 +15,12 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
-    // Check for admin session and edit mode
-    const checkState = async () => {
-      const { data: { session } } = await import('../../lib/supabase').then(m => m.supabase.auth.getSession());
+    const checkState = () => {
       const hasLocalSession = sessionStorage.getItem("jammi_admin_session") === "true" || 
                              localStorage.getItem("jammi_admin_session") === "true" ||
                              localStorage.getItem("jammi_cms_session") === "true";
       
-      if (session || hasLocalSession) {
+      if (hasLocalSession) {
         setIsAdmin(true);
         const editMode = sessionStorage.getItem("jammi_edit_mode") || localStorage.getItem("jammi_edit_mode");
         if (editMode === "true") {
@@ -39,39 +37,24 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     window.addEventListener('jammi_cms_unlocked', checkState);
     window.addEventListener('storage', checkState);
 
-    let authListener: any = null;
-    import('../../lib/supabase').then(({ supabase }) => {
-       const { data } = supabase.auth.onAuthStateChange((event, session) => {
-          if (session) {
-             setIsAdmin(true);
-          } else {
-             // Only log out if there's no UI local override for edge cases
-             const hasLocal = sessionStorage.getItem("jammi_admin_session") === "true" || 
-                              localStorage.getItem("jammi_admin_session") === "true";
-             if (!hasLocal) {
-                setIsAdmin(false);
-                setIsEditMode(false);
-             }
-          }
-       });
-       authListener = data.subscription;
-    });
-
     return () => {
-       if (authListener) authListener.unsubscribe();
+      window.removeEventListener('jammi_cms_unlocked', checkState);
+      window.removeEventListener('storage', checkState);
     };
   }, []);
 
   const handleSetEditMode = (val: boolean) => {
     setIsEditMode(val);
-    sessionStorage.setItem("jammi_edit_mode", val ? "true" : "false");
+    const s = val ? "true" : "false";
+    sessionStorage.setItem("jammi_edit_mode", s);
+    localStorage.setItem("jammi_edit_mode", s);
   };
 
   const logout = async () => {
-    const { supabase } = await import('../../lib/supabase');
-    if (supabase) await supabase.auth.signOut();
     sessionStorage.removeItem("jammi_admin_session");
     sessionStorage.removeItem("jammi_edit_mode");
+    localStorage.removeItem("jammi_admin_session");
+    localStorage.removeItem("jammi_cms_session");
     setIsAdmin(false);
     setIsEditMode(false);
     window.location.reload();

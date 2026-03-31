@@ -33,3 +33,4 @@ scripts/fb-cred.json
 scripts/fb-tokens.json
 scripts/*.json
 .env
+.vercel

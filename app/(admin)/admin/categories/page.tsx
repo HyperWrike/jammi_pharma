@@ -1,42 +1,30 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
-import { supabase } from '@/lib/supabase';
+import { useCategories, useDeleteCategory } from '@/hooks/useConvex';
 import CategoryFormModal from './CategoryFormModal';
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
 
-  const fetchCategories = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/admin/categories');
-      const data = await res.json();
-      setCategories(data || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  const { data: categories, loading, refetch: refetchCategories } = useCategories();
+  const deleteCategory = useDeleteCategory();
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure? Products in this category will become uncategorized.')) return;
     try {
-      const res = await fetch(`/api/admin/categories/${id}`, { method: 'DELETE' });
-      if (res.ok) fetchCategories();
+      await deleteCategory.mutate({ id });
+      refetchCategories();
     } catch (err) {
       alert('Delete failed');
     }
   };
+
+  const categoryList = Array.isArray(categories)
+    ? categories.map((cat: any) => ({ ...cat, id: cat._id || cat.id }))
+    : [];
 
   return (
     <AdminLayout>
@@ -60,8 +48,8 @@ export default function CategoriesPage() {
              [1,2,3].map(i => (
                <div key={i} className="h-48 rounded-2xl bg-white/5 animate-pulse border border-white/5" />
              ))
-          ) : Array.isArray(categories) ? categories.map((cat) => (
-            <div key={cat.id} className="group bg-[#111118] border border-white/5 rounded-2xl overflow-hidden shadow-xl hover:border-green-500/30 transition-all duration-300">
+           ) : categoryList.length > 0 ? categoryList.map((cat) => (
+             <div key={cat._id || cat.id} className="group bg-[#111118] border border-white/5 rounded-2xl overflow-hidden shadow-xl hover:border-green-500/30 transition-all duration-300">
               <div className="h-32 bg-white/5 relative bg-cover bg-center" style={{ backgroundImage: cat.image_url ? `url(${cat.image_url})` : 'none' }}>
                  {!cat.image_url && (
                     <div className="absolute inset-0 flex items-center justify-center opacity-20">
@@ -107,7 +95,7 @@ export default function CategoriesPage() {
           <CategoryFormModal 
             category={editingCategory} 
             onClose={() => setIsModalOpen(false)} 
-            onSuccess={() => { setIsModalOpen(false); fetchCategories(); }} 
+            onSuccess={() => { setIsModalOpen(false); refetchCategories(); }} 
           />
         )}
       </div>

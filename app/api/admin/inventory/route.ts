@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdmin, supabaseAdmin, unauthorized, serverError } from '@/lib/adminAuth';
+import { convexQuery } from '@/lib/convexServer';
+import { verifyAdmin, unauthorized } from '@/lib/adminAuth';
 
 export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) return unauthorized();
 
   try {
-    const { data, error } = await supabaseAdmin
-      .from('products')
-      .select('id, name, sku, stock, low_stock_alert, status, categories(name), updated_at')
-      .order('name', { ascending: true });
-      
-    if (error) return serverError(error);
+    const data = await convexQuery("functions/products.js:listInventory", {});
     return NextResponse.json({ data });
-  } catch (error) {
-    return serverError(error);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

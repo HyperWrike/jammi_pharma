@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '../../../lib/supabase';
+import { convexMutation } from '@/lib/convexServer';
 import { Resend } from 'resend';
 import * as React from 'react';
+
+function cleanArgs(args: any) {
+  const cleaned: any = {};
+  Object.keys(args).forEach(key => {
+    if (args[key] !== null && args[key] !== undefined && args[key] !== '') {
+      cleaned[key] = args[key];
+    }
+  });
+  return cleaned;
+}
 
 // Email Template
 const doctorApplicationHtml = (name: string, specialty: string, bio: string) => `
@@ -25,22 +35,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Name and Specialty are required' }, { status: 400 });
     }
 
-    // Insert into Supabase
-    const { data: profile, error } = await supabaseAdmin
-      .from('doctor_profiles')
-      .insert({
-        name,
-        specialty,
-        bio,
-        verified: false,
-      })
-      .select('id')
-      .single();
-
-    if (error) {
-      console.error('[doctor-application] Supabase insert error:', error);
-      return NextResponse.json({ error: 'Database error saving profile' }, { status: 500 });
-    }
+    // Insert into Convex
+    const profileId = await convexMutation("functions/doctor_profiles.js:createDoctorProfile", cleanArgs({
+      name,
+      specialty,
+      bio,
+      verified: false,
+    }));
 
     // Send Admin Email
     const resendKey = process.env.RESEND_API_KEY;
@@ -59,8 +60,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, id: profile?.id });
-  } catch (err) {
+    return NextResponse.json({ success: true, id: profileId });
+  } catch (err: any) {
     console.error('[doctor-application] Unexpected error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
