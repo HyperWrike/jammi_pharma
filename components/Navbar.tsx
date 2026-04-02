@@ -4,44 +4,11 @@ import Link from 'next/link';
 import LiveEditable from './admin/LiveEditable';
 import { useCart } from '../hooks/useCart';
 
-const NAV_DROPDOWNS = [
-  {
-    label: 'Wellness',
-    items: [
-      'Immunity',
-      'Fatty Liver',
-      'Digestion',
-      'IBS',
-      'Pre-Diabetes',
-      'Obesity',
-      'Aches & Pains',
-      'Heart Health',
-      'Kidney/Gall Bladder Stones',
-      'Male & Female Sexual Wellness',
-      'Stress',
-      'Thyroid Related',
-    ],
-  },
-  {
-    label: 'Skin and Hair Care',
-    items: ['Acne/Pimples', 'Skin Complexion', 'Lip and Oral Care', 'Skin Dullness', 'Hair Fall', 'Dandruff'],
-  },
-  {
-    label: 'Therapeutics/Cures',
-    items: [
-      'Liver Diseases',
-      'Prostate Disorders',
-      'Viral Fevers',
-      'Asthma/Wheezing',
-      'Anaemia – Ayurin',
-      'Coughs and Colds',
-      'Weakened Immunity',
-      'Gynaecological Health',
-      'Gut-health Disorders',
-      'Psoriasis/Eczema',
-      'Diabetes',
-    ],
-  },
+const NAV_LINKS = [
+  { label: 'Legacy', href: '/legacy' },
+  { label: 'Founders', href: '/founders' },
+  { label: 'Shop', href: '/shop' },
+  { label: 'Federation', href: '/federation' },
 ];
 
 const Navbar: React.FC = () => {
@@ -98,51 +65,17 @@ const Navbar: React.FC = () => {
           </Link>
 
           <nav className="hidden lg:flex items-center gap-10" aria-label="Primary">
-            {NAV_DROPDOWNS.map((dd) => (
-              <div
-                key={dd.label}
-                data-jammi-navroot="true"
-                className="relative"
-                onMouseEnter={() => setOpenDropdown(dd.label)}
-                onMouseLeave={() => setOpenDropdown((prev) => (prev === dd.label ? null : prev))}
-              >
-                <button
-                  type="button"
-                  className="jammi-navlink inline-flex items-center gap-2"
-                  aria-haspopup="menu"
-                  aria-expanded={openDropdown === dd.label}
-                  onFocus={() => setOpenDropdown(dd.label)}
-                >
-                  {dd.label} <span aria-hidden className="text-[12px]">▾</span>
-                </button>
-
-                <div
-                  role="menu"
-                  aria-label={`${dd.label} menu`}
-                  className={`absolute left-0 top-[68px] min-w-[320px] transform transition-all origin-top ${
-                    openDropdown === dd.label ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'
-                  } jammi-dropdown-menu p-3`}
-                >
-                  {dd.items.map((item) => (
-                    <a
-                      key={item}
-                      href="#"
-                      role="menuitem"
-                      className="jammi-dropdown-item block hover:bg-[var(--yellow)]"
-                      onClick={(e) => e.preventDefault()}
-                    >
-                      {item}
-                    </a>
-                  ))}
-                </div>
-              </div>
+            {NAV_LINKS.map((l) => (
+              <Link key={l.label} href={l.href} className="jammi-navlink inline-flex items-center gap-2">
+                {l.label}
+              </Link>
             ))}
           </nav>
 
           <div className="flex items-center gap-3 sm:gap-4">
             <Link
               href="/consultation"
-              className="hidden lg:flex bg-[var(--yellow)] text-[var(--purple)] px-6 py-2.5 rounded-full font-bold text-sm tracking-wide hover:brightness-95 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200"
+              className="btn btn-primary hidden lg:flex"
             >
               CONSULT NOW
             </Link>
@@ -203,21 +136,11 @@ const Navbar: React.FC = () => {
           <div className="text-[13px] font-bold tracking-widest text-[var(--purple)] mb-6 uppercase">Menu</div>
 
           <nav className="flex flex-col gap-6">
-            {NAV_DROPDOWNS.map((dd) => (
-              <div key={dd.label} className="space-y-3">
-                <div className="text-[17px] font-bold text-[var(--purple)] uppercase">{dd.label}</div>
-                <div className="flex flex-col gap-2">
-                  {dd.items.map((item) => (
-                    <a
-                      key={item}
-                      href="#"
-                      className="jammi-dropdown-item block w-fit bg-transparent hover:bg-[var(--yellow)] transition-colors"
-                      onClick={(e) => e.preventDefault()}
-                    >
-                      {item}
-                    </a>
-                  ))}
-                </div>
+            {NAV_LINKS.map((l) => (
+              <div key={l.label} className="space-y-3">
+                <Link href={l.href} className="text-[17px] font-bold text-[var(--purple)] uppercase hover:underline">
+                  {l.label}
+                </Link>
               </div>
             ))}
           </nav>
