@@ -32,7 +32,7 @@ const Home: React.FC = () => {
     <div className="bg-background-light pt-[5rem]">
 
       {/* Section 1: Hero */}
-      <section className="relative min-h-[640px] lg:min-h-[750px] mt-1 overflow-hidden bg-[var(--purple)]">
+      <section className="relative min-h-[640px] lg:min-h-[750px] mt-1 overflow-hidden bg-[var(--purple)] lg:flex lg:items-stretch">
         {/* Left Column (Solid Purple) */}
         <div className="w-full lg:w-1/2 bg-[var(--purple)] flex items-center">
           <div className="max-w-[560px] px-5 sm:px-10 lg:px-14 py-12 lg:py-16">
