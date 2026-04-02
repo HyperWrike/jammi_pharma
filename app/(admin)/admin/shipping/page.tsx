@@ -8,6 +8,12 @@ export default function ShippingPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingMethod, setEditingMethod] = useState<any>(null);
+   const [emailSettings, setEmailSettings] = useState({
+      fromEmail: 'Jammi Pharmaceuticals <onboarding@resend.dev>',
+      internalRecipients: 'frontdesk@jammi.org,njammi@gmail.com',
+   });
+   const [emailSaving, setEmailSaving] = useState(false);
+   const [emailMessage, setEmailMessage] = useState('');
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('jammi_admin_token') || localStorage.getItem('jammi_bypass_token') || 'JAMMI_ADMIN_MASTER_KEY_2024';
@@ -29,8 +35,70 @@ export default function ShippingPage() {
     }
   };
 
+   const fetchEmailSettings = async () => {
+      try {
+         const res = await fetch('/api/admin/cms/content?page=email_settings&section=notifications', {
+            headers: getAuthHeaders(),
+         });
+         const json = await res.json();
+         const rows = json.data || [];
+         const fromEmail = rows.find((r: any) => r.content_key === 'from_email')?.content_value;
+         const internalRecipients = rows.find((r: any) => r.content_key === 'internal_recipients')?.content_value;
+         setEmailSettings({
+            fromEmail: fromEmail || 'Jammi Pharmaceuticals <onboarding@resend.dev>',
+            internalRecipients: internalRecipients || 'frontdesk@jammi.org,njammi@gmail.com',
+         });
+      } catch (err) {
+         console.error(err);
+      }
+   };
+
+   const saveEmailSettings = async () => {
+      setEmailSaving(true);
+      setEmailMessage('');
+      try {
+         const res = await fetch('/api/admin/cms/content', {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json',
+               ...getAuthHeaders(),
+            },
+            body: JSON.stringify({
+               updates: [
+                  {
+                     page: 'email_settings',
+                     section: 'notifications',
+                     content_key: 'from_email',
+                     content_value: emailSettings.fromEmail,
+                     content_type: 'text',
+                  },
+                  {
+                     page: 'email_settings',
+                     section: 'notifications',
+                     content_key: 'internal_recipients',
+                     content_value: emailSettings.internalRecipients,
+                     content_type: 'text',
+                  },
+               ],
+            }),
+         });
+
+         if (!res.ok) {
+            const json = await res.json();
+            throw new Error(json.error || 'Failed to save email settings');
+         }
+
+         setEmailMessage('Email settings saved. New orders will use this configuration.');
+      } catch (err: any) {
+         setEmailMessage(err.message || 'Failed to save email settings');
+      } finally {
+         setEmailSaving(false);
+      }
+   };
+
   useEffect(() => {
     fetchMethods();
+      fetchEmailSettings();
   }, []);
 
   const handleDelete = async (id: string) => {
@@ -121,6 +189,48 @@ export default function ShippingPage() {
               <div className="col-span-full py-32 text-center text-slate-600 italic">No shipping methods configured.</div>
            )}
         </div>
+
+            <div className="bg-[#111118] border border-white/5 rounded-3xl p-6">
+               <h2 className="text-lg font-black text-white tracking-tight">Order Email Settings</h2>
+               <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Editable email sender and admin notification recipients</p>
+
+               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-5">
+                  <div>
+                     <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">From Email</label>
+                     <input
+                        type="text"
+                        value={emailSettings.fromEmail}
+                        onChange={(e) => setEmailSettings((prev) => ({ ...prev, fromEmail: e.target.value }))}
+                        className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-green-500/50"
+                        placeholder="Jammi Pharmaceuticals <onboarding@resend.dev>"
+                     />
+                  </div>
+
+                  <div>
+                     <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Internal Recipients</label>
+                     <input
+                        type="text"
+                        value={emailSettings.internalRecipients}
+                        onChange={(e) => setEmailSettings((prev) => ({ ...prev, internalRecipients: e.target.value }))}
+                        className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-green-500/50"
+                        placeholder="frontdesk@jammi.org,njammi@gmail.com"
+                     />
+                     <p className="text-[10px] text-slate-500 mt-2">Use comma-separated email addresses.</p>
+                  </div>
+               </div>
+
+               <div className="mt-5 flex items-center gap-3">
+                  <button
+                     type="button"
+                     onClick={saveEmailSettings}
+                     disabled={emailSaving}
+                     className="px-5 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-green-500/20 disabled:opacity-70"
+                  >
+                     {emailSaving ? 'Saving...' : 'Save Email Settings'}
+                  </button>
+                  {emailMessage && <p className="text-xs text-slate-300">{emailMessage}</p>}
+               </div>
+            </div>
 
         {showModal && (
            <ShippingModal 

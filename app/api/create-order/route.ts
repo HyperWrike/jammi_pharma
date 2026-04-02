@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
-import { convexMutation } from '../../../lib/convexServer';
+import { convexMutation, convexQuery } from '../../../lib/convexServer';
 import { rateLimit, getClientIp } from '../../../lib/rateLimit';
 import { Resend } from 'resend';
 import { OrderConfirmationEmail } from '../../../components/emails/OrderConfirmationEmail';
@@ -10,6 +10,38 @@ function getResend() {
   const key = process.env.RESEND_API_KEY;
   if (!key) return null;
   return new Resend(key);
+}
+
+function getFromAddress() {
+  return process.env.RESEND_FROM_EMAIL || 'Jammi Pharmaceuticals <onboarding@resend.dev>';
+}
+
+async function getEmailSettings() {
+  const defaults = {
+    fromEmail: getFromAddress(),
+    internalRecipients: ['frontdesk@jammi.org', 'njammi@gmail.com'],
+  };
+
+  try {
+    const rows = await convexQuery<any[]>('functions/cms:getCmsContent', {
+      page: 'email_settings',
+      section: 'notifications',
+    });
+
+    const fromEmail = rows.find((r) => r.content_key === 'from_email')?.content_value;
+    const recipientsRaw = rows.find((r) => r.content_key === 'internal_recipients')?.content_value;
+    const internalRecipients = String(recipientsRaw || '')
+      .split(',')
+      .map((v) => v.trim())
+      .filter(Boolean);
+
+    return {
+      fromEmail: fromEmail || defaults.fromEmail,
+      internalRecipients: internalRecipients.length > 0 ? internalRecipients : defaults.internalRecipients,
+    };
+  } catch {
+    return defaults;
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -102,10 +134,11 @@ export async function POST(req: NextRequest) {
     try {
       const resend = getResend();
       if (resend) {
+        const emailSettings = await getEmailSettings();
         const addressStr = typeof shippingAddress === 'string' ? shippingAddress : Object.values(shippingAddress).filter(Boolean).join(', ');
 
         await resend.emails.send({
-          from: 'Jammi Pharma <orders@updates.jammi.in>',
+          from: emailSettings.fromEmail,
           to: [customerEmail],
           subject: `Order Confirmed: ${orderNumber}`,
           react: OrderConfirmationEmail({
@@ -125,8 +158,8 @@ export async function POST(req: NextRequest) {
         });
 
         await resend.emails.send({
-          from: 'Jammi Pharma <orders@updates.jammi.in>',
-          to: ['frontdesk@jammi.org', 'njammi@gmail.com'],
+          from: emailSettings.fromEmail,
+          to: emailSettings.internalRecipients,
           subject: `New Order: ${orderNumber} (₹${total})`,
           react: OrderConfirmationInternal({
             customerName,

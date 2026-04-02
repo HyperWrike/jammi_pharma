@@ -1,19 +1,19 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useFederationStore } from '../store/federationStore';
 
 interface Message {
     id: string;
     sender: 'user' | 'bot';
     text: string;
-    isAction?: boolean;
-    product?: {
+    products?: Array<{
+        id?: string;
         name: string;
         image: string;
         link: string;
         price: string;
-    };
+        reason?: string;
+    }>;
 }
 
 const SUGGESTED_QUESTIONS = [
@@ -29,14 +29,13 @@ export default function Chatbot() {
         {
             id: 'welcome-1',
             sender: 'bot',
-            text: 'Namaste. I am pantulu, your Ayurvedic AI guide. How can I assist you with Jammi Pharmaceuticals today?'
+            text: 'Namaste. I am Pantulu, your Ayurvedic AI guide. How can I assist you with Jammi Pharmaceuticals today?'
         }
     ]);
     const [inputValue, setInputValue] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [hasUnread, setHasUnread] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const { products: storeProducts } = useFederationStore();
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -51,7 +50,7 @@ export default function Chatbot() {
         if (!isOpen) setHasUnread(false);
     };
 
-    const handleSend = (text: string) => {
+    const handleSend = async (text: string) => {
         if (!text.trim()) return;
 
         const userMsg: Message = { id: Date.now().toString(), sender: 'user', text };
@@ -59,88 +58,33 @@ export default function Chatbot() {
         setInputValue('');
         setIsTyping(true);
 
-        // Mock AI response delay
-        setTimeout(() => {
-            let botResponse = "I'm still learning the intricacies of our 128-year-old pharmacopoeia. Please consult our expert Vaidyas for profound medical advice.";
-            let isAction = false;
-            let productData: Message['product'] = undefined;
-            const lowerText = text.toLowerCase();
+        try {
+            const res = await fetch('/api/chat/pantulu', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
 
-            if (lowerText.includes('livercure') || lowerText.includes('liver')) {
-                botResponse = "LiverCure is our flagship formulation designed to protect and rejuvenate the liver. It's particularly effective for fatty liver and sluggish digestion.";
-            } else if (lowerText.includes('consultation') || lowerText.includes('book')) {
-                botResponse = "I can help you with that. You can book an online video consultation or an offline clinic visit with our expert Vaidyas.";
-                isAction = true;
-            } else {
-                const searchKeywords = lowerText.split(' ').filter(w => w.length > 3);
+            const data = await res.json();
+            const botResponse = data?.reply || 'Pantulu is unable to respond at the moment.';
+            const productData = Array.isArray(data?.recommendations) ? data.recommendations.slice(0, 3) : undefined;
 
-                // Dynamically extract categories from all store products
-                const uniqueCategories = Array.from(new Set(storeProducts.map(p => p.category?.toLowerCase() || '')));
-                
-                // Add category-based dynamic keywords
-                uniqueCategories.forEach(cat => {
-                    const catWords = cat.split(/[\s-]+/).filter(w => w.length > 3);
-                    // If the user's text contains a significant word from a category
-                    if (catWords.some(cw => lowerText.includes(cw))) {
-                        searchKeywords.push(...catWords);
-                        searchKeywords.push(cat); // Boost the exact category name
-                    }
-                });
-
-                // Additional user-intent mapping for issues
-                if (lowerText.includes('issue') || lowerText.includes('problem') || lowerText.includes('care')) {
-                    const baseWords = lowerText.split(' ').filter(w => w.length > 2 && !['issue', 'problem', 'care', 'the', 'and', 'for', 'with', 'have'].includes(w));
-                    for (const bw of baseWords) {
-                         const matchedCat = uniqueCategories.find(c => c.includes(bw));
-                         if (matchedCat) {
-                             searchKeywords.push(matchedCat);
-                         }
-                    }
-                }
-
-                // Fallback common vernacular mappings
-                if (lowerText.includes('hair')) searchKeywords.push('hair');
-                if (lowerText.includes('skin') || lowerText.includes('acne') || lowerText.includes('glow')) searchKeywords.push('skin', 'glow', 'acne', 'complexion');
-                if (lowerText.includes('joint') || lowerText.includes('pain') || lowerText.includes('knee')) searchKeywords.push('joint', 'ortho', 'pain', 'arthritis');
-                if (lowerText.includes('liver') || lowerText.includes('digestion') || lowerText.includes('stomach')) searchKeywords.push('liver', 'digestion', 'stomach', 'hepableen');
-                if (lowerText.includes('sugar') || lowerText.includes('diabet')) searchKeywords.push('sugar', 'metabolism');
-
-                let bestMatch: any = null;
-                let maxScore = 0;
-
-                for (const prod of storeProducts) {
-                    let score = 0;
-                    // Heavily weight the exact category matching
-                    const searchableText = `${prod.name} ${prod.category} ${prod.category} ${prod.category} ${(prod as any).description || (prod as any).shortDesc || ''} ${prod.label} ${prod.features?.map((f: any) => f.title + f.desc).join(' ')}`.toLowerCase();
-
-                    for (const keyword of searchKeywords) {
-                        if (searchableText.includes(keyword)) {
-                            // Boost score if the keyword exactly matches the product category
-                            score += (prod.category?.toLowerCase() === keyword || prod.category?.toLowerCase().includes(keyword)) ? 3 : 1;
-                        }
-                    }
-
-                    if (score > maxScore) {
-                        maxScore = score;
-                        bestMatch = prod;
-                    }
-                }
-
-                if (bestMatch && maxScore > 0) {
-                    botResponse = `Based on what you've mentioned, I highly recommend looking into ${bestMatch.name}. It is specifically crafted for this concern.`;
-                    productData = {
-                        name: bestMatch.name,
-                        image: bestMatch.image,
-                        link: `/product/${bestMatch.id}`,
-                        price: `₹${bestMatch.price}`
-                    };
-                }
-            }
-
-            setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), sender: 'bot', text: botResponse, isAction, product: productData }]);
+            setMessages(prev => [...prev, {
+                id: (Date.now() + 1).toString(),
+                sender: 'bot',
+                text: botResponse,
+                products: productData
+            }]);
+        } catch {
+            setMessages(prev => [...prev, {
+                id: (Date.now() + 1).toString(),
+                sender: 'bot',
+                text: 'Pantulu could not reach the recommendation service right now. Please try again.'
+            }]);
+        } finally {
             setIsTyping(false);
             if (!isOpen) setHasUnread(true);
-        }, 1200);
+        }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -210,27 +154,23 @@ export default function Chatbot() {
                             >
                                 <p className="text-sm leading-relaxed">{msg.text}</p>
 
-                                {msg.product && (
-                                    <Link href={msg.product.link} onClick={() => setIsOpen(false)} className="mt-3 block bg-slate-50 border border-slate-200 rounded-xl overflow-hidden hover:border-primary transition-colors group">
+                                {msg.products?.map((product, idx) => (
+                                    <Link
+                                        key={`${msg.id}-${idx}`}
+                                        href={product.link}
+                                        onClick={() => setIsOpen(false)}
+                                        className="mt-3 block bg-slate-50 border border-slate-200 rounded-xl overflow-hidden hover:border-primary transition-colors group"
+                                    >
                                         <div className="aspect-[4/3] bg-slate-100 overflow-hidden relative">
-                                            <img src={msg.product.image} alt={msg.product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                            <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                         </div>
                                         <div className="p-3">
-                                            <h4 className="font-bold text-slate-800 text-sm leading-tight">{msg.product.name}</h4>
-                                            <p className="text-primary font-bold text-xs mt-1">{msg.product.price}</p>
+                                            <h4 className="font-bold text-slate-800 text-sm leading-tight">{product.name}</h4>
+                                            <p className="text-primary font-bold text-xs mt-1">{product.price}</p>
+                                            {product.reason && <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">{product.reason}</p>}
                                         </div>
                                     </Link>
-                                )}
-
-                                {msg.isAction && msg.text.includes('consultation') && (
-                                    <Link
-                                        href="/consultation"
-                                        onClick={() => setIsOpen(false)}
-                                        className="mt-3 block text-center bg-secondary text-white text-xs font-bold uppercase tracking-widest py-2.5 rounded-lg hover:bg-black transition-colors"
-                                    >
-                                        Go to Booking
-                                    </Link>
-                                )}
+                                ))}
                             </div>
                         </div>
                     ))}
