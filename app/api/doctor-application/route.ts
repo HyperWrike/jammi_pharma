@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Insert into Convex
-    const profileId = await convexMutation("functions/doctor_profiles.js:createDoctorProfile", cleanArgs({
+    const profileId = await convexMutation("functions/doctor_profiles:createDoctorProfile", cleanArgs({
       name,
       specialty,
       bio,

@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   if (!admin) return unauthorized();
 
   try {
-    const data = await convexQuery("functions/products.js:listInventory", {});
+    const data = await convexQuery("functions/products:listInventory", {});
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });

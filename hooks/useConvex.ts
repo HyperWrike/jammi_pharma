@@ -106,14 +106,14 @@ export function useConvexMutation<T = any>(path: string) {
 // Products hooks
 export const useProducts = (filters?: { search?: string; category?: string; status?: string; page?: number; limit?: number }) => {
   return useConvexQuery({
-    path: "functions/products.js:listProducts",
+    path: "functions/products:listProducts",
     args: filters || {},
   });
 };
 
 export const useProduct = (id: string | null) => {
   return useConvexQuery({
-    path: "functions/products.js:getProduct",
+    path: "functions/products:getProduct",
     args: id ? { id } : {},
     enabled: !!id,
   });
@@ -121,155 +121,155 @@ export const useProduct = (id: string | null) => {
 
 export const useFeaturedProducts = () => {
   return useConvexQuery({
-    path: "functions/products.js:getFeaturedProducts",
+    path: "functions/products:getFeaturedProducts",
     args: {},
   });
 };
 
-export const useCreateProduct = () => useConvexMutation("functions/products_mutations.js:createProduct");
-export const useUpdateProduct = () => useConvexMutation("functions/products_mutations.js:updateProduct");
-export const useDeleteProduct = () => useConvexMutation("functions/products_mutations.js:deleteProduct");
+export const useCreateProduct = () => useConvexMutation("functions/products_mutations:createProduct");
+export const useUpdateProduct = () => useConvexMutation("functions/products_mutations:updateProduct");
+export const useDeleteProduct = () => useConvexMutation("functions/products_mutations:deleteProduct");
 
 // Categories hooks
 export const useCategories = () => {
   return useConvexQuery({
-    path: "functions/categories.js:listCategories",
+    path: "functions/categories:listCategories",
     args: {},
   });
 };
 
-export const useCreateCategory = () => useConvexMutation("functions/categories.js:createCategory");
-export const useUpdateCategory = () => useConvexMutation("functions/categories.js:updateCategory");
-export const useDeleteCategory = () => useConvexMutation("functions/categories.js:deleteCategory");
+export const useCreateCategory = () => useConvexMutation("functions/categories:createCategory");
+export const useUpdateCategory = () => useConvexMutation("functions/categories:updateCategory");
+export const useDeleteCategory = () => useConvexMutation("functions/categories:deleteCategory");
 
 // Orders hooks
 export const useOrders = (filters?: { status?: string; page?: number; limit?: number }) => {
   return useConvexQuery({
-    path: "functions/orders.js:listOrders",
+    path: "functions/orders:listOrders",
     args: filters || {},
   });
 };
 
 export const useOrder = (id: string | null) => {
   return useConvexQuery({
-    path: "functions/orders.js:getOrder",
+    path: "functions/orders:getOrder",
     args: id ? { id } : {},
     enabled: !!id,
   });
 };
 
-export const useCreateOrder = () => useConvexMutation("functions/orders.js:createOrder");
-export const useUpdateOrderStatus = () => useConvexMutation("functions/orders.js:updateOrderStatus");
+export const useCreateOrder = () => useConvexMutation("functions/orders:createOrder");
+export const useUpdateOrderStatus = () => useConvexMutation("functions/orders:updateOrderStatus");
 
 // Reviews hooks
 export const useReviews = (filters?: { productId?: string; status?: string }) => {
   return useConvexQuery({
-    path: "functions/reviews.js:listReviews",
+    path: "functions/reviews:listReviews",
     args: filters || {},
   });
 };
 
-export const useCreateReview = () => useConvexMutation("functions/reviews.js:createReview");
-export const useUpdateReviewStatus = () => useConvexMutation("functions/reviews.js:updateReviewStatus");
-export const useDeleteReview = () => useConvexMutation("functions/reviews.js:deleteReview");
+export const useCreateReview = () => useConvexMutation("functions/reviews:createReview");
+export const useUpdateReviewStatus = () => useConvexMutation("functions/reviews:updateReviewStatus");
+export const useDeleteReview = () => useConvexMutation("functions/reviews:deleteReview");
 
 // Federation Posts hooks
 export const useFederationPosts = (filters?: { status?: string; page?: number; limit?: number }) => {
   return useConvexQuery({
-    path: "functions/federation_posts.js:listFederationPosts",
+    path: "functions/federation_posts:listFederationPosts",
     args: filters || {},
   });
 };
 
-export const useCreateFederationPost = () => useConvexMutation("functions/federation_posts.js:createFederationPost");
-export const useUpdateFederationPost = () => useConvexMutation("functions/federation_posts.js:updateFederationPost");
-export const useDeleteFederationPost = () => useConvexMutation("functions/federation_posts.js:deleteFederationPost");
+export const useCreateFederationPost = () => useConvexMutation("functions/federation_posts:createFederationPost");
+export const useUpdateFederationPost = () => useConvexMutation("functions/federation_posts:updateFederationPost");
+export const useDeleteFederationPost = () => useConvexMutation("functions/federation_posts:deleteFederationPost");
 
 // Bundles hooks
 export const useBundles = (filters?: { status?: string }) => {
   return useConvexQuery({
-    path: "functions/bundles.js:listBundles",
+    path: "functions/bundles:listBundles",
     args: filters || {},
   });
 };
 
 export const useBundle = (id: string | null) => {
   return useConvexQuery({
-    path: "functions/bundles.js:getBundle",
+    path: "functions/bundles:getBundle",
     args: id ? { id } : {},
     enabled: !!id,
   });
 };
 
-export const useCreateBundle = () => useConvexMutation("functions/bundles.js:createBundle");
-export const useUpdateBundle = () => useConvexMutation("functions/bundles.js:updateBundle");
-export const useDeleteBundle = () => useConvexMutation("functions/bundles.js:deleteBundle");
+export const useCreateBundle = () => useConvexMutation("functions/bundles:createBundle");
+export const useUpdateBundle = () => useConvexMutation("functions/bundles:updateBundle");
+export const useDeleteBundle = () => useConvexMutation("functions/bundles:deleteBundle");
 
 // Coupons hooks
 export const useCoupons = (filters?: { status?: string }) => {
   return useConvexQuery({
-    path: "functions/coupons.js:listCoupons",
+    path: "functions/coupons:listCoupons",
     args: filters || {},
   });
 };
 
 export const useCoupon = (code: string | null) => {
   return useConvexQuery({
-    path: "functions/coupons.js:getCoupon",
+    path: "functions/coupons:getCoupon",
     args: code ? { code } : {},
     enabled: !!code,
   });
 };
 
-export const useCreateCoupon = () => useConvexMutation("functions/coupons.js:createCoupon");
-export const useUpdateCoupon = () => useConvexMutation("functions/coupons.js:updateCoupon");
-export const useDeleteCoupon = () => useConvexMutation("functions/coupons.js:deleteCoupon");
+export const useCreateCoupon = () => useConvexMutation("functions/coupons:createCoupon");
+export const useUpdateCoupon = () => useConvexMutation("functions/coupons:updateCoupon");
+export const useDeleteCoupon = () => useConvexMutation("functions/coupons:deleteCoupon");
 
 // CMS hooks
 export const useBanners = (filters?: { status?: string }) => {
   return useConvexQuery({
-    path: "functions/cms.js:listBanners",
+    path: "functions/cms:listBanners",
     args: filters || {},
   });
 };
 
-export const useCreateBanner = () => useConvexMutation("functions/cms.js:createBanner");
-export const useUpdateBanner = () => useConvexMutation("functions/cms.js:updateBanner");
-export const useDeleteBanner = () => useConvexMutation("functions/cms.js:deleteBanner");
+export const useCreateBanner = () => useConvexMutation("functions/cms:createBanner");
+export const useUpdateBanner = () => useConvexMutation("functions/cms:updateBanner");
+export const useDeleteBanner = () => useConvexMutation("functions/cms:deleteBanner");
 
 export const useBlogs = (filters?: { status?: string }) => {
   return useConvexQuery({
-    path: "functions/cms.js:listBlogs",
+    path: "functions/cms:listBlogs",
     args: filters || {},
   });
 };
 
 export const useBlog = (slug: string | null) => {
   return useConvexQuery({
-    path: "functions/cms.js:getBlog",
+    path: "functions/cms:getBlog",
     args: slug ? { slug } : {},
     enabled: !!slug,
   });
 };
 
-export const useCreateBlog = () => useConvexMutation("functions/cms.js:createBlog");
-export const useUpdateBlog = () => useConvexMutation("functions/cms.js:updateBlog");
-export const useDeleteBlog = () => useConvexMutation("functions/cms.js:deleteBlog");
+export const useCreateBlog = () => useConvexMutation("functions/cms:createBlog");
+export const useUpdateBlog = () => useConvexMutation("functions/cms:updateBlog");
+export const useDeleteBlog = () => useConvexMutation("functions/cms:deleteBlog");
 
 export const useCmsContent = (filters?: { page?: string; section?: string }) => {
   return useConvexQuery({
-    path: "functions/cms.js:getCmsContent",
+    path: "functions/cms:getCmsContent",
     args: filters || {},
   });
 };
 
-export const useSetCmsContent = () => useConvexMutation("functions/cms.js:setCmsContent");
+export const useSetCmsContent = () => useConvexMutation("functions/cms:setCmsContent");
 
 export const useAnnouncement = () => {
   return useConvexQuery({
-    path: "functions/cms.js:getAnnouncement",
+    path: "functions/cms:getAnnouncement",
     args: {},
   });
 };
 
-export const useUpdateAnnouncement = () => useConvexMutation("functions/cms.js:updateAnnouncement");
+export const useUpdateAnnouncement = () => useConvexMutation("functions/cms:updateAnnouncement");

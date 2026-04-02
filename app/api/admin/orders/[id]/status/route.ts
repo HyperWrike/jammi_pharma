@@ -12,9 +12,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { order_status, payment_status, tracking_number, courier_name, admin_notes } = body;
 
     // Get current order to check previous status
-    const currentOrder = await convexQuery("functions/orders.js:getOrder", { id });
+    const currentOrder = await convexQuery("functions/orders:getOrder", { id });
 
-    const data = await convexMutation("functions/orders.js:updateOrderStatus", {
+    const data = await convexMutation("functions/orders:updateOrderStatus", {
       id,
       order_status,
       payment_status,

@@ -29,7 +29,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       usage_limit: body?.usage_limit !== undefined && body?.usage_limit !== null ? Number(body.usage_limit) : undefined,
       status: body?.status,
     });
-    const data = await convexMutation("functions/coupons.js:updateCoupon", { id, ...payload });
+    const data = await convexMutation("functions/coupons:updateCoupon", { id, ...payload });
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
@@ -43,7 +43,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const { id } = await params;
     const body = await req.json();
-    const data = await convexMutation("functions/coupons.js:updateCoupon", { id, status: body.status });
+    const data = await convexMutation("functions/coupons:updateCoupon", { id, status: body.status });
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
@@ -56,7 +56,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   try {
     const { id } = await params;
-    await convexMutation("functions/coupons.js:deleteCoupon", { id });
+    await convexMutation("functions/coupons:deleteCoupon", { id });
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });

@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     const id = await convexMutation(
-      'functions/federation_posts.js:createFederationPost',
+      'functions/federation_posts:createFederationPost',
       payload
     );
 

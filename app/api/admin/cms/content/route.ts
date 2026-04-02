@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const page = searchParams.get('page');
     const section = searchParams.get('section');
-    const data = await convexQuery("functions/cms.js:getCmsContent", cleanArgs({ page, section }));
+    const data = await convexQuery("functions/cms:getCmsContent", cleanArgs({ page, section }));
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     }
 
     for (const update of updates) {
-      await convexMutation("functions/cms.js:setCmsContent", cleanArgs(update));
+      await convexMutation("functions/cms:setCmsContent", cleanArgs(update));
     }
     return NextResponse.json({ success: true });
   } catch (error: any) {

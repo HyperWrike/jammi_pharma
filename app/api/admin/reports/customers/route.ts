@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20", 10);
     const search = searchParams.get("search") || undefined;
 
-    const result = await convexQuery<any>("functions/orders.js:listCustomers", {
+    const result = await convexQuery<any>("functions/orders:listCustomers", {
       page,
       limit,
       search,

@@ -12,7 +12,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const { status } = await req.json();
-    const data = await convexMutation("functions/coupons.js:updateCoupon", { id, status });
+    const data = await convexMutation("functions/coupons:updateCoupon", { id, status });
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json(

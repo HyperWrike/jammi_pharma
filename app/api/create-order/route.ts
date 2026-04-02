@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Upsert customer in Convex
-    await convexMutation("functions/orders.js:upsertCustomer", {
+    await convexMutation("functions/orders:upsertCustomer", {
       email: customerEmail,
       name: customerName,
       phone: customerPhone || '',
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     const orderNumber = `JMP-${dateStr}-${randSuffix}`;
 
     // Create order in Convex
-    const orderId = await convexMutation("functions/orders.js:createOrder", {
+    const orderId = await convexMutation("functions/orders:createOrder", {
       order_number: orderNumber,
       customer_name: customerName,
       customer_email: customerEmail,
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     // Create order items
     for (const item of items) {
-      await convexMutation("functions/orders.js:createOrderItem", {
+      await convexMutation("functions/orders:createOrderItem", {
         order_id: orderId,
         product_id: item.productId || item.product_id,
         product_name: item.name || item.productName || 'Product',

@@ -54,17 +54,17 @@ export const subscribeToCollection = (
       const listFn = `${prefix}:listProducts`;
       let data;
       if (collectionName === "content") {
-        data = await convexQuery("functions/cms.js:getCmsContent", {});
+        data = await convexQuery("functions/cms:getCmsContent", {});
       } else if (collectionName === "categories") {
-        data = await convexQuery("functions/categories.js:listCategories", {});
+        data = await convexQuery("functions/categories:listCategories", {});
       } else if (collectionName === "products") {
-        data = await convexQuery("functions/products.js:listProducts", {});
+        data = await convexQuery("functions/products:listProducts", {});
         data = data?.data || data;
       } else if (collectionName === "orders") {
-        data = await convexQuery("functions/orders.js:listOrders", {});
+        data = await convexQuery("functions/orders:listOrders", {});
         data = data?.data || data;
       } else {
-        data = await convexQuery("functions/products.js:listProducts", {});
+        data = await convexQuery("functions/products:listProducts", {});
         data = data?.data || data;
       }
       if (!cancelled && data) callback(Array.isArray(data) ? data : []);
@@ -92,7 +92,7 @@ export const subscribeToDocument = (
     try {
       if (collectionName === "content") {
         // CMS content - fetch by page/section
-        const data = await convexQuery("functions/cms.js:getCmsContent", { page: id });
+        const data = await convexQuery("functions/cms:getCmsContent", { page: id });
         if (!cancelled) {
           if (data && Array.isArray(data)) {
             const doc: any = {};
@@ -121,11 +121,11 @@ export const subscribeToDocument = (
 export const fetchCollection = async (collectionName: string) => {
   try {
     if (collectionName === "content") {
-      return await convexQuery("functions/cms.js:getCmsContent", {});
+      return await convexQuery("functions/cms:getCmsContent", {});
     } else if (collectionName === "categories") {
-      return await convexQuery("functions/categories.js:listCategories", {});
+      return await convexQuery("functions/categories:listCategories", {});
     } else if (collectionName === "products") {
-      const result = await convexQuery("functions/products.js:listProducts", {});
+      const result = await convexQuery("functions/products:listProducts", {});
       return result?.data || result || [];
     }
     return [];
@@ -138,7 +138,7 @@ export const fetchCollection = async (collectionName: string) => {
 export const fetchDocument = async (collectionName: string, id: string) => {
   try {
     if (collectionName === "content") {
-      const data = await convexQuery("functions/cms.js:getCmsContent", { page: id });
+      const data = await convexQuery("functions/cms:getCmsContent", { page: id });
       if (data && Array.isArray(data)) {
         const doc: any = {};
         data.forEach((item: any) => {
@@ -156,7 +156,7 @@ export const fetchDocument = async (collectionName: string, id: string) => {
 
 export const createDocument = async (collectionName: string, data: any) => {
   if (collectionName === "content") {
-    return await convexMutation("functions/cms.js:setCmsContent", data);
+    return await convexMutation("functions/cms:setCmsContent", data);
   }
   throw new Error(`createDocument not supported for ${collectionName}`);
 };
@@ -165,7 +165,7 @@ export const updateDocument = async (collectionName: string, id: string, data: a
   if (collectionName === "content") {
     // CMS content - save each field as a separate content entry
     for (const [key, value] of Object.entries(data)) {
-      await convexMutation("functions/cms.js:setCmsContent", {
+      await convexMutation("functions/cms:setCmsContent", {
         page: id,
         section: "content",
         content_key: key,
