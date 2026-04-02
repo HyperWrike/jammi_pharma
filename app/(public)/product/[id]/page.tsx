@@ -10,7 +10,7 @@ type Props = {
 
 async function getProduct(slug: string) {
   try {
-    const product = await convexQuery("functions/products.js:getProductsBySlug", { slug });
+    const product = await convexQuery("functions/products:getProductsBySlug", { slug });
     if (product) return product;
   } catch (e) {
     // Convex query failed, fall through to mock

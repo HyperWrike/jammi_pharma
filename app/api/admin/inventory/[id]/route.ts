@@ -11,7 +11,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const body = await req.json();
     const { stock, low_stock_threshold, reason } = body;
 
-    const data = await convexMutation("functions/products_mutations.js:updateInventory", {
+    const data = await convexMutation("functions/products_mutations:updateInventory", {
       id,
       stock,
       low_stock_threshold,
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   try {
     const { id } = await params;
-    const data = await convexQuery("functions/products.js:getInventoryLog", { id });
+    const data = await convexQuery("functions/products:getInventoryLog", { id });
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });

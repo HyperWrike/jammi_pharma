@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
   if (!admin) return unauthorized();
 
   try {
-    const data = await convexQuery("functions/bundles.js:listBundles", {});
+    const data = await convexQuery("functions/bundles:listBundles", {});
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
@@ -46,9 +46,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Bundle must include at least 2 products.' }, { status: 400 });
     }
 
-    const bundleId = await convexMutation("functions/bundles.js:createBundle", sanitizeBundlePayload(bundleData));
+    const bundleId = await convexMutation("functions/bundles:createBundle", sanitizeBundlePayload(bundleData));
 
-    await convexMutation("functions/bundles.js:setBundleProducts", {
+    await convexMutation("functions/bundles:setBundleProducts", {
       bundle_id: bundleId,
       product_ids: productIds
     });

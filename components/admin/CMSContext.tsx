@@ -1,23 +1,18 @@
 "use client";
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
-import { RealtimeChannel } from '@supabase/supabase-js';
-import { supabase } from '../../lib/supabase';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { convexQuery } from '../../lib/convexServer';
 
 const CMSContext = createContext<any>(null);
 
 export function CMSProvider({ page, children }: { page: string; children: React.ReactNode }) {
   const [content, setContent] = useState({});
   const [loading, setLoading] = useState(true);
-  const channelRef = useRef<RealtimeChannel | null>(null);
 
   const fetchContent = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('cms_content')
-        .select('*')
-        .eq('page', page);
+      const data = await convexQuery('functions/cms:getCmsContent', { page });
 
-      if (!error && data) {
+      if (data && Array.isArray(data)) {
         const structured: Record<string, Record<string, string>> = {};
         data.forEach((row: any) => {
           if (!structured[row.section]) structured[row.section] = {};
@@ -48,19 +43,10 @@ export function CMSProvider({ page, children }: { page: string; children: React.
   useEffect(() => {
     fetchContent();
 
-    const channel = supabase
-      .channel(`cms:${page}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'cms_content', filter: `page=eq.${page}` }, () => {
-        fetchContent();
-      })
-      .subscribe();
-
-    channelRef.current = channel;
-
-    return () => {
-      if (channelRef.current) supabase.removeChannel(channelRef.current);
-    };
-  }, [fetchContent, page]);
+    // Note: Real-time updates removed. Convex supports real-time subscriptions
+    // through the Convex React client, which can be added if needed.
+    // For now, content will be fetched once on mount.
+  }, [fetchContent]);
 
   return (
     <CMSContext.Provider value={{ content, loading, getValue, updateLocal, refetch: fetchContent }}>
@@ -84,16 +70,11 @@ export function useCMSValue(page: string, section: string, contentKey: string, f
   useEffect(() => {
     const fetchValue = async () => {
       try {
-        const { data, error } = await supabase
-          .from('cms_content')
-          .select('content_value')
-          .eq('page', page)
-          .eq('section', section)
-          .eq('content_key', contentKey)
-          .single();
+        const data = await convexQuery('functions/cms:getCmsContent', { page, section });
 
-        if (!error && data) {
-          setValue(data.content_value || fallback);
+        if (data && Array.isArray(data)) {
+          const item = data.find((row: any) => row.content_key === contentKey);
+          setValue(item?.content_value || fallback);
         } else {
           setValue(fallback);
         }
@@ -106,23 +87,8 @@ export function useCMSValue(page: string, section: string, contentKey: string, f
 
     fetchValue();
 
-    const channel = supabase
-      .channel(`cms:${page}:${section}:${contentKey}`)
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'cms_content',
-        filter: `page=eq.${page}&section=eq.${section}&content_key=eq.${contentKey}`
-      }, (payload) => {
-        if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-          setValue(payload.new.content_value);
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Note: Real-time updates removed. Convex supports real-time subscriptions
+    // through the Convex React client, which can be added if needed.
   }, [page, section, contentKey, fallback]);
 
   return { value, loading };

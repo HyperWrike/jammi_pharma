@@ -1,9 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap');
 @import "tailwindcss";
 
+:root {
+  --purple: #540C3C;
+  --yellow: #F9D139;
+  --orange: #E87722;
+  --font: 'Montserrat', sans-serif;
+}
+
 @theme {
-  --color-primary: #d58a30;
-  --color-saffron: #E67E22;
-  --color-forest: #3c2a1e; /* Changed to dark earth tone */
+  --color-primary: #540C3C;
+  --color-saffron: #F9D139;
+  --color-forest: #540C3C;
   --color-cream: #FDF9F0;
   --color-cream-dark: #F0E8DC;
   --color-background-light: #FDF9F0;
@@ -21,9 +29,9 @@
   --color-taupe: #9E8E7E;
   --color-ink: #2C2420;
 
-  --font-sans: "Inter", "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Playfair Display", serif;
-  --font-dm: "DM Sans", sans-serif;
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Montserrat", serif;
+  --font-dm: "Montserrat", sans-serif;
 
   /* New Fonts for Federation */
   --font-cormorant: var(--font-cormorant);
@@ -71,5 +79,62 @@
 }
 
 body {
-  @apply bg-background-light font-sans text-[#1a150f];
+  @apply bg-background-light;
+  color: var(--purple);
+  font-size: 16px;
 }
+
+/* Brand typography system: Montserrat everywhere */
+* {
+  font-family: var(--font) !important;
+}
+
+/* Founders/team photo: always full color + gentle hover scale */
+.team-photo,
+.founder-img {
+  filter: none;
+  transition: transform 0.3s ease;
+}
+
+.team-photo:hover,
+.founder-img:hover {
+  transform: scale(1.03);
+}
+
+.jammi-shop-filters {
+  position: sticky;
+  top: 80px; /* matches fixed header height */
+  z-index: 45;
+  background: var(--yellow);
+}
+
+.jammi-navlink {
+  font-size: 15px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.jammi-navlink:hover,
+.jammi-navlink[aria-current="page"] {
+  color: var(--yellow);
+}
+
+.jammi-dropdown-menu {
+  background: #FEF6CC; /* white/light cream */
+  color: var(--purple);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.jammi-dropdown-item {
+  color: var(--purple);
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
+.jammi-dropdown-item:hover {
+  background: var(--yellow);
+  color: var(--purple);
+}
+

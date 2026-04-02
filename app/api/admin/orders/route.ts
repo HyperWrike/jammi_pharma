@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    const result = await convexQuery("functions/orders.js:listOrders", cleanArgs({ status, page, limit }));
+    const result = await convexQuery("functions/orders:listOrders", cleanArgs({ status, page, limit }));
     return NextResponse.json(result);
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });

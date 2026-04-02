@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   if (!admin) return unauthorized();
 
   try {
-    const data = await convexQuery("functions/cms.js:listRolePermissions", {});
+    const data = await convexQuery("functions/cms:listRolePermissions", {});
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    await convexMutation("functions/cms.js:updateRolePermissions", body);
+    await convexMutation("functions/cms:updateRolePermissions", body);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });

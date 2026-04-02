@@ -93,6 +93,23 @@ const Consultation: React.FC = () => {
                 <CMS section="booking" field="formTitle" fallback="Request Appointment" />
               </h2>
 
+              {/* Booking Info Card (Brand Spec) */}
+              <div className="bg-[var(--yellow)] text-[var(--purple)] rounded-2xl p-6 border border-[var(--purple)]/10 mb-10">
+                <div className="flex items-start gap-4">
+                  <span className="material-symbols-outlined text-[34px] leading-none mt-0.5">
+                    schedule
+                  </span>
+                  <div>
+                    <div className="text-[14px] font-bold uppercase tracking-widest opacity-95">Available</div>
+                    <div className="text-[18px] font-black leading-tight">1:20 PM – 6:00 PM</div>
+                  </div>
+                </div>
+                <div className="mt-6 flex items-baseline justify-between gap-6">
+                  <div className="text-[14px] font-bold uppercase tracking-widest opacity-95">Consultation Fee</div>
+                  <div className="text-[28px] font-black leading-none">₹200</div>
+                </div>
+              </div>
+
               {/* Consultation Mode Toggle */}
               <section className="mb-10">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">
@@ -197,7 +214,7 @@ const Consultation: React.FC = () => {
                   <p className="text-xs text-slate-500 uppercase font-bold tracking-widest mb-1">
                     <CMS section="booking" field="feeLabel" fallback="Consultation Fee" />
                   </p>
-                  <p className="text-3xl font-black text-secondary tracking-tight">₹{mode === 'online' ? '499' : '899'}</p>
+                  <p className="text-3xl font-black text-secondary tracking-tight">₹200</p>
                 </div>
                 <button className="w-full md:w-auto min-w-[240px] bg-secondary hover:bg-black text-white py-4 px-8 rounded-full font-bold text-lg shadow-xl shadow-secondary/20 flex items-center justify-center gap-3 transition-all transform hover:-translate-y-1">
                   <CMS section="booking" field="confirmBtn" fallback="Confirm Booking" />

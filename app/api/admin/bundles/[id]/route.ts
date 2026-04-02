@@ -33,8 +33,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       status: body?.status,
     });
 
-    const data = await convexMutation("functions/bundles.js:updateBundle", { id, ...payload });
-    await convexMutation("functions/bundles.js:setBundleProducts", { bundle_id: id, product_ids: productIds });
+    const data = await convexMutation("functions/bundles:updateBundle", { id, ...payload });
+    await convexMutation("functions/bundles:setBundleProducts", { bundle_id: id, product_ids: productIds });
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
@@ -47,7 +47,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   try {
     const { id } = await params;
-    await convexMutation("functions/bundles.js:deleteBundle", { id });
+    await convexMutation("functions/bundles:deleteBundle", { id });
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });

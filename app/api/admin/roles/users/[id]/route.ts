@@ -9,7 +9,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
     const body = await req.json();
-    const data = await convexMutation("functions/cms.js:updateAdminUser", { id, ...body });
+    const data = await convexMutation("functions/cms:updateAdminUser", { id, ...body });
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
@@ -27,7 +27,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       return NextResponse.json({ error: 'Cannot delete your own admin account' }, { status: 400 });
     }
 
-    await convexMutation("functions/cms.js:deleteAdminUser", { id });
+    await convexMutation("functions/cms:deleteAdminUser", { id });
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });

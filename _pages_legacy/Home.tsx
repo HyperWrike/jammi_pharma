@@ -1,9 +1,9 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import ProductCard from '../components/ProductCard';
 import { MOCK_PRODUCTS } from '../constants';
-import { fetchCollection, updateDocument } from '../lib/adminDb';
+import { updateDocument } from '../lib/adminDb';
 import LiveEditable from '../components/admin/LiveEditable';
 import EditorImage from '../components/EditorImage';
 import { useCMSContent } from '../hooks/useCMSContent';
@@ -15,15 +15,6 @@ const Home: React.FC = () => {
   );
 
   const { content, loading } = useCMSContent('homepage');
-  const [activeBanner, setActiveBanner] = useState<any>(null);
-
-  useEffect(() => {
-    // Fetch banners
-    fetchCollection('banners').then(banners => {
-      const active = banners.find((b: any) => b.isActive);
-      if (active) setActiveBanner(active);
-    });
-  }, []);
 
   const CMS = ({ section, field, fallback, inputType = 'text', multiline = false, className = '' }: any) => (
     <LiveEditable 
@@ -37,65 +28,65 @@ const Home: React.FC = () => {
     />
   );
 
-  const heroBgImage = activeBanner?.imageUrl || "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=1920";
-
   return (
     <div className="bg-background-light pt-[5rem]">
 
       {/* Section 1: Hero */}
-      <section className="relative min-h-[90vh] flex items-center bg-forest overflow-hidden mt-1">
-        {/* Background Image */}
-        <EditorImage
-          src={heroBgImage}
-          alt="Home Hero Background"
-          bucket="banners"
-          folder="hero"
-          editorActive={true}
-          className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay"
-          onUpdate={(url) => {
-            if (activeBanner) {
-               updateDocument('banners', activeBanner.id, { imageUrl: url });
-            }
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-forest via-forest/80 to-transparent"></div>
+      <section className="relative min-h-[750px] flex overflow-hidden mt-1">
+        {/* Left Column (Solid Purple) */}
+        <div className="w-1/2 bg-[var(--purple)] flex items-center">
+          <div className="max-w-[560px] px-8 sm:px-14 py-16">
+            <h1 className="m-0 leading-[0.95]">
+              <div className="text-[64px] lg:text-[72px] font-black text-[var(--yellow)] tracking-tight">
+                INDIA&apos;S
+              </div>
+              <div className="text-[52px] font-normal italic text-white leading-[1.0] mt-2">
+                Healthcare
+              </div>
+              <div className="text-[64px] lg:text-[72px] font-black text-[var(--orange)] tracking-tight mt-2">
+                RENAISSANCE
+              </div>
+            </h1>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-10 w-full py-20 flex flex-col justify-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 border border-saffron/50 rounded-full px-4 py-1.5 mb-8 w-max bg-forest/30 backdrop-blur-sm">
-            <span className="material-symbols-outlined text-saffron text-sm">star</span>
-            <span className="text-white text-[10px] sm:text-xs font-bold tracking-widest uppercase mt-0.5">
-              <CMS section="hero" field="heroBadge" fallback="128 Years of Authenticity" />
-            </span>
+            <p className="text-[19px] text-white/95 max-w-[520px] leading-relaxed mt-8 font-normal">
+              We are not &apos;Alternative Medicine.&apos; We are India&apos;s primary healthcare solution since 1897.
+            </p>
+
+            <Link
+              href="/shop"
+              className="inline-flex items-center justify-center bg-[var(--yellow)] text-[var(--purple)] font-bold text-[16px] px-10 py-4 rounded-xl mt-10 hover:brightness-95 transition-colors"
+            >
+              THE PHARMACY
+            </Link>
+          </div>
+        </div>
+
+        {/* Right Column (Fully Visible Product Image) */}
+        <div
+          className="w-1/2 relative flex items-center justify-center overflow-visible"
+          style={{
+            background:
+              "radial-gradient(circle at 35% 20%, rgba(249,209,57,0.40) 0%, rgba(249,209,57,0.00) 60%), #540C3C",
+          }}
+        >
+          <div className="absolute inset-0 pointer-events-none">
+            <div
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] rounded-full"
+              style={{
+                background: "radial-gradient(circle, rgba(249,209,57,0.55) 0%, rgba(249,209,57,0.0) 65%)",
+                filter: "blur(8px)",
+              }}
+            />
           </div>
 
-          {/* Headline */}
-          <h1 className="font-serif leading-[1.1] sm:leading-none mb-6">
-            <span className="block text-white font-bold text-5xl sm:text-7xl md:text-8xl uppercase tracking-tight">
-              <CMS section="hero" field="heroTitleLine1" fallback="INDIA'S" />
-            </span>
-            <span className="block text-saffron italic text-6xl sm:text-8xl md:text-9xl pl-2 tracking-tight sm:-mt-6">
-              <CMS section="hero" field="heroTitleLine2" fallback="Healthcare" />
-            </span>
-            <span className="block text-white font-bold text-5xl sm:text-7xl md:text-8xl uppercase tracking-tight sm:-mt-4 relative z-10">
-              <CMS section="hero" field="heroTitleLine3" fallback="RENAISSANCE." />
-            </span>
-          </h1>
-
-          {/* Subtext */}
-          <p className="text-white/80 max-w-xl text-lg sm:text-xl font-medium leading-relaxed mb-10">
-            <CMS section="hero" field="heroSubtext" multiline fallback="We are not 'Alternative Medicine.' We are India's primary healthcare solution since 1897." />
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-            <Link href="/shop" className="bg-saffron text-white font-bold px-8 py-4 flex justify-between items-center rounded-sm hover:-translate-y-1 hover:shadow-xl transition-all w-full sm:w-auto min-w-[200px] border border-saffron text-sm tracking-widest leading-none">
-              <CMS section="hero" field="ctaText" fallback="THE PHARMACY" />
-              <span className="material-symbols-outlined ml-4">arrow_forward</span>
-            </Link>
-            <Link href="/federation" className="bg-transparent border-2 border-white text-white font-bold px-8 py-4 flex justify-center items-center rounded-sm hover:bg-white/10 transition-all w-full sm:w-auto text-sm tracking-widest leading-none">
-              <CMS section="hero" field="ctaSecondaryText" fallback="JOIN THE ARMY" />
-            </Link>
+          <div className="relative w-[92%] max-w-[460px]">
+            {/* No cropping: keep aspect ratio with contain */}
+            <img
+              alt="Jammi product"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1zitHt_v0ndbw8MiOLwFRMMSN4w1fY7IhpTivcaiMDu_oOqJrzmpZCnF58sj6ODckdbHlyiUkOUtfAjgPCqtdavgJlK76_Epmw4XcGqdIE2FnwDeFeC9b38itfAffYTbAEnc1xej--uYAnSGxRZxfgE56cnyKlifitqWMmjKa_2l6yKXDwhx1atcflGGXRqa_w1NituPvdAoqOS0irf4d1yYL2pGxG9TdbfuNSRR-qzZOaJK3mgjlVGxqLrfnY4_LGRxwkhpSqyE"
+              className="w-full h-auto object-contain rounded-[18px]"
+              style={{ boxShadow: "0 18px 45px rgba(0,0,0,0.22)" }}
+            />
           </div>
         </div>
       </section>
@@ -143,7 +134,7 @@ const Home: React.FC = () => {
               </span>
             </h2>
             <div className="w-16 h-1 bg-saffron"></div>
-            <blockquote className="text-forest/70 italic text-xl lg:text-2xl font-serif leading-relaxed border-l-4 border-saffron/30 pl-6">
+            <blockquote className="text-[var(--purple)] font-bold text-[20px] leading-relaxed border-l-4 border-[var(--orange)]/25 pl-6">
               "<CMS section="claim" field="claimQuote" multiline fallback="We don't sell hope. We sell 128 years of clinical results. Authentic Ayurveda doesn't ask for belief—it demands respect." />"
             </blockquote>
             <div className="pt-4">

@@ -47,7 +47,7 @@ export default function FoundersPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
                     <div className="relative group order-2 lg:order-1">
                         <div className="absolute inset-0 bg-primary/20 rounded-[2rem] transform -translate-x-4 translate-y-4 -z-10 group-hover:-translate-x-6 group-hover:translate-y-6 transition-transform duration-500"></div>
-                        <div className="rounded-[2rem] w-full aspect-[4/5] object-cover shadow-2xl overflow-hidden relative grayscale hover:grayscale-0 transition-all duration-700">
+                        <div className="team-photo rounded-[2rem] w-full aspect-[4/5] object-cover shadow-2xl overflow-hidden relative">
                             <EditorImage
                                 src={content.founder1Image || "/images/founder_1.png"}
                                 alt="Dr. Narasimham Jammi"
@@ -94,7 +94,7 @@ export default function FoundersPage() {
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-3 bg-white border border-slate-200 hover:border-primary text-secondary px-8 py-4 rounded-full font-bold transition-all shadow-sm hover:shadow-md group"
                         >
-                            <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="LinkedIn" className="w-5 h-5 grayscale group-hover:grayscale-0 transition-colors" />
+                            <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="LinkedIn" className="w-5 h-5 transition-colors" />
                             <CMS collection="content" docId="founders" field="linkedInText">Connect on LinkedIn</CMS>
                             <span className="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform">arrow_right_alt</span>
                         </a>
@@ -147,7 +147,7 @@ export default function FoundersPage() {
 
                     <div className="relative group">
                         <div className="absolute inset-0 bg-secondary/10 rounded-[2rem] transform translate-x-4 -translate-y-4 -z-10 group-hover:translate-x-6 group-hover:-translate-y-6 transition-transform duration-500"></div>
-                        <div className="rounded-[2rem] w-full aspect-[4/5] object-cover shadow-2xl overflow-hidden relative grayscale hover:grayscale-0 transition-all duration-700">
+                        <div className="team-photo rounded-[2rem] w-full aspect-[4/5] object-cover shadow-2xl overflow-hidden relative">
                             <EditorImage
                                 src={content.founder2Image || "/images/founder_2.jpg"}
                                 alt="Dr. Anitha Balachander"

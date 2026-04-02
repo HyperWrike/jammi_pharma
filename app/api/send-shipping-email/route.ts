@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Fetch order from Convex
-    const order = await convexQuery("functions/orders.js:getOrder", { id: orderId });
+    const order = await convexQuery("functions/orders:getOrder", { id: orderId });
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });

@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const productId = searchParams.get('productId');
 
-    const reviews = await convexQuery("functions/reviews.js:listReviews", cleanArgs({ productId, status: 'approved' }));
+    const reviews = await convexQuery("functions/reviews:listReviews", cleanArgs({ productId, status: 'approved' }));
 
     const mapped = (reviews || []).map((r: any) => ({
       id: r._id,
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const reviewId = await convexMutation("functions/reviews.js:createReview", cleanArgs({
+    const reviewId = await convexMutation("functions/reviews:createReview", cleanArgs({
       product_id: productId,
       reviewer_name: customerName,
       rating: parseInt(rating),

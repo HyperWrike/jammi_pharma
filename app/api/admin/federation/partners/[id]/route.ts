@@ -9,7 +9,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const { id } = await params;
     const body = await req.json();
-    const data = await convexMutation("functions/federation_posts.js:updatePartner", { id, status: body.status });
+    const data = await convexMutation("functions/federation_posts:updatePartner", { id, status: body.status });
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
@@ -22,7 +22,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   try {
     const { id } = await params;
-    await convexMutation("functions/federation_posts.js:deletePartner", { id });
+    await convexMutation("functions/federation_posts:deletePartner", { id });
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });

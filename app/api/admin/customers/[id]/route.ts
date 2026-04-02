@@ -8,7 +8,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   try {
     const { id } = await params;
-    const data = await convexQuery("functions/orders.js:getCustomer", { id });
+    const data = await convexQuery("functions/orders:getCustomer", { id });
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
@@ -22,7 +22,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const { id } = await params;
     const body = await req.json();
-    const data = await convexMutation("functions/orders.js:updateCustomer", { id, ...body });
+    const data = await convexMutation("functions/orders:updateCustomer", { id, ...body });
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
