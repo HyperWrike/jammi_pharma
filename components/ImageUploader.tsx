@@ -80,7 +80,7 @@ export default function ImageUploader({
         // Show local preview immediately for snappy UX
         setPreview(URL.createObjectURL(file));
 
-        // Upload to Supabase Storage via our secure admin route
+        // Upload image via our secure admin route
         const url = await uploadImage(file, bucket, folder);
         if (url) {
           setPreview(url);
