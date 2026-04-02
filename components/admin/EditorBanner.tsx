@@ -8,7 +8,7 @@ export default function EditorBanner() {
   if (!isAdmin || !isEditMode) return null;
 
   return (
-    <div className="fixed top-0 left-0 w-full h-11 z-[9999] bg-green-600 text-white px-4 flex items-center justify-between shadow-md">
+    <div className="fixed top-0 left-0 w-full z-[9999] bg-green-600 text-white px-4 py-2 flex items-center justify-between shadow-md">
       <div className="flex items-center gap-2 font-bold text-sm">
         <span className="material-symbols-outlined text-[18px]">edit_note</span>
         Live Editor Mode Active

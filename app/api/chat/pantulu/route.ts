@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { convexQuery } from '@/lib/convexServer';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 type CatalogProduct = {
   _id: string;
   name: string;
@@ -22,11 +25,39 @@ type Category = {
 };
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+const GROQ_MODEL = process.env.GROQ_MODEL || process.env.GROQ_CHAT_MODEL || 'llama-3.3-70b-versatile';
+
+const NON_RECOMMENDABLE_STATUSES = new Set(['archived', 'deleted', 'draft', 'inactive', 'unpublished']);
 
 function formatPrice(price?: number, discountPrice?: number) {
   const finalPrice = typeof discountPrice === 'number' ? discountPrice : price;
   return typeof finalPrice === 'number' ? `Rs.${finalPrice}` : 'Price on request';
+}
+
+function isRecommendableProduct(p: CatalogProduct) {
+  const status = (p.status || '').toLowerCase().trim();
+  return !NON_RECOMMENDABLE_STATUSES.has(status);
+}
+
+async function fetchAllProducts(): Promise<CatalogProduct[]> {
+  const pageSize = 500;
+  let page = 1;
+  let total = 0;
+  const all: CatalogProduct[] = [];
+
+  do {
+    const result = await convexQuery<{ data: CatalogProduct[]; total: number }>('functions/products:listProducts', {
+      page,
+      limit: pageSize,
+    });
+
+    const items = Array.isArray(result?.data) ? result.data : [];
+    total = Number(result?.total || 0);
+    all.push(...items);
+    page += 1;
+  } while (all.length < total);
+
+  return all;
 }
 
 function bestEffortRecommendations(message: string, products: CatalogProduct[], categoryMap: Record<string, string>) {
@@ -34,7 +65,7 @@ function bestEffortRecommendations(message: string, products: CatalogProduct[], 
   const words = q.split(/\s+/).filter((w) => w.length > 2);
 
   const scored = products
-    .filter((p) => (p.status || '').toLowerCase() !== 'archived')
+    .filter(isRecommendableProduct)
     .map((p) => {
       const categoryName = p.category_id ? categoryMap[p.category_id] || '' : '';
       const haystack = [
@@ -103,15 +134,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    const [productResult, categories] = await Promise.all([
-      convexQuery<{ data: CatalogProduct[]; total: number }>('functions/products:listProducts', {
-        page: 1,
-        limit: 1000,
-      }),
+    const [allProducts, categories] = await Promise.all([
+      fetchAllProducts(),
       convexQuery<Category[]>('functions/categories:listCategories', {}),
     ]);
 
-    const products = Array.isArray(productResult?.data) ? productResult.data : [];
+    const products = allProducts.filter(isRecommendableProduct);
     const categoryMap: Record<string, string> = {};
     for (const c of categories || []) {
       categoryMap[c._id] = c.name;
@@ -130,7 +158,11 @@ export async function POST(req: NextRequest) {
       '{"reply":"string","recommendations":[{"name":"string","url":"string","reason":"string"}]}'
     ].join(' ');
 
-    const groqKey = process.env.GROQ_API_KEY;
+    const groqKey =
+      process.env.GROQ_API_KEY ||
+      process.env.GROQ_KEY ||
+      process.env.GROQ_API_TOKEN ||
+      process.env.NEXT_PUBLIC_GROQ_API_KEY;
     if (!groqKey) {
       return NextResponse.json({
         reply: 'Pantulu is not configured yet. Please set GROQ_API_KEY on the server.',
