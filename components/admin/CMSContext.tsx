@@ -1,6 +1,5 @@
 "use client";
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
-import { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 
 const CMSContext = createContext<any>(null);
@@ -8,7 +7,7 @@ const CMSContext = createContext<any>(null);
 export function CMSProvider({ page, children }: { page: string; children: React.ReactNode }) {
   const [content, setContent] = useState({});
   const [loading, setLoading] = useState(true);
-  const channelRef = useRef<RealtimeChannel | null>(null);
+  const channelRef = useRef<any>(null);
 
   const fetchContent = useCallback(async () => {
     try {
