@@ -7,7 +7,7 @@ type Product = { id: string; name: string; shortDesc?: string; price?: number; i
 export default function ProductCard({ product }: { product: Product }) {
   const image = product.image || '/images/placeholder.png';
   return (
-    <div className="legacy-product-card" style={{ border: '1px solid #e5e7eb', padding: 12, borderRadius: 8, maxWidth: 260 }}>
+    <div className="legacy-product-card w-full" style={{ border: '1px solid #e5e7eb', padding: 12, borderRadius: 8 }}>
       <Link href={`/product/${product.id}`}>
         <img src={image} alt={product.name} style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'contain' }} />
       </Link>

@@ -32,29 +32,29 @@ const Home: React.FC = () => {
     <div className="bg-background-light pt-[5rem]">
 
       {/* Section 1: Hero */}
-      <section className="relative min-h-[750px] flex overflow-hidden mt-1">
+      <section className="relative min-h-[640px] lg:min-h-[750px] mt-1 overflow-hidden bg-[var(--purple)]">
         {/* Left Column (Solid Purple) */}
-        <div className="w-1/2 bg-[var(--purple)] flex items-center">
-          <div className="max-w-[560px] px-8 sm:px-14 py-16">
+        <div className="w-full lg:w-1/2 bg-[var(--purple)] flex items-center">
+          <div className="max-w-[560px] px-5 sm:px-10 lg:px-14 py-12 lg:py-16">
             <h1 className="m-0 leading-[0.95]">
-              <div className="text-[64px] lg:text-[72px] font-black text-[var(--yellow)] tracking-tight">
+              <div className="text-[40px] sm:text-[56px] lg:text-[72px] font-black text-[var(--yellow)] tracking-tight">
                 INDIA&apos;S
               </div>
-              <div className="text-[52px] font-normal italic text-white leading-[1.0] mt-2">
+              <div className="text-[34px] sm:text-[44px] lg:text-[52px] font-normal italic text-white leading-[1.0] mt-2">
                 Healthcare
               </div>
-              <div className="text-[64px] lg:text-[72px] font-black text-[var(--orange)] tracking-tight mt-2">
+              <div className="text-[40px] sm:text-[56px] lg:text-[72px] font-black text-[var(--orange)] tracking-tight mt-2">
                 RENAISSANCE
               </div>
             </h1>
 
-            <p className="text-[19px] text-white/95 max-w-[520px] leading-relaxed mt-8 font-normal">
+            <p className="text-base sm:text-lg lg:text-[19px] text-white/95 max-w-[520px] leading-relaxed mt-6 sm:mt-8 font-normal">
               We are not &apos;Alternative Medicine.&apos; We are India&apos;s primary healthcare solution since 1897.
             </p>
 
             <Link
               href="/shop"
-              className="inline-flex items-center justify-center bg-[var(--yellow)] text-[var(--purple)] font-bold text-[16px] px-10 py-4 rounded-xl mt-10 hover:brightness-95 transition-colors"
+              className="inline-flex items-center justify-center bg-[var(--yellow)] text-[var(--purple)] font-bold text-sm sm:text-base px-7 sm:px-10 py-3 sm:py-4 rounded-xl mt-8 sm:mt-10 hover:brightness-95 transition-colors"
             >
               THE PHARMACY
             </Link>
@@ -63,7 +63,7 @@ const Home: React.FC = () => {
 
         {/* Right Column (Fully Visible Product Image) */}
         <div
-          className="w-1/2 relative flex items-center justify-center overflow-visible"
+          className="w-full lg:w-1/2 relative flex items-center justify-center overflow-visible px-5 pb-10 lg:px-0 lg:pb-0"
           style={{
             background:
               "radial-gradient(circle at 35% 20%, rgba(249,209,57,0.40) 0%, rgba(249,209,57,0.00) 60%), #540C3C",
@@ -71,7 +71,7 @@ const Home: React.FC = () => {
         >
           <div className="absolute inset-0 pointer-events-none">
             <div
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] rounded-full"
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] h-[360px] sm:w-[460px] sm:h-[460px] lg:w-[520px] lg:h-[520px] rounded-full"
               style={{
                 background: "radial-gradient(circle, rgba(249,209,57,0.55) 0%, rgba(249,209,57,0.0) 65%)",
                 filter: "blur(8px)",
@@ -79,7 +79,7 @@ const Home: React.FC = () => {
             />
           </div>
 
-          <div className="relative w-[92%] max-w-[460px]">
+          <div className="relative w-full max-w-[420px] sm:max-w-[460px]">
             {/* No cropping: keep aspect ratio with contain */}
             <img
               alt="Jammi product"
@@ -92,7 +92,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Section 2: Stats Scroller */}
-      <section className="bg-white py-6 border-b-2 border-cream-dark overflow-hidden whitespace-nowrap flex group">
+      <section className="bg-white py-4 sm:py-6 border-b-2 border-cream-dark overflow-hidden whitespace-nowrap flex group">
         <div className="animate-marquee flex gap-12 items-center min-w-full pl-12">
           {/* Loop items */}
           {[1, 2, 3].map((_, i) => (
@@ -118,23 +118,23 @@ const Home: React.FC = () => {
       </section>
 
       {/* Section 3: The Jammi Claim */}
-      <section className="bg-cream py-24 lg:py-32">
+      <section className="bg-cream py-16 sm:py-20 lg:py-32">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Left Column */}
           <div className="space-y-8">
             <h2 className="font-serif leading-none">
-              <span className="block text-forest font-bold text-5xl lg:text-6xl xl:text-7xl uppercase tracking-tight">
+              <span className="block text-forest font-bold text-4xl sm:text-5xl lg:text-6xl xl:text-7xl uppercase tracking-tight">
                 <CMS section="claim" field="claimTitleLine1" fallback="MEDICINE IS" />
               </span>
-              <span className="block text-forest font-bold text-5xl lg:text-6xl xl:text-7xl uppercase tracking-tight">
+              <span className="block text-forest font-bold text-4xl sm:text-5xl lg:text-6xl xl:text-7xl uppercase tracking-tight">
                 <CMS section="claim" field="claimTitleLine2" fallback="NOT A" />
               </span>
-              <span className="block text-saffron italic text-5xl lg:text-6xl xl:text-7xl tracking-tight pr-4">
+              <span className="block text-saffron italic text-4xl sm:text-5xl lg:text-6xl xl:text-7xl tracking-tight pr-4">
                 <CMS section="claim" field="claimTitleLine3" fallback="Marketing Claim." />
               </span>
             </h2>
             <div className="w-16 h-1 bg-saffron"></div>
-            <blockquote className="text-[var(--purple)] font-bold text-[20px] leading-relaxed border-l-4 border-[var(--orange)]/25 pl-6">
+            <blockquote className="text-[var(--purple)] font-bold text-lg sm:text-[20px] leading-relaxed border-l-4 border-[var(--orange)]/25 pl-5 sm:pl-6">
               "<CMS section="claim" field="claimQuote" multiline fallback="We don't sell hope. We sell 128 years of clinical results. Authentic Ayurveda doesn't ask for belief—it demands respect." />"
             </blockquote>
             <div className="pt-4">
@@ -166,18 +166,18 @@ const Home: React.FC = () => {
       </section>
 
       {/* Section 4: Product Curation */}
-      <section className="bg-background-light py-24 lg:py-32 border-b border-cream-dark border-t border-cream-dark">
+      <section className="bg-background-light py-16 sm:py-20 lg:py-32 border-b border-cream-dark border-t border-cream-dark">
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
-          <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-16">
+          <div className="flex flex-col md:flex-row justify-between md:items-end gap-6 mb-12 sm:mb-16">
             <div className="max-w-xl">
               <span className="text-saffron font-bold uppercase tracking-widest text-sm mb-4 block">
                 <CMS section="essentials" field="label" fallback="CURATED SELECTION" />
               </span>
-              <h2 className="text-5xl lg:text-6xl font-serif font-bold text-forest">
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-forest">
                 <CMS section="essentials" field="title" fallback="THE ESSENTIALS" />
               </h2>
             </div>
-            <Link href="/shop" className="border-2 border-forest text-forest font-bold uppercase tracking-widest text-xs px-8 py-4 hover:bg-forest hover:text-white transition-colors">
+            <Link href="/shop" className="border-2 border-forest text-forest font-bold uppercase tracking-widest text-xs px-6 sm:px-8 py-3 sm:py-4 hover:bg-forest hover:text-white transition-colors w-full sm:w-auto text-center">
               <CMS section="essentials" field="ctaText" fallback="BROWSE FULL INVENTORY" />
             </Link>
           </div>
@@ -190,7 +190,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Section 5: Prescribe Jammi (Partnership) */}
-      <section className="bg-cream-dark py-24 lg:py-32">
+      <section className="bg-cream-dark py-16 sm:py-20 lg:py-32">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
           {/* Left Column */}
           <div>
@@ -208,7 +208,7 @@ const Home: React.FC = () => {
                 <CMS section="partner" field="subtitle" fallback="Add 128 Years to Your Practice." />
               </span>
             </h2>
-            <p className="text-forest/80 text-lg leading-relaxed mb-12 max-w-xl font-medium">
+            <p className="text-forest/80 text-base sm:text-lg leading-relaxed mb-10 sm:mb-12 max-w-xl font-medium">
               <CMS section="partner" field="partnerDescription" multiline fallback="You heal the patient. We supply the medicine. Jammi Pharmaceuticals invites qualified Ayurveda practitioners to partner with us commercially. Prescribe and retail our AYUSH-licensed, time-tested formulations through your clinic. Your patients get 128 years of proven results. You get a trusted product line and healthy margins — without the overhead of manufacturing. This is a straightforward business partnership. You focus on healing. We handle formulation, quality, compliance, and supply." />
             </p>
 
@@ -284,7 +284,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Section 6: The Federation */}
-      <section className="bg-forest py-24 lg:py-32 relative overflow-hidden">
+      <section className="bg-forest py-16 sm:py-20 lg:py-32 relative overflow-hidden">
         {/* Subtle background texture/pattern */}
         <div className="absolute inset-0 opacity-5 grain-texture mix-blend-overlay"></div>
         <div className="absolute right-0 top-0 w-1/2 h-full bg-saffron/5 skew-x-12 -translate-x-32 hidden lg:block"></div>
@@ -307,7 +307,7 @@ const Home: React.FC = () => {
                 <CMS section="federation" field="fedHeroTitleLine3" fallback="START LEADING." />
               </span>
             </h2>
-            <p className="text-white/80 text-xl font-medium leading-relaxed mb-12 max-w-md">
+            <p className="text-white/80 text-lg sm:text-xl font-medium leading-relaxed mb-10 sm:mb-12 max-w-md">
               <CMS section="federation" field="fedSubtext" multiline fallback="Join India's most powerful collective of traditional healers. We share our 128-year legacy, you provide the authentic healing. Together, we take back Indian healthcare." />
             </p>
 
