@@ -3,16 +3,20 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import LiveEditable from './admin/LiveEditable';
 import { useCart } from '../hooks/useCart';
+import { useAdmin } from './admin/AdminContext';
 
 const NAV_LINKS = [
   { label: 'Legacy', href: '/legacy' },
   { label: 'Founders', href: '/founders' },
   { label: 'Shop', href: '/shop' },
+  { label: 'Blog', href: '/blog' },
   { label: 'Federation', href: '/federation' },
 ];
 
 const Navbar: React.FC = () => {
   const { cartCount } = useCart();
+  const { isAdmin, isEditMode } = useAdmin();
+  const isLiveEditor = isAdmin && isEditMode;
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -55,7 +59,7 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <header className="fixed top-0 z-50 w-full bg-[var(--purple)] border-b border-black/10">
+      <header className={`fixed z-50 w-full bg-[var(--purple)] border-b border-black/10 ${isLiveEditor ? 'top-11' : 'top-0'}`}>
         <div className="max-w-7xl mx-auto px-4 lg:px-10 h-20 flex items-center justify-between">
           <Link
             href="/"

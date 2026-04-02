@@ -11,6 +11,28 @@ function getResend() {
   return new Resend(key);
 }
 
+function getFromAddress() {
+  return process.env.RESEND_FROM_EMAIL || 'Jammi Pharmaceuticals <onboarding@resend.dev>';
+}
+
+async function getEmailSettings() {
+  const defaults = {
+    fromEmail: getFromAddress(),
+  };
+
+  try {
+    const rows = await convexQuery<any[]>('functions/cms:getCmsContent', {
+      page: 'email_settings',
+      section: 'notifications',
+    });
+
+    const fromEmail = rows.find((r) => r.content_key === 'from_email')?.content_value;
+    return { fromEmail: fromEmail || defaults.fromEmail };
+  } catch {
+    return defaults;
+  }
+}
+
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
   const { allowed, remaining, resetAt } = rateLimit(`send-shipping-email:${ip}`, 5, 60_000);
@@ -63,8 +85,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, message: 'Email skipped (no API key)' });
     }
 
+    const emailSettings = await getEmailSettings();
+
     const { error: emailError } = await resend.emails.send({
-      from: 'Jammi Pharmaceuticals <onboarding@resend.dev>',
+      from: emailSettings.fromEmail,
       to: [order.customer_email],
       subject: `Your Jammi order ${order.order_number} is on its way!`,
       react: OrderShippedEmail({
@@ -93,6 +117,9 @@ export async function POST(req: NextRequest) {
     );
   } catch (err) {
     console.error('[send-shipping-email] Unexpected error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error', detail: err instanceof Error ? err.message : String(err) },
+      { status: 500 }
+    );
   }
 }
