@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     // Find order by razorpay_order_id
     let order: any = null;
     try {
-      order = await convexQuery("functions/orders.js:getOrderByRazorpayOrderId", {
+      order = await convexQuery("functions/orders:getOrderByRazorpayOrderId", {
         razorpay_order_id: razorpayOrderId,
       });
     } catch (e) {
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     // Update order to paid
     if (order?._id) {
       try {
-        await convexMutation("functions/orders.js:updateOrderById", {
+        await convexMutation("functions/orders:updateOrderById", {
           id: order._id,
           updates: {
             payment_status: 'paid',
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
 
     // Insert payment record
     try {
-      await convexMutation("functions/orders.js:createPayment", {
+      await convexMutation("functions/orders:createPayment", {
         transaction_id: razorpayPaymentId,
         razorpay_order_id: razorpayOrderId,
         customer_name: order?.customer_name || payment.contact || '',
@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
     // Upsert customer
     if (payment.email) {
       try {
-        await convexMutation("functions/orders.js:upsertCustomer", {
+        await convexMutation("functions/orders:upsertCustomer", {
           email: payment.email,
           name: order?.customer_name || payment.contact || 'Customer',
           phone: payment.contact || order?.customer_phone || '',
@@ -199,11 +199,11 @@ export async function POST(req: NextRequest) {
 
     if (razorpayOrderId) {
       try {
-        const order = await convexQuery("functions/orders.js:getOrderByRazorpayOrderId", {
+        const order = await convexQuery("functions/orders:getOrderByRazorpayOrderId", {
           razorpay_order_id: razorpayOrderId,
         });
         if (order?._id) {
-          await convexMutation("functions/orders.js:updateOrderById", {
+          await convexMutation("functions/orders:updateOrderById", {
             id: order._id,
             updates: { payment_status: 'failed' },
           });
@@ -215,7 +215,7 @@ export async function POST(req: NextRequest) {
 
     if (payment.id) {
       try {
-        await convexMutation("functions/orders.js:createPayment", {
+        await convexMutation("functions/orders:createPayment", {
           transaction_id: payment.id,
           razorpay_order_id: razorpayOrderId,
           customer_name: payment.contact || '',

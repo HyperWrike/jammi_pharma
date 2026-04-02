@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
   if (!admin) return unauthorized();
 
   try {
-    const data = await convexQuery("functions/coupons.js:listCoupons", {});
+    const data = await convexQuery("functions/coupons:listCoupons", {});
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const data = await convexMutation("functions/coupons.js:createCoupon", sanitizeCouponPayload(body));
+    const data = await convexMutation("functions/coupons:createCoupon", sanitizeCouponPayload(body));
     return NextResponse.json({ data }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });

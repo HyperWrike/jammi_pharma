@@ -106,13 +106,13 @@ const Shop: React.FC = () => {
     };
 
     const fetchShopData = async () => {
-      const catData = await convexQuery('functions/categories.js:listCategories', {});
+      const catData = await convexQuery('functions/categories:listCategories', {});
       currentCategories = Array.isArray(catData) ? catData : [];
       const categoryNameById = new Map(
         currentCategories.map((cat: any) => [cat._id || cat.id, cat.name]),
       );
 
-      const prodResult = await convexQuery('functions/products.js:listProducts', {
+      const prodResult = await convexQuery('functions/products:listProducts', {
         status: 'published',
         page: 1,
         limit: 50,
@@ -153,7 +153,7 @@ const Shop: React.FC = () => {
       const catResult = await fetch(`${CONVEX_URL}/api/query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: 'functions/categories.js:listCategories', args: {}, format: 'json' }),
+        body: JSON.stringify({ path: 'functions/categories:listCategories', args: {}, format: 'json' }),
       });
       const catJson = await catResult.json();
       const firstCategory = Array.isArray(catJson?.value) ? catJson.value[0] : null;

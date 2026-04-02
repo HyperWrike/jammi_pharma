@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
     }
 
-    const result = await convexMutation("functions/admin.js:verifyAdmin", cleanArgs({ email, password }));
+    const result = await convexMutation("functions/admin:verifyAdmin", cleanArgs({ email, password }));
     
     if (result.success) {
       return NextResponse.json({ 

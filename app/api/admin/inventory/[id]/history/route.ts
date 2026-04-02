@@ -11,7 +11,7 @@ export async function GET(
 
   try {
     const { id } = await params;
-    const data = await convexQuery("functions/products.js:getInventoryLog", { id });
+    const data = await convexQuery("functions/products:getInventoryLog", { id });
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json(

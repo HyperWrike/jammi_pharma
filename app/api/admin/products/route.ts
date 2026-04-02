@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    const result = await convexQuery("functions/products.js:listProducts", cleanArgs({
+    const result = await convexQuery("functions/products:listProducts", cleanArgs({
       search, category, status, page, limit
     }));
     return NextResponse.json(result);
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
   if (!admin) return unauthorized();
   try {
     const body = await req.json();
-    const result = await convexMutation("functions/products_mutations.js:createProduct", sanitizeProductInput(body));
+    const result = await convexMutation("functions/products_mutations:createProduct", sanitizeProductInput(body));
     return NextResponse.json({ data: result }, { status: 201 });
   } catch (error: any) {
     if ((error?.message || '').toLowerCase().includes('already exists')) {

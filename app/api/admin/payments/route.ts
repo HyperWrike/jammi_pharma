@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status') || 'all';
     const search = searchParams.get('search');
 
-    const data = await convexQuery("functions/orders.js:listPayments", cleanArgs({ status, search }));
+    const data = await convexQuery("functions/orders:listPayments", cleanArgs({ status, search }));
     return NextResponse.json({ data: data || [] });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });

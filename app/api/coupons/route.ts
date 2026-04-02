@@ -3,7 +3,7 @@ import { convexQuery } from '@/lib/convexServer';
 
 export async function GET() {
   try {
-    const allCoupons = await convexQuery('functions/coupons.js:listCoupons', {});
+    const allCoupons = await convexQuery('functions/coupons:listCoupons', {});
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const data = (allCoupons || []).filter((coupon: any) => {

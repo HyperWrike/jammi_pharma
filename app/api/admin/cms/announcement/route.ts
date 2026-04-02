@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   if (!admin) return unauthorized();
 
   try {
-    const data = await convexQuery("functions/cms.js:getAnnouncement", {});
+    const data = await convexQuery("functions/cms:getAnnouncement", {});
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
@@ -20,7 +20,7 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const data = await convexMutation("functions/cms.js:updateAnnouncement", body);
+    const data = await convexMutation("functions/cms:updateAnnouncement", body);
     return NextResponse.json({ data });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });

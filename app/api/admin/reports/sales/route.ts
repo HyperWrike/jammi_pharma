@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const from = searchParams.get("from");
     const to = searchParams.get("to");
-    const dashboard = await convexQuery<any>("functions/orders.js:getDashboardReport", {});
+    const dashboard = await convexQuery<any>("functions/orders:getDashboardReport", {});
     return NextResponse.json({
       data: {
         from,

@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const id = await convexMutation('functions/partner_requests.js:createPartnerRequest', {
+    const id = await convexMutation('functions/partner_requests:createPartnerRequest', {
       full_name,
       organization,
       specialization,

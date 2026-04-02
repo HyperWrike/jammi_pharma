@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    const result = await convexQuery("functions/doctor_profiles.js:listDoctorProfiles", {});
+    const result = await convexQuery("functions/doctor_profiles:listDoctorProfiles", {});
     const list = Array.isArray(result) ? result : [];
     return NextResponse.json({ data: list });
   } catch (error: any) {

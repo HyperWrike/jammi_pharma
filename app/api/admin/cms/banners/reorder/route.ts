@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     }
 
     for (let i = 0; i < ids.length; i += 1) {
-      await convexMutation("functions/cms.js:updateBanner", { id: ids[i], display_order: i });
+      await convexMutation("functions/cms:updateBanner", { id: ids[i], display_order: i });
     }
     return NextResponse.json({ success: true });
   } catch (error: any) {
