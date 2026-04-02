@@ -46,6 +46,13 @@ const Navbar: React.FC = () => {
     return () => document.removeEventListener('mousedown', onDocClick);
   }, [openDropdown]);
 
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
+
   return (
     <>
       <header className="fixed top-0 z-50 w-full bg-[var(--purple)] border-b border-black/10">
@@ -138,7 +145,11 @@ const Navbar: React.FC = () => {
           <nav className="flex flex-col gap-6">
             {NAV_LINKS.map((l) => (
               <div key={l.label} className="space-y-3">
-                <Link href={l.href} className="text-[17px] font-bold text-[var(--purple)] uppercase hover:underline">
+                <Link
+                  href={l.href}
+                  className="text-[17px] font-bold text-[var(--purple)] uppercase hover:underline"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   {l.label}
                 </Link>
               </div>

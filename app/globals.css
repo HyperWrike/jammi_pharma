@@ -1,185 +1,277 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap');
 @import "tailwindcss";
-
 :root {
-  --purple: #540C3C;
-  --yellow: #F9D139;
-  --orange: #E87722;
-  --font: 'Montserrat', sans-serif;
+    --purple: #540C3C;
+    --yellow: #F9D139;
+    --orange: #E87722;
+    --font: 'Montserrat', sans-serif;
 }
 
 @theme {
-  --color-primary: #540C3C;
-  --color-saffron: #F9D139;
-  --color-forest: #540C3C;
-  --color-cream: #FDF9F0;
-  --color-cream-dark: #F0E8DC;
-  --color-background-light: #FDF9F0;
-  --color-background-dark: #2a1c12; /* Changed to dark earth tone */
-  
-  /* Missing jscolors for Federation */
-  --color-ivory: #FAF8F2;
-  --color-parchment: #EDE5D8;
-  --color-espresso: #1C1411;
-  --color-espresso-deep: #0D0907;
-  --color-gold: #C9A84C;
-  --color-gold-light: #E8C96D;
-  --color-bronze: #8B6914;
-  --color-blush: #D4B896;
-  --color-taupe: #9E8E7E;
-  --color-ink: #2C2420;
-
-  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Montserrat", serif;
-  --font-dm: "Montserrat", sans-serif;
-
-  /* New Fonts for Federation */
-  --font-cormorant: var(--font-cormorant);
-  --font-playfair: var(--font-playfair);
-  --font-garamond: var(--font-garamond);
-  --font-cinzel: var(--font-cinzel);
-  --font-dm-mono: var(--font-dm-mono);
+    --color-primary: #540C3C;
+    --color-saffron: #F9D139;
+    --color-forest: #540C3C;
+    --color-cream: #FDF9F0;
+    --color-cream-dark: #F0E8DC;
+    --color-background-light: #FDF9F0;
+    --color-background-dark: #2a1c12;
+    /* Changed to dark earth tone */
+    /* Missing jscolors for Federation */
+    --color-ivory: #FAF8F2;
+    --color-parchment: #EDE5D8;
+    --color-espresso: #1C1411;
+    --color-espresso-deep: #0D0907;
+    --color-gold: #C9A84C;
+    --color-gold-light: #E8C96D;
+    --color-bronze: #8B6914;
+    --color-blush: #D4B896;
+    --color-taupe: #9E8E7E;
+    --color-ink: #2C2420;
+    --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+    --font-serif: "Montserrat", serif;
+    --font-dm: "Montserrat", sans-serif;
+    /* New Fonts for Federation */
+    --font-cormorant: var(--font-cormorant);
+    --font-playfair: var(--font-playfair);
+    --font-garamond: var(--font-garamond);
+    --font-cinzel: var(--font-cinzel);
+    --font-dm-mono: var(--font-dm-mono);
 }
 
 @layer utilities {
-  .grain-texture {
-    background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB2NUbxbD7Xx8BIQFYdrk6FXiOuWjDPYBuKswv9Fyr9q18CDhV6BA9B5K9y3j8VSozm9ynAL5kQDR6Z8WiUnwP1II6RB-GoHqNzh-ukZs1NyneMYdVXx-RoJIY18qrhNDATmPqPy6UEmHwAiXXhPj61qWCotlbTnQ_1TzqAYeDu31dlCEHbqss_wNz4ZC1izUqR7yCj1loF_82u1uDfoli7ayVQnxHrgd60sDBxdwD47vThdJ5QW8z0llOCoQdLKznsaQpdAl6JjgY");
-    background-blend-mode: overlay;
-  }
-  .glass-header {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(240, 232, 220, 0.5);
-  }
-  .paper-grain {
-    position: relative;
-  }
-  .paper-grain::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    opacity: 0.05;
-    pointer-events: none;
-    background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB2NUbxbD7Xx8BIQFYdrk6FXiOuWjDPYBuKswv9Fyr9q18CDhV6BA9B5K9y3j8VSozm9ynAL5kQDR6Z8WiUnwP1II6RB-GoHqNzh-ukZs1NyneMYdVXx-RoJIY18qrhNDATmPqPy6UEmHwAiXXhPj61qWCotlbTnQ_1TzqAYeDu31dlCEHbqss_wNz4ZC1izUqR7yCj1loF_82u1uDfoli7ayVQnxHrgd60sDBxdwD47vThdJ5QW8z0llOCoQdLKznsaQpdAl6JjgY");
-  }
-
-  .animate-marquee {
-    animation: marquee 30s linear infinite;
-  }
+    .grain-texture {
+        background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB2NUbxbD7Xx8BIQFYdrk6FXiOuWjDPYBuKswv9Fyr9q18CDhV6BA9B5K9y3j8VSozm9ynAL5kQDR6Z8WiUnwP1II6RB-GoHqNzh-ukZs1NyneMYdVXx-RoJIY18qrhNDATmPqPy6UEmHwAiXXhPj61qWCotlbTnQ_1TzqAYeDu31dlCEHbqss_wNz4ZC1izUqR7yCj1loF_82u1uDfoli7ayVQnxHrgd60sDBxdwD47vThdJ5QW8z0llOCoQdLKznsaQpdAl6JjgY");
+        background-blend-mode: overlay;
+    }
+    .glass-header {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(240, 232, 220, 0.5);
+    }
+    .paper-grain {
+        position: relative;
+    }
+    .paper-grain::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0.05;
+        pointer-events: none;
+        background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB2NUbxbD7Xx8BIQFYdrk6FXiOuWjDPYBuKswv9Fyr9q18CDhV6BA9B5K9y3j8VSozm9ynAL5kQDR6Z8WiUnwP1II6RB-GoHqNzh-ukZs1NyneMYdVXx-RoJIY18qrhNDATmPqPy6UEmHwAiXXhPj61qWCotlbTnQ_1TzqAYeDu31dlCEHbqss_wNz4ZC1izUqR7yCj1loF_82u1uDfoli7ayVQnxHrgd60sDBxdwD47vThdJ5QW8z0llOCoQdLKznsaQpdAl6JjgY");
+    }
+    .animate-marquee {
+        animation: marquee 30s linear infinite;
+    }
 }
 
 @keyframes marquee {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(-50%); }
+    0% {
+        transform: translateX(0%);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
 }
 
 .material-symbols-outlined {
-  font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24;
-  font-family: 'Material Symbols Outlined' !important;
-  font-style: normal;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  -webkit-font-smoothing: antialiased;
+    font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24;
+    font-family: 'Material Symbols Outlined' !important;
+    font-style: normal;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
 }
 
 body {
-  @apply bg-background-light;
-  color: var(--purple);
-  font-size: 16px;
+    @apply bg-background-light;
+    color: var(--purple);
+    font-size: 16px;
 }
+
 
 /* Brand typography system: Montserrat everywhere */
-body, h1, h2, h3, h4, h5, h6, p, span, div, a, button, input, textarea, select, label, li, td, th {
-  font-family: var(--font);
+
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+div,
+a,
+button,
+input,
+textarea,
+select,
+label,
+li,
+td,
+th {
+    font-family: var(--font);
 }
 
+
 /* Founders/team photo: always full color + gentle hover scale */
+
 .team-photo,
 .founder-img {
-  filter: none;
-  transition: transform 0.3s ease;
+    filter: none;
+    transition: transform 0.3s ease;
 }
 
 .team-photo:hover,
 .founder-img:hover {
-  transform: scale(1.03);
+    transform: scale(1.03);
 }
 
 .jammi-shop-filters {
-  position: sticky;
-  top: 80px; /* matches fixed header height */
-  z-index: 45;
-  background: var(--yellow);
+    position: sticky;
+    top: 80px;
+    /* matches fixed header height */
+    z-index: 45;
+    background: var(--yellow);
 }
 
 .jammi-navlink {
-  font-size: 15px;
-  font-weight: 500;
-  color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    color: #fff;
 }
 
 .jammi-navlink:hover,
 .jammi-navlink[aria-current="page"] {
-  color: var(--yellow);
+    color: var(--yellow);
 }
 
 .jammi-dropdown-menu {
-  background: #FEF6CC; /* white/light cream */
-  color: var(--purple);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    background: #FEF6CC;
+    /* white/light cream */
+    color: var(--purple);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
 .jammi-dropdown-item {
-  color: var(--purple);
-  font-weight: 600;
-  padding: 10px 14px;
-  border-radius: 10px;
+    color: var(--purple);
+    font-weight: 600;
+    padding: 10px 14px;
+    border-radius: 10px;
 }
 
 .jammi-dropdown-item:hover {
-  background: var(--yellow);
-  color: var(--purple);
+    background: var(--yellow);
+    color: var(--purple);
 }
+
+
 /* Global UI improvements for default modern UI (old look preserved via CSS only) */
-:root { font-size: 16px; }
-html, body, #__next { height: 100%; }
-/* Ensure basic form controls are legible and consistent */
-button, input, textarea, select { font-family: inherit; font-size: 1rem; }
-/* Make sure primary action buttons are visible across the site */
-button {
-  background: #1f2937; /* dark slate */
-  color: #ffffff;
-  border: 1px solid #374151;
-  padding: 0.5rem 0.9rem;
-  border-radius: 6px;
-  cursor: pointer;
+
+:root {
+    font-size: 16px;
 }
-button:hover { background: #374151; }
+
+html,
+body,
+#__next {
+    height: 100%;
+}
+
+html,
+body {
+    overflow-x: hidden;
+}
+
+
+/* Ensure basic form controls are legible and consistent */
+
+button,
+input,
+textarea,
+select {
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+
+/* Make sure primary action buttons are visible across the site */
+
+button {
+    background: #1f2937;
+    /* dark slate */
+    color: #ffffff;
+    border: 1px solid #374151;
+    padding: 0.5rem 0.9rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #374151;
+}
+
 
 /* Shop product grid fade-in animation */
+
 @keyframes productFadeIn {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .legacy-product-card {
-  animation: productFadeIn 0.4s ease-out both;
+    animation: productFadeIn 0.4s ease-out both;
 }
 
-.grid > .legacy-product-card:nth-child(1) { animation-delay: 0.05s; }
-.grid > .legacy-product-card:nth-child(2) { animation-delay: 0.1s; }
-.grid > .legacy-product-card:nth-child(3) { animation-delay: 0.15s; }
-.grid > .legacy-product-card:nth-child(4) { animation-delay: 0.2s; }
-.grid > .legacy-product-card:nth-child(5) { animation-delay: 0.25s; }
-.grid > .legacy-product-card:nth-child(6) { animation-delay: 0.3s; }
-.grid > .legacy-product-card:nth-child(7) { animation-delay: 0.35s; }
-.grid > .legacy-product-card:nth-child(8) { animation-delay: 0.4s; }
-.grid > .legacy-product-card:nth-child(9) { animation-delay: 0.45s; }
-.grid > .legacy-product-card:nth-child(n+10) { animation-delay: 0.5s; }
+.grid>.legacy-product-card:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.grid>.legacy-product-card:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.grid>.legacy-product-card:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.grid>.legacy-product-card:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+.grid>.legacy-product-card:nth-child(5) {
+    animation-delay: 0.25s;
+}
+
+.grid>.legacy-product-card:nth-child(6) {
+    animation-delay: 0.3s;
+}
+
+.grid>.legacy-product-card:nth-child(7) {
+    animation-delay: 0.35s;
+}
+
+.grid>.legacy-product-card:nth-child(8) {
+    animation-delay: 0.4s;
+}
+
+.grid>.legacy-product-card:nth-child(9) {
+    animation-delay: 0.45s;
+}
+
+.grid>.legacy-product-card:nth-child(n+10) {
+    animation-delay: 0.5s;
+}
