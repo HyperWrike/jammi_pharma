@@ -22,6 +22,7 @@ export default function BlogPage() {
   const blogs = useQuery(api["functions/cms"].listBlogs, {}) || [];
   const createBlog = useMutation(api["functions/cms"].createBlog);
   const updateBlog = useMutation(api["functions/cms"].updateBlog);
+  const deleteBlog = useMutation(api["functions/cms"].deleteBlog);
 
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -29,6 +30,11 @@ export default function BlogPage() {
   const [category, setCategory] = useState('Wellness');
   const [content, setContent] = useState('');
   const [featuredImage, setFeaturedImage] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editCategory, setEditCategory] = useState('');
+  const [editContent, setEditContent] = useState('');
+  const [editImage, setEditImage] = useState('');
 
   const publishedBlogs = useMemo(
     () => blogs.filter((b: any) => b.status === 'published'),
@@ -98,6 +104,94 @@ export default function BlogPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const onEditBlog = (post: any) => {
+    setEditingId(post._id);
+    setEditTitle(post.title);
+    setEditCategory(post.category || 'Wellness');
+    setEditContent(post.content);
+    setEditImage(post.featured_image || '');
+  };
+
+  const onSaveEdit = async () => {
+    if (!editTitle.trim() || !editContent.trim()) {
+      window.dispatchEvent(
+        new CustomEvent('jammi_toast', {
+          detail: { message: 'Title and content are required', type: 'error' },
+        })
+      );
+      return;
+    }
+
+    try {
+      setSaving(true);
+      await updateBlog({
+        id: editingId!,
+        title: editTitle.trim(),
+        content: editContent.trim(),
+        featured_image: editImage || undefined,
+        category: editCategory.trim() || undefined,
+      });
+
+      setEditingId(null);
+      setEditTitle('');
+      setEditCategory('');
+      setEditContent('');
+      setEditImage('');
+
+      window.dispatchEvent(
+        new CustomEvent('jammi_toast', {
+          detail: { message: 'Blog updated', type: 'success' },
+        })
+      );
+    } catch (e: any) {
+      window.dispatchEvent(
+        new CustomEvent('jammi_toast', {
+          detail: { message: e?.message || 'Failed to update blog', type: 'error' },
+        })
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const onDeleteBlog = async (blogId: string) => {
+    if (!confirm('Are you sure you want to delete this blog?')) return;
+
+    try {
+      setSaving(true);
+      await deleteBlog({ id: blogId });
+
+      window.dispatchEvent(
+        new CustomEvent('jammi_toast', {
+          detail: { message: 'Blog deleted', type: 'success' },
+        })
+      );
+    } catch (e: any) {
+      window.dispatchEvent(
+        new CustomEvent('jammi_toast', {
+          detail: { message: e?.message || 'Failed to delete blog', type: 'error' },
+        })
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const onUploadEditImage = async (file: File | null) => {
+    if (!file) return;
+    setUploading(true);
+    const url = await uploadImage(file, 'cms-images', 'blogs');
+    if (url) {
+      setEditImage(url);
+      window.dispatchEvent(
+        new CustomEvent('jammi_toast', {
+          detail: { message: 'Image uploaded', type: 'success' },
+        })
+      );
+    }
+    setUploading(false);
   };
 
   return (
@@ -177,6 +271,92 @@ export default function BlogPage() {
         </section>
       )}
 
+      {editingId && (
+        <section className="py-8 border-b border-[var(--purple)]/10 bg-white">
+          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-10">
+            <div className="rounded-2xl border border-[var(--purple)]/15 bg-[var(--cream)] p-5 sm:p-6 lg:p-7">
+              <div className="flex items-center justify-between gap-4 mb-4">
+                <h2 className="text-2xl font-extrabold text-[var(--purple)]">Edit Blog</h2>
+                <button
+                  onClick={() => {
+                    setEditingId(null);
+                    setEditTitle('');
+                    setEditCategory('');
+                    setEditContent('');
+                    setEditImage('');
+                  }}
+                  className="text-[var(--purple)]/70 hover:text-[var(--purple)] text-xl font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="Blog title"
+                  className="w-full rounded-lg border border-[var(--purple)]/20 px-3 py-2 bg-white text-[var(--purple)]"
+                />
+                <input
+                  value={editCategory}
+                  onChange={(e) => setEditCategory(e.target.value)}
+                  placeholder="Category"
+                  className="w-full rounded-lg border border-[var(--purple)]/20 px-3 py-2 bg-white text-[var(--purple)]"
+                />
+              </div>
+
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                placeholder="Blog content / excerpt"
+                className="mt-4 w-full rounded-lg border border-[var(--purple)]/20 px-3 py-2 bg-white text-[var(--purple)] min-h-[150px]"
+              />
+
+              <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                <label className="inline-flex items-center justify-center rounded-lg border border-[var(--purple)]/20 bg-white px-4 py-2 text-sm font-semibold text-[var(--purple)] cursor-pointer hover:bg-[var(--cream)] transition-colors">
+                  {uploading ? 'Uploading...' : 'Update Featured Image'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => onUploadEditImage(e.target.files?.[0] || null)}
+                    disabled={uploading}
+                  />
+                </label>
+                {editImage && <span className="text-xs text-[var(--purple)]/70">Image updated</span>}
+              </div>
+
+              {editImage && (
+                <img src={editImage} alt="Edit preview" className="mt-4 h-40 w-full sm:w-60 object-cover rounded-lg border border-[var(--purple)]/15" />
+              )}
+
+              <div className="mt-5 flex gap-3">
+                <button
+                  onClick={onSaveEdit}
+                  disabled={saving || uploading}
+                  className="bg-[var(--yellow)] text-[var(--purple)] font-bold px-6 py-3 rounded-lg hover:brightness-95 disabled:opacity-60"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingId(null);
+                    setEditTitle('');
+                    setEditCategory('');
+                    setEditContent('');
+                    setEditImage('');
+                  }}
+                  className="bg-[var(--purple)]/10 text-[var(--purple)] font-bold px-6 py-3 rounded-lg hover:bg-[var(--purple)]/20 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="py-14 sm:py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-10">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8 sm:mb-10">
@@ -222,8 +402,24 @@ export default function BlogPage() {
                     </p>
 
                     {isEditMode && (
-                      <div className="mt-4 inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest bg-[var(--purple)]/10 text-[var(--purple)]">
-                        {post.status || 'draft'}
+                      <div className="mt-4 flex items-center justify-between">
+                        <div className="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest bg-[var(--purple)]/10 text-[var(--purple)]">
+                          {post.status || 'draft'}
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => onEditBlog(post)}
+                            className="text-[10px] font-bold px-3 py-1 rounded-full bg-[var(--yellow)]/20 text-[var(--yellow)] hover:bg-[var(--yellow)]/40 transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => onDeleteBlog(post._id)}
+                            className="text-[10px] font-bold px-3 py-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
