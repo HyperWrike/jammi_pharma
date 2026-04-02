@@ -31,3 +31,19 @@ export async function convexMutation<T = any>(path: string, args?: any): Promise
   
   return result.value;
 }
+
+export async function convexAction<T = any>(path: string, args?: any): Promise<T> {
+  const response = await fetch(`${CONVEX_URL}/api/action`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path, args: args || {}, format: "json" }),
+  });
+
+  const result = await response.json();
+
+  if (result.status === "error") {
+    throw new Error(result.errorMessage || "Convex action failed");
+  }
+
+  return result.value;
+}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { convexQuery } from '@/lib/convexServer';
+import { convexAction, convexQuery } from '@/lib/convexServer';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -24,7 +24,6 @@ type Category = {
   name: string;
 };
 
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODEL = process.env.GROQ_MODEL || process.env.GROQ_CHAT_MODEL || 'llama-3.3-70b-versatile';
 
 const NON_RECOMMENDABLE_STATUSES = new Set(['archived', 'deleted', 'draft', 'inactive', 'unpublished']);
@@ -158,47 +157,24 @@ export async function POST(req: NextRequest) {
       '{"reply":"string","recommendations":[{"name":"string","url":"string","reason":"string"}]}'
     ].join(' ');
 
-    const groqKey =
-      process.env.GROQ_API_KEY ||
-      process.env.GROQ_KEY ||
-      process.env.GROQ_API_TOKEN ||
-      process.env.NEXT_PUBLIC_GROQ_API_KEY;
-    if (!groqKey) {
-      return NextResponse.json({
-        reply: 'Pantulu is not configured yet. Please set GROQ_API_KEY on the server.',
-        recommendations: fallbackRecommendations,
-      });
-    }
-
-    const completionRes = await fetch(GROQ_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${groqKey}`,
-      },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        temperature: 0.3,
-        max_tokens: 700,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'system', content: `CATALOG:\n${catalogContext}` },
-          { role: 'user', content: userMessage },
-        ],
-      }),
+    const completionRes = await convexAction<
+      { ok: true; content: string } | { ok: false; status: number; error: string }
+    >('functions/pantulu:chatCompletion', {
+      systemPrompt,
+      catalogContext,
+      userMessage,
+      model: GROQ_MODEL,
     });
 
     if (!completionRes.ok) {
-      const text = await completionRes.text();
       return NextResponse.json({
         reply: `Pantulu could not reach Groq right now. (${completionRes.status})`,
-        debug: text.slice(0, 300),
+        debug: completionRes.error,
         recommendations: fallbackRecommendations,
       });
     }
 
-    const completionData = await completionRes.json();
-    const raw = completionData?.choices?.[0]?.message?.content || '';
+    const raw = completionRes.content || '';
 
     let parsed: { reply?: string; recommendations?: Array<{ name: string; url: string; reason: string }> } = {};
     try {
