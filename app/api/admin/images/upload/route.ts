@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdmin, unauthorized } from '@/lib/adminAuth';
+import { convexMutation } from '@/lib/convexServer';
 
 export async function POST(req: NextRequest) {
   const admin = await verifyAdmin(req);
@@ -13,14 +14,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Convert to base64 data URL
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const base64 = buffer.toString('base64');
-    const mimeType = file.type || 'image/jpeg';
-    const dataUrl = `data:${mimeType};base64,${base64}`;
+    const uploadUrl = await convexMutation<string>('functions/uploads:generateUploadUrl', {});
+    const uploadResponse = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': file.type || 'application/octet-stream',
+      },
+      body: file,
+    });
 
-    return NextResponse.json({ url: dataUrl, path: file.name }, { status: 200 });
+    if (!uploadResponse.ok) {
+      const text = await uploadResponse.text();
+      return NextResponse.json({ error: `Convex storage upload failed: ${text}` }, { status: 500 });
+    }
+
+    const uploadResult = await uploadResponse.json();
+    const storageId = uploadResult.storageId;
+    const publicUrl = await convexMutation<string | null>('functions/uploads:getStorageUrl', { storageId });
+
+    if (!publicUrl) {
+      return NextResponse.json({ error: 'Failed to resolve uploaded image URL' }, { status: 500 });
+    }
+
+    return NextResponse.json({ url: publicUrl, path: storageId }, { status: 200 });
   } catch (error: any) {
     console.error('Upload Error:', error);
     return NextResponse.json({ error: error.message || 'Upload failed' }, { status: 500 });

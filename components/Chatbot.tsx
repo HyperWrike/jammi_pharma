@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useCart } from '../hooks/useCart';
 
 interface Message {
     id: string;
@@ -24,6 +26,8 @@ const SUGGESTED_QUESTIONS = [
 ];
 
 export default function Chatbot() {
+    const pathname = usePathname();
+    const { cartCount, cartItems } = useCart();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
         {
@@ -35,6 +39,7 @@ export default function Chatbot() {
     const [inputValue, setInputValue] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [hasUnread, setHasUnread] = useState(true);
+    const [cartAssistShown, setCartAssistShown] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -44,6 +49,90 @@ export default function Chatbot() {
     useEffect(() => {
         scrollToBottom();
     }, [messages, isOpen, isTyping]);
+
+    useEffect(() => {
+        const shouldSuggest = (pathname === '/checkout' || pathname?.startsWith('/checkout/')) && cartCount > 0;
+        if (!shouldSuggest || cartAssistShown) return;
+
+        const suggestBundles = async () => {
+            try {
+                const res = await fetch('/api/bundles');
+                const json = await res.json();
+                const bundles = Array.isArray(json?.data) ? json.data : [];
+
+                const cartProductIds = new Set(
+                    (cartItems || []).map((item: any) => String(item.product_id || item.id || ''))
+                );
+
+                const prioritizedBundles = bundles
+                    .map((bundle: any) => {
+                        const bundleProductIds = (bundle.bundle_products || []).map((bp: any) => String(bp?.product_id || ''));
+                        const overlapCount = bundleProductIds.filter((id: string) => cartProductIds.has(id)).length;
+                        return { bundle, overlapCount };
+                    })
+                    .sort((a: any, b: any) => {
+                        if (b.overlapCount !== a.overlapCount) return b.overlapCount - a.overlapCount;
+                        const aDiscount = Number(a.bundle?.extra_discount_percent || 0);
+                        const bDiscount = Number(b.bundle?.extra_discount_percent || 0);
+                        return bDiscount - aDiscount;
+                    })
+                    .map((x: any) => x.bundle)
+                    .slice(0, 2);
+
+                const recommendations = prioritizedBundles.map((b: any) => {
+                    const overlapProduct = b.bundle_products?.find((bp: any) => cartProductIds.has(String(bp?.product_id || '')))?.products;
+                    const firstProduct = overlapProduct || b.bundle_products?.find((bp: any) => bp?.products)?.products;
+                    const link = firstProduct?.slug
+                        ? `/product/${firstProduct.slug}`
+                        : firstProduct?._id
+                            ? `/product/${firstProduct._id}`
+                            : '/shop';
+
+                    return {
+                        id: b._id,
+                        name: b.name || 'Jammi Bundle Offer',
+                        image: b.image_url || firstProduct?.images?.[0] || '/images/placeholder.png',
+                        link,
+                        price: b.extra_discount_percent ? `${b.extra_discount_percent}% extra off` : 'Special offer',
+                        reason: overlapProduct
+                            ? 'Matched with items already in your cart for better value.'
+                            : 'Recommended bundle offer for better savings.',
+                    };
+                });
+
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        id: `cart-assist-${Date.now()}`,
+                        sender: 'bot',
+                        text: 'Great choice. Before checkout, consider these bundle offers to save more.',
+                        products: recommendations,
+                    }
+                ]);
+            } catch {
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        id: `cart-assist-${Date.now()}`,
+                        sender: 'bot',
+                        text: 'Great choice. Before checkout, check our latest bundle offers in the shop for extra savings.',
+                        products: [{
+                            name: 'Explore Bundle Offers',
+                            image: '/images/placeholder.png',
+                            link: '/shop',
+                            price: 'Special offers',
+                            reason: 'Bundle and offer options available in the shop.',
+                        }],
+                    }
+                ]);
+            } finally {
+                setCartAssistShown(true);
+                setHasUnread(true);
+            }
+        };
+
+        suggestBundles();
+    }, [pathname, cartCount, cartItems, cartAssistShown]);
 
     const handleToggle = () => {
         setIsOpen(!isOpen);

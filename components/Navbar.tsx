@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import LiveEditable from './admin/LiveEditable';
 import { useCart } from '../hooks/useCart';
+import { useAdmin } from './admin/AdminContext';
 
 const NAV_LINKS = [
   { label: 'Legacy', href: '/legacy' },
@@ -13,6 +14,7 @@ const NAV_LINKS = [
 
 const Navbar: React.FC = () => {
   const { cartCount } = useCart();
+  const { isAdmin, isEditMode } = useAdmin();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -55,7 +57,10 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <header className="fixed top-0 z-50 w-full bg-[var(--purple)] border-b border-black/10">
+      <header
+        className="fixed top-0 z-50 w-full bg-[var(--purple)] border-b border-black/10 transition-[top] duration-200"
+        style={isAdmin && isEditMode ? { top: 'var(--jammi-editor-banner-height, 0px)' } : undefined}
+      >
         <div className="max-w-7xl mx-auto px-4 lg:px-10 h-20 flex items-center justify-between">
           <Link
             href="/"

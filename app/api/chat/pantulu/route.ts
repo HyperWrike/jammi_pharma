@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { convexAction, convexQuery } from '@/lib/convexServer';
+import { MOCK_PRODUCTS } from '@/constants';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 type CatalogProduct = {
   _id: string;
+  id?: string;
   name: string;
   slug?: string;
   short_description?: string;
@@ -31,6 +33,45 @@ const NON_RECOMMENDABLE_STATUSES = new Set(['archived', 'deleted', 'draft', 'ina
 function formatPrice(price?: number, discountPrice?: number) {
   const finalPrice = typeof discountPrice === 'number' ? discountPrice : price;
   return typeof finalPrice === 'number' ? `Rs.${finalPrice}` : 'Price on request';
+}
+
+function buildProductLink(p: CatalogProduct) {
+  return `/product/${p.slug || p.id || p._id}`;
+}
+
+function normalizeText(value?: string) {
+  return (value || '').toLowerCase().trim();
+}
+
+function normalizeMockProducts(): CatalogProduct[] {
+  return (MOCK_PRODUCTS || []).map((p: any) => ({
+    _id: String(p.id || p.slug || p.name || ''),
+    id: String(p.id || ''),
+    slug: String(p.id || p.slug || ''),
+    name: String(p.name || ''),
+    short_description: String(p.shortDesc || ''),
+    description: String(p.description || p.shortDesc || ''),
+    images: p.image ? [String(p.image)] : [],
+    price: typeof p.price === 'number' ? p.price : undefined,
+    discount_price: undefined,
+    tags: [],
+    benefits: Array.isArray(p.features) ? p.features.map((f: any) => String(f?.title || '')).filter(Boolean) : [],
+    status: 'published',
+  }));
+}
+
+function mergeCatalogs(primary: CatalogProduct[], fallback: CatalogProduct[]): CatalogProduct[] {
+  const seen = new Set<string>();
+  const merged: CatalogProduct[] = [];
+
+  for (const p of [...primary, ...fallback]) {
+    const key = `${normalizeText(p.slug || p.id || p._id)}|${normalizeText(p.name)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(p);
+  }
+
+  return merged;
 }
 
 function isRecommendableProduct(p: CatalogProduct) {
@@ -60,8 +101,33 @@ async function fetchAllProducts(): Promise<CatalogProduct[]> {
 }
 
 function bestEffortRecommendations(message: string, products: CatalogProduct[], categoryMap: Record<string, string>) {
-  const q = message.toLowerCase();
+  const q = normalizeText(message);
   const words = q.split(/\s+/).filter((w) => w.length > 2);
+
+  const exactMatches = products
+    .filter(isRecommendableProduct)
+    .filter((p) => {
+      const name = normalizeText(p.name);
+      const slug = normalizeText(p.slug || p.id || p._id);
+      return q.includes(name) || q.includes(slug);
+    })
+    .slice(0, 3)
+    .map((p) => ({
+      p,
+      score: 999,
+      categoryName: p.category_id ? categoryMap[p.category_id] || '' : '',
+    }));
+
+  if (exactMatches.length > 0) {
+    return exactMatches.map((x) => ({
+      id: x.p._id,
+      name: x.p.name,
+      image: x.p.images?.[0] || '/images/placeholder.png',
+      link: buildProductLink(x.p),
+      price: formatPrice(x.p.price, x.p.discount_price),
+      reason: 'Exact match for your requested product.',
+    }));
+  }
 
   const scored = products
     .filter(isRecommendableProduct)
@@ -69,6 +135,7 @@ function bestEffortRecommendations(message: string, products: CatalogProduct[], 
       const categoryName = p.category_id ? categoryMap[p.category_id] || '' : '';
       const haystack = [
         p.name,
+        p.slug || p.id || p._id,
         p.short_description || '',
         p.description || '',
         categoryName,
@@ -88,15 +155,18 @@ function bestEffortRecommendations(message: string, products: CatalogProduct[], 
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
 
-  return scored
-    .filter((x) => x.score > 0)
-    .map((x) => ({
+  const top = scored.slice(0, 3);
+
+  return top.map((x) => ({
       id: x.p._id,
       name: x.p.name,
       image: x.p.images?.[0] || '/images/placeholder.png',
-      link: `/product/${x.p.slug || x.p._id}`,
+      link: buildProductLink(x.p),
       price: formatPrice(x.p.price, x.p.discount_price),
-      reason: `Matches your query for ${x.categoryName || 'wellness'} support.`,
+      reason:
+        x.score > 0
+          ? `Matches your query for ${x.categoryName || 'wellness'} support.`
+          : `Closest related option in ${x.categoryName || 'wellness'} category.`,
     }));
 }
 
@@ -117,7 +187,7 @@ function buildCatalogContext(products: CatalogProduct[], categoryMap: Record<str
       `summary:${summary}`,
       `tags:${tags}`,
       `benefits:${benefits}`,
-      `url:/product/${p.slug || p._id}`,
+      `url:${buildProductLink(p)}`,
     ].join(' | ');
   });
 
@@ -138,7 +208,8 @@ export async function POST(req: NextRequest) {
       convexQuery<Category[]>('functions/categories:listCategories', {}),
     ]);
 
-    const products = allProducts.filter(isRecommendableProduct);
+    const mergedCatalog = mergeCatalogs(allProducts, normalizeMockProducts());
+    const products = mergedCatalog.filter(isRecommendableProduct);
     const categoryMap: Record<string, string> = {};
     for (const c of categories || []) {
       categoryMap[c._id] = c.name;
@@ -148,11 +219,17 @@ export async function POST(req: NextRequest) {
     const fallbackRecommendations = bestEffortRecommendations(userMessage, products, categoryMap);
 
     const systemPrompt = [
-      'You are Pantulu, AI product assistant for Jammi Pharmaceuticals.',
-      'Goal: Recommend the most suitable Jammi products based only on the provided catalog context.',
-      'When user asks for suggestions, give concise guidance and top 1-3 products.',
-      'If symptoms are severe or unclear, advise consultation politely.',
-      'Never invent products not present in catalog context.',
+      'You are Pantulu, customer-care and product assistant for Jammi Pharmaceuticals.',
+      'Your job is to guide customers from question to action: understand concern, suggest suitable real products, and direct them to the exact product pages.',
+      'The catalog context contains the current live products from admin panel. Use only that data.',
+      'Never invent product names, URLs, prices, categories, tags, or benefits.',
+      'Recommend at most 3 products and keep advice concise and practical.',
+      'For severe symptoms, emergencies, pregnancy, children, or unclear complaints: advise consultation at /consultation.',
+      'If user asks to browse more options, direct to /shop.',
+      'When suggesting any product, include only URL values from catalog context format /product/<slug-or-id>.',
+      'If exact match is unavailable, suggest closest related products from catalog instead of saying not available.',
+      'Never respond with dead-end phrases like "we do not have" or "not available" without giving alternatives.',
+      'Tone: respectful, clear, customer-friendly, no overpromising medical claims.',
       'Respond in strict JSON with this shape:',
       '{"reply":"string","recommendations":[{"name":"string","url":"string","reason":"string"}]}'
     ].join(' ');
@@ -188,22 +265,33 @@ export async function POST(req: NextRequest) {
 
     const recommendations = recsFromModel
       .map((r) => {
-        const matched = products.find((p) => (p.slug && r.url?.includes(p.slug)) || p.name.toLowerCase() === r.name.toLowerCase());
+        const url = (r.url || '').toLowerCase();
+        const matched = products.find((p) => {
+          const slugMatch = p.slug ? url.includes(p.slug.toLowerCase()) : false;
+          const idMatch = url.includes(String(p._id).toLowerCase()) || (p.id ? url.includes(String(p.id).toLowerCase()) : false);
+          const nameMatch = p.name.toLowerCase() === r.name.toLowerCase();
+          return slugMatch || idMatch || nameMatch;
+        });
         if (!matched) return null;
         return {
           id: matched._id,
           name: matched.name,
           image: matched.images?.[0] || '/images/placeholder.png',
-          link: `/product/${matched.slug || matched._id}`,
+          link: buildProductLink(matched),
           price: formatPrice(matched.price, matched.discount_price),
           reason: r.reason || 'Recommended for your query.',
         };
       })
       .filter(Boolean);
 
+    const finalRecommendations = recommendations.length > 0 ? recommendations : fallbackRecommendations;
+
     return NextResponse.json({
-      reply: parsed.reply || 'Here are suitable Jammi options for you.',
-      recommendations: recommendations.length > 0 ? recommendations : fallbackRecommendations,
+      reply:
+        parsed.reply && parsed.reply.trim().length > 0
+          ? parsed.reply.replace(/\b(sorry|not available|we do not have)\b/gi, 'Here are the closest options')
+          : 'Here are the closest suitable Jammi options for you.',
+      recommendations: finalRecommendations,
     });
   } catch (error: any) {
     return NextResponse.json(

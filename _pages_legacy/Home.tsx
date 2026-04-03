@@ -3,9 +3,7 @@ import React from 'react';
 import Link from 'next/link';
 import ProductCard from '../components/ProductCard';
 import { MOCK_PRODUCTS } from '../constants';
-import { updateDocument } from '../lib/adminDb';
 import LiveEditable from '../components/admin/LiveEditable';
-import EditorImage from '../components/EditorImage';
 import { useCMSContent } from '../hooks/useCMSContent';
 
 const Home: React.FC = () => {
@@ -149,16 +147,10 @@ const Home: React.FC = () => {
           <div className="relative mx-auto mt-12 lg:mt-0 w-full max-w-lg lg:max-w-full rotate-2 hover:rotate-0 transition-transform duration-700">
             <div className="absolute inset-0 bg-saffron translate-x-4 translate-y-4 lg:translate-x-6 lg:translate-y-6 shadow-2xl"></div>
             <div className="relative z-10 w-full aspect-[4/5] object-cover shadow-2xl overflow-hidden">
-               <EditorImage 
-                src={(content as any)?.claim?.imageUrl || "/images/tamil_doctor_lab.png"} 
-                alt="Jammi Authentic Lab" 
+              <img
+                src={(content as any)?.claim?.imageUrl || "/images/tamil_doctor_lab.png"}
+                alt="Jammi Authentic Lab"
                 className="w-full h-full object-cover"
-                bucket="site-assets"
-                folder="homepage"
-                editorActive={true}
-                onUpdate={(url) => {
-                  updateDocument('site_content', 'homepage_assets', { claim_imageUrl: url });
-                }}
               />
             </div>
           </div>
@@ -261,16 +253,10 @@ const Home: React.FC = () => {
           {/* Right Column (Image) */}
           <div className="relative mx-auto mt-12 lg:-mt-10 lg:-mr-10 xl:-mr-20">
             <div className="aspect-[4/5] overflow-hidden -rotate-2 w-full max-w-sm sm:max-w-md lg:max-w-lg shadow-2xl relative z-10 border-8 border-white group">
-              <EditorImage
+              <img
                 src={(content as any)?.partner?.imageUrl || "/images/tamil_doctor_consultation.png"}
                 alt="Ayurveda Practitioner"
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                bucket="site-assets"
-                folder="homepage"
-                editorActive={true}
-                onUpdate={(url) => {
-                  updateDocument('site_content', 'homepage_assets', { partner_imageUrl: url });
-                }}
               />
             </div>
             <div className="absolute -bottom-8 -left-4 sm:-left-8 bg-forest p-6 sm:p-8 text-white z-20 shadow-2xl w-[90%] sm:max-w-xs rotate-2">
@@ -338,16 +324,10 @@ const Home: React.FC = () => {
           <div className="relative mx-auto mt-12 lg:mt-0 w-full max-w-sm sm:max-w-md lg:max-w-full lg:ml-auto perspective-1000">
             <div className="absolute inset-0 bg-transparent border-4 border-saffron translate-x-6 translate-y-6 lg:translate-x-8 lg:translate-y-8 z-0"></div>
             <div className="relative z-10 w-full aspect-[4/5] sm:aspect-[4/5] object-cover shadow-2xl overflow-hidden">
-              <EditorImage
+              <img
                 src={(content as any)?.federation?.imageUrl || "/images/tamil_doctor_group.png"}
                 alt="Confident Practitioner"
                 className="w-full h-full object-cover hover:opacity-100 transition-all duration-700"
-                bucket="site-assets"
-                folder="homepage"
-                editorActive={true}
-                onUpdate={(url) => {
-                  updateDocument('site_content', 'homepage_assets', { federation_imageUrl: url });
-                }}
               />
             </div>
           </div>

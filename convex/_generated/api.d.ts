@@ -16,10 +16,12 @@ import type * as functions_coupons from "../functions/coupons.js";
 import type * as functions_doctor_profiles from "../functions/doctor_profiles.js";
 import type * as functions_federation_posts from "../functions/federation_posts.js";
 import type * as functions_orders from "../functions/orders.js";
+import type * as functions_pantulu from "../functions/pantulu.js";
 import type * as functions_partner_requests from "../functions/partner_requests.js";
 import type * as functions_products from "../functions/products.js";
 import type * as functions_products_mutations from "../functions/products_mutations.js";
 import type * as functions_reviews from "../functions/reviews.js";
+import type * as functions_uploads from "../functions/uploads.js";
 
 import type {
   ApiFromModules,
@@ -36,10 +38,12 @@ declare const fullApi: ApiFromModules<{
   "functions/doctor_profiles": typeof functions_doctor_profiles;
   "functions/federation_posts": typeof functions_federation_posts;
   "functions/orders": typeof functions_orders;
+  "functions/pantulu": typeof functions_pantulu;
   "functions/partner_requests": typeof functions_partner_requests;
   "functions/products": typeof functions_products;
   "functions/products_mutations": typeof functions_products_mutations;
   "functions/reviews": typeof functions_reviews;
+  "functions/uploads": typeof functions_uploads;
 }>;
 
 /**
