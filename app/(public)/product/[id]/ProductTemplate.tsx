@@ -262,15 +262,15 @@ export default function ProductTemplate({ productId, initialData }: { productId:
                                 <div>
                                     <p className="text-sm text-slate-500 font-bold mb-1">Price</p>
                                     <div className="flex items-baseline gap-1">
-                                        <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">₹</span>
-                                        <LiveEditable collection="products" docId={product.id} field="price" inputType="number" className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-                                            {product.price}
+                                        <span className="text-3xl sm:text-4xl font-black text-[var(--purple)] tracking-tight">₹</span>
+                                        <LiveEditable collection="products" docId={product.id} field="price" inputType="number" className="text-3xl sm:text-4xl font-black text-[var(--purple)] tracking-tight">
+                                            {product.price ?? '—'}
                                         </LiveEditable>
-                                        <span className="text-xs sm:text-sm font-medium text-slate-500 ml-1">/ Unit</span>
+                                        <span className="text-xs sm:text-sm font-semibold text-[var(--purple)]/80 ml-1">/ Unit</span>
                                     </div>
                                 </div>
                                 <div className="text-right hidden sm:block">
-                                    <span className={`inline-flex items-center gap-1 text-xs sm:text-sm font-bold px-3 py-1 rounded-lg ${product.stockStatus === 'Out of Stock' ? 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30' : 'text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30'}`}>
+                                    <span className={`inline-flex items-center gap-1 text-xs sm:text-sm font-bold px-3 py-1 rounded-lg border ${product.stockStatus === 'Out of Stock' ? 'text-red-800 bg-red-100 border-red-200' : 'text-emerald-800 bg-emerald-100 border-emerald-200'}`}>
                                         <span className="material-symbols-outlined text-[12px] sm:text-[14px]">
                                             {product.stockStatus === 'Out of Stock' ? 'warning' : 'bolt'}
                                         </span> 
