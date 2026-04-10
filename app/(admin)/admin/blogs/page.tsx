@@ -1,199 +1,158 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
-import { convexQuery, convexMutation } from '@/lib/adminDb';
+import React, { useState } from 'react';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import toast from 'react-hot-toast';
+import Link from 'next/link';
 
-export default function BlogsPage() {
-  const [blogs, setBlogs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editingBlog, setEditingBlog] = useState<any>(null);
+export default function AdminBlogsPage() {
+  const blogs = useQuery(api.functions.cms.listBlogs, {}) || undefined;
+  const updateStatus = useMutation(api.functions.cms.updateBlog);
+  const deleteBlog = useMutation(api.functions.cms.deleteBlog);
+  const [filter, setFilter] = useState('all');
 
-  const [formData, setFormData] = useState({
-    title: '',
-    slug: '',
-    featured_image: '',
-    content: '',
-    category: '',
-    status: 'draft',
-    tags: []
+  if (blogs === undefined) {
+    return (
+      <div className="p-8 pb-32 animate-pulse">
+        <div className="h-10 bg-[#22c55e]/10 w-64 rounded-xl mb-8"></div>
+        <div className="space-y-4">
+          <div className="h-24 bg-[#1e293b]/50 rounded-2xl w-full"></div>
+          <div className="h-24 bg-[#1e293b]/50 rounded-2xl w-full"></div>
+        </div>
+      </div>
+    );
+  }
+
+  const filteredBlogs = blogs.filter(b => {
+    if (filter === 'all') return true;
+    return b.status === filter;
   });
 
-  const fetchBlogs = async () => {
-    setLoading(true);
+  const handleStatusChange = async (targetId: any, newStatus: string) => {
     try {
-      const data = await convexQuery("functions/cms:listBlogs", {});
-      setBlogs(data || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+      await updateStatus({ id: targetId, status: newStatus });
+      toast.success(`Post marked as ${newStatus}`);
+    } catch (error) {
+      toast.error('Failed to update status');
     }
   };
-
-  useEffect(() => {
-    fetchBlogs();
-  }, []);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this blog post?')) return;
-    try {
-      await convexMutation("functions/cms:deleteBlog", { id });
-      fetchBlogs();
-    } catch (err) {
-      console.error(err);
-      alert('Failed to delete blog');
-    }
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-      e.preventDefault();
+    if (window.confirm("Are you sure you want to delete this blog post?")) {
       try {
-          if (editingBlog) {
-             await convexMutation("functions/cms:updateBlog", {
-                 id: editingBlog._id,
-                 title: formData.title,
-                 content: formData.content,
-                 featured_image: formData.featured_image,
-                 status: formData.status,
-                 ...(formData.status === 'published' && editingBlog.status !== 'published' ? { published_at: new Date().toISOString() } : {})
-             });
-          } else {
-             await convexMutation("functions/cms:createBlog", {
-                 title: formData.title,
-                 slug: formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-                 content: formData.content,
-                 featured_image: formData.featured_image,
-                 category: formData.category,
-                 tags: []
-             });
-          }
-          setShowModal(false);
-          fetchBlogs();
-      } catch (err) {
-          console.error(err);
-          alert("Failed to save blog post");
+        await deleteBlog({ id });
+        toast.success("Blog post deleted");
+      } catch (e) {
+        toast.error("Failed to delete blog post");
       }
-  };
+    }
+  }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-black text-white tracking-tight">Blog Posts</h1>
-            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Manage articles and Ayurvedic knowledge</p>
+    <div className="p-8 pb-32">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+            Blog Management
+          </h1>
+          <p className="text-[#94a3b8] mt-2 text-sm max-w-2xl">
+            Create, edit, and manage blog posts.
+          </p>
+        </div>
+        
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+          <div className="flex items-center gap-2 bg-[#1e293b] p-1 rounded-xl">
+            {['all', 'draft', 'pending', 'published'].map((s) => (
+              <button
+                key={s}
+                onClick={() => setFilter(s)}
+                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                  filter === s 
+                    ? 'bg-[#22c55e] text-[#0a0a0f] shadow-[0_0_15px_rgba(34,197,94,0.3)]'
+                    : 'text-white hover:bg-[#334155]'
+                }`}
+              >
+                {s.charAt(0).toUpperCase() + s.slice(1)}
+              </button>
+            ))}
           </div>
-          <button 
-            onClick={() => { 
-                setEditingBlog(null); 
-                setFormData({ title: '', slug: '', featured_image: '', content: '', category: 'Ayurveda', status: 'draft', tags: [] });
-                setShowModal(true); 
-            }}
-            className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-green-500/20 active:scale-95 flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined text-[18px]">edit_document</span>
-            Create New Post
-          </button>
+          <Link href="/admin/blogs/new" className="bg-[#22c55e] text-[#0a0a0f] hover:bg-[#16a34a] px-5 py-2.5 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(34,197,94,0.3)] flex items-center gap-2">
+            <span className="material-symbols-outlined text-[20px]">add</span>
+            New Post
+          </Link>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-           {loading ? (
-              Array(3).fill(0).map((_, i) => (
-                 <div key={i} className="bg-[#111118] border border-white/5 rounded-3xl p-6 animate-pulse h-64"></div>
-              ))
-           ) : blogs.length > 0 ? blogs.map((blog, idx) => (
-              <div key={blog._id} className="bg-[#111118] border border-white/5 rounded-3xl p-6 hover:bg-white/[0.02] transition flex flex-col group overflow-hidden">
-                 <div className="flex items-center justify-between mb-4">
-                    <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${blog.status === 'published' ? 'bg-green-500/10 text-green-500 border-green-500/10' : 'bg-orange-500/10 text-orange-500 border-orange-500/10'}`}>
-                       {blog.status}
-                    </span>
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                       {new Date(blog.created_at).toLocaleDateString()}
-                    </span>
-                 </div>
-
-                 {blog.featured_image && (
-                     <img src={blog.featured_image} className="w-full h-32 object-cover rounded-xl mb-4 border border-white/10" alt="Cover" />
-                 )}
-
-                 <h3 className="text-xl font-black text-white mb-2 leading-tight group-hover:text-green-500 transition-colors">
-                    {blog.title}
-                 </h3>
-                 <p className="text-xs text-slate-500 line-clamp-2 mb-6 font-medium">{blog.content.replace(/<[^>]+>/g, '').substring(0, 100)}...</p>
-
-                 <div className="mt-auto flex items-center gap-2">
-                    <button 
-                      onClick={() => { 
-                          setEditingBlog(blog); 
-                          setFormData({ title: blog.title, slug: blog.slug, featured_image: blog.featured_image || '', content: blog.content, category: blog.category || '', status: blog.status, tags: blog.tags || [] });
-                          setShowModal(true); 
-                      }}
-                      className="flex-grow py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition border border-white/5"
-                    >
-                       Edit Post
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(blog._id)}
-                      className="p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl transition border border-red-500/10"
-                    >
-                       <span className="material-symbols-outlined text-[18px]">delete</span>
-                    </button>
-                 </div>
-              </div>
-           )) : (
-              <div className="col-span-full py-32 text-center text-slate-600 italic">No blog posts yet. Create the first one!</div>
-           )}
-        </div>
-
-        {showModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                <div className="bg-[#111118] border border-white/10 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 sm:p-8">
-                    <div className="flex justify-between items-center mb-8">
-                       <h2 className="text-2xl font-black text-white">{editingBlog ? 'Edit Blog Post' : 'Create Blog Post'}</h2>
-                       <button onClick={() => setShowModal(false)} className="text-slate-500 hover:text-white transition"><span className="material-symbols-outlined">close</span></button>
-                    </div>
-                    <form onSubmit={handleSave} className="space-y-6">
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                           <div className="space-y-2">
-                               <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Title</label>
-                               <input type="text" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition" />
-                           </div>
-                           <div className="space-y-2">
-                               <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Featured Image URL</label>
-                               <input type="text" value={formData.featured_image} onChange={e => setFormData({...formData, featured_image: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition" />
-                           </div>
-                       </div>
-                       
-                       <div className="space-y-2">
-                           <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Content (Markdown/HTML)</label>
-                           <textarea required rows={12} value={formData.content} onChange={e => setFormData({...formData, content: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white font-mono text-sm focus:outline-none focus:border-green-500 transition"></textarea>
-                       </div>
-
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                           <div className="space-y-2">
-                               <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Status</label>
-                               <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition appearance-none">
-                                   <option value="draft" className="bg-[#111118]">Draft</option>
-                                   <option value="published" className="bg-[#111118]">Published</option>
-                               </select>
-                           </div>
-                           <div className="space-y-2">
-                               <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Category</label>
-                               <input type="text" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 transition" />
-                           </div>
-                       </div>
-
-                       <div className="flex justify-end gap-3 pt-6 border-t border-white/10">
-                           <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition">Cancel</button>
-                           <button type="submit" className="px-8 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-green-500/20 active:scale-95 transition">Save Post</button>
-                       </div>
-                    </form>
+      <div className="grid grid-cols-1 gap-6">
+        {filteredBlogs.length === 0 ? (
+          <div className="bg-[#111118] border border-[#22c55e]/10 rounded-2xl p-12 text-center">
+            <span className="material-symbols-outlined text-6xl text-[#94a3b8]/30 mb-4 block">article</span>
+            <h3 className="text-xl font-bold text-white mb-2">No Blog Posts Found</h3>
+            <p className="text-[#94a3b8]">Create your first blog post to get started!</p>
+          </div>
+        ) : (
+          filteredBlogs.map((blog) => (
+            <div key={blog._id} className="bg-[#111118] border border-[#22c55e]/10 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row gap-6 items-center">
+              {blog.image_id || blog.featured_image ? (
+                <div className="w-full md:w-48 h-32 bg-[#0a0a0f] rounded-xl overflow-hidden shrink-0 border border-white/5 relative">
+                  {/* For simpler implementation without waiting for image_id resolving if it's already a string URL from legacy. If it's a storage id we might need a separate component to resolve, or we use a helper query if it's featured_image */}
+                  {/* For now, just show a placeholder icon or image if it's a URL */}
+                  <div className="absolute inset-0 flex items-center justify-center text-[#94a3b8]">
+                    <span className="material-symbols-outlined text-4xl">image</span>
+                  </div>
                 </div>
+              ) : (
+                <div className="w-full md:w-48 h-32 bg-[#1e293b] rounded-xl flex items-center justify-center shrink-0 border border-white/5">
+                   <span className="material-symbols-outlined text-[#94a3b8] text-4xl">image_not_supported</span>
+                </div>
+              )}
+              
+              <div className="flex-1 space-y-3 w-full">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-xl font-bold text-white">{blog.title}</h3>
+                    <p className="text-[#94a3b8] text-sm mt-1">/{blog.slug}</p>
+                  </div>
+                  <span className={`px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${
+                    blog.status === 'draft' ? 'bg-gray-500/20 text-gray-400 border border-gray-500/30' :
+                    blog.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                    'bg-[#22c55e]/20 text-[#22c55e] border border-[#22c55e]/30'
+                  }`}>
+                    {blog.status}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-4 text-sm mt-4">
+                  <p className="text-[#94a3b8]">Last updated: {new Date(blog.updated_at || '').toLocaleDateString()}</p>
+                  <p className="text-[#94a3b8]">Views: {blog.view_count || 0}</p>
+                </div>
+              </div>
+
+              <div className="w-full md:w-48 flex flex-col gap-2 justify-center border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-6 shrink-0">
+                <Link href={`/admin/blogs/${blog.slug}`} className="w-full py-2 px-4 rounded-lg text-sm font-bold uppercase tracking-wider transition-all border border-[#22c55e]/30 text-[#22c55e] hover:bg-[#22c55e] hover:text-[#0a0a0f] text-center">
+                  Edit Post
+                </Link>
+                {['draft', 'pending', 'published'].filter(s => s !== blog.status).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => handleStatusChange(blog._id, s)}
+                    className="w-full py-2 px-4 rounded-lg text-xs font-semibold tracking-wider transition-all border border-transparent bg-white/5 text-[#94a3b8] hover:bg-white/10"
+                  >
+                    Set {s}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handleDelete(blog._id)}
+                  className="w-full py-2 px-4 rounded-lg text-xs font-semibold tracking-wider transition-all border border-red-500/30 text-red-500 hover:bg-red-500/10 mt-2"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
+          ))
         )}
       </div>
-    </AdminLayout>
+    </div>
   );
 }

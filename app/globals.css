@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap');
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 :root {
     --purple: #540C3C;
     --yellow: #F9D139;

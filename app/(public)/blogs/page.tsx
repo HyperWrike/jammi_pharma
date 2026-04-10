@@ -1,302 +1,171 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useRef } from 'react';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import Link from 'next/link';
-import { convexQuery, convexMutation } from '@/lib/adminDb';
-import { useAdmin } from '@/components/admin/AdminContext';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
-export default function BlogsFrontendPage() {
-    const [blogs, setBlogs] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const { isAdmin } = useAdmin();
+export default function BlogsPage() {
+  const blogs = useQuery(api.functions.cms.listBlogs, { status: "published" });
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
+  
+  const yParallax = useTransform(scrollYProgress, [0, 1], [0, -100]);
 
-    // Blog management state
-    const [showModal, setShowModal] = useState(false);
-    const [editingBlog, setEditingBlog] = useState<any>(null);
-    const [formData, setFormData] = useState({
-        title: '',
-        featured_image: '',
-        content: '',
-        category: 'Ayurveda',
-        status: 'draft',
-    });
-    const [saving, setSaving] = useState(false);
-
-    const fetchBlogs = async () => {
-        try {
-            const data = await convexQuery("functions/cms:listBlogs", {});
-            // Admin sees all, public sees only published
-            if (isAdmin) {
-                setBlogs(data || []);
-            } else {
-                setBlogs((data || []).filter((b: any) => b.status === 'published'));
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchBlogs();
-    }, [isAdmin]);
-
-    const openCreateModal = () => {
-        setEditingBlog(null);
-        setFormData({ title: '', featured_image: '', content: '', category: 'Ayurveda', status: 'draft' });
-        setShowModal(true);
-    };
-
-    const openEditModal = (blog: any) => {
-        setEditingBlog(blog);
-        setFormData({
-            title: blog.title || '',
-            featured_image: blog.featured_image || '',
-            content: blog.content || '',
-            category: blog.category || '',
-            status: blog.status || 'draft',
-        });
-        setShowModal(true);
-    };
-
-    const handleSave = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setSaving(true);
-        try {
-            if (editingBlog) {
-                await convexMutation("functions/cms:updateBlog", {
-                    id: editingBlog._id,
-                    title: formData.title,
-                    content: formData.content,
-                    featured_image: formData.featured_image,
-                    status: formData.status,
-                    ...(formData.status === 'published' && editingBlog.status !== 'published' ? { published_at: new Date().toISOString() } : {})
-                });
-            } else {
-                await convexMutation("functions/cms:createBlog", {
-                    title: formData.title,
-                    slug: formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, ''),
-                    content: formData.content,
-                    featured_image: formData.featured_image || undefined,
-                    category: formData.category,
-                    tags: [],
-                    status: formData.status,
-                });
-            }
-            setShowModal(false);
-            fetchBlogs();
-        } catch (err) {
-            console.error(err);
-            alert("Failed to save blog post.");
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleDelete = async (blogId: string) => {
-        if (!confirm('Delete this blog post?')) return;
-        try {
-            await convexMutation("functions/cms:deleteBlog", { id: blogId });
-            fetchBlogs();
-        } catch (err) {
-            alert('Failed to delete blog');
-        }
-    };
-
+  if (blogs === undefined) {
     return (
-        <div className="bg-background-light text-slate-900 font-body min-h-screen pt-24 pb-20">
-            <main className="max-w-7xl mx-auto px-4 md:px-10">
-                <div className="text-center mb-16">
-                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-secondary dark:text-primary mb-4 leading-tight font-display">
-                        Ayurvedic Insights
-                    </h1>
-                    <p className="text-slate-700 text-lg sm:text-xl font-medium max-w-2xl mx-auto">
-                        Explore our latest research, traditional wisdom, and updates.
-                    </p>
+      <div className="bg-[#FAF8F2] min-h-screen pt-32 pb-24 flex items-center justify-center">
+         <div className="w-16 h-16 border-t-2 border-r-2 border-[#540C3C] rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
-                    {isAdmin && (
-                        <button
-                            onClick={openCreateModal}
-                            className="mt-8 inline-flex items-center gap-2 bg-[var(--purple)] text-white px-6 py-3 rounded-full font-bold text-sm tracking-wide hover:brightness-95 transition-all shadow-lg"
-                        >
-                            <span className="material-symbols-outlined text-[18px]">add_circle</span>
-                            Create Blog Post
-                        </button>
-                    )}
-                </div>
+  const featuredBlog = blogs[0];
+  const remainingBlogs = blogs.slice(1);
 
-                {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {Array(3).fill(0).map((_, i) => (
-                            <div key={i} className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 animate-pulse h-80"></div>
-                        ))}
-                    </div>
-                ) : blogs.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {blogs.map(blog => (
-                            <div key={blog._id} className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl border border-slate-200 transition-all duration-300 transform hover:-translate-y-1 flex flex-col relative">
+  return (
+    <div ref={containerRef} className="bg-[#FAF8F2] min-h-screen overflow-hidden selection:bg-[#540C3C] selection:text-[#F9D139]">
+      {/* Editorial Header */}
+      <div className="pt-40 pb-20 px-6 md:px-12 relative border-b border-[#540C3C]/10">
+        <div className="absolute inset-0 paper-grain pointer-events-none opacity-40 mix-blend-multiply"></div>
+        <div className="max-w-[1400px] mx-auto relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-12">
+            <motion.div 
+               initial={{ opacity: 0, y: 40 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            >
+                <span className="text-xs font-bold tracking-[0.3em] uppercase text-[#E87722] block mb-4">Journal & Insights</span>
+                <h1 className="text-6xl md:text-8xl lg:text-[10rem] leading-[0.85] font-serif text-[#540C3C] tracking-tight m-0 mix-blend-darken">
+                   Wisdom<br/>Archive.
+                </h1>
+            </motion.div>
+            
+            <motion.div 
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               transition={{ duration: 1, delay: 0.3 }}
+               className="md:max-w-sm pb-4"
+            >
+                <p className="text-[#2C2420]/80 text-lg leading-relaxed font-sans font-light">
+                   Exploring the intersection of ancient Ayurvedic tradition and modern holistic living. Meticulously curated for the mindful.
+                </p>
+            </motion.div>
+        </div>
+      </div>
 
-                                {/* Admin Controls */}
-                                {isAdmin && (
-                                    <div className="absolute top-4 right-4 z-20 flex gap-2">
-                                        <button
-                                            onClick={(e) => { e.preventDefault(); openEditModal(blog); }}
-                                            className="w-9 h-9 bg-white/90 backdrop-blur-sm text-[var(--purple)] rounded-full flex items-center justify-center shadow-md hover:bg-white transition-all border border-slate-200"
-                                            title="Edit"
-                                        >
-                                            <span className="material-symbols-outlined text-[16px]">edit</span>
-                                        </button>
-                                        <button
-                                            onClick={(e) => { e.preventDefault(); handleDelete(blog._id); }}
-                                            className="w-9 h-9 bg-white/90 backdrop-blur-sm text-red-500 rounded-full flex items-center justify-center shadow-md hover:bg-red-50 transition-all border border-slate-200"
-                                            title="Delete"
-                                        >
-                                            <span className="material-symbols-outlined text-[16px]">delete</span>
-                                        </button>
-                                    </div>
-                                )}
-
-                                <Link href={`/blogs/${blog.slug}`} className="flex flex-col flex-1">
-                                    <div className="h-48 overflow-hidden bg-slate-100 relative">
-                                        {blog.featured_image ? (
-                                            <img src={blog.featured_image} alt={blog.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-slate-300">
-                                                <span className="material-symbols-outlined text-4xl">article</span>
-                                            </div>
-                                        )}
-                                        <div className="absolute top-4 left-4 flex gap-2">
-                                            {blog.category && (
-                                                <div className="bg-primary text-secondary text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-md">
-                                                    {blog.category}
-                                                </div>
-                                            )}
-                                            {isAdmin && blog.status !== 'published' && (
-                                                <div className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-md">
-                                                    {blog.status}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="p-6 sm:p-8 flex-1 flex flex-col">
-                                        <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
-                                            {new Date(blog.published_at || blog.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
-                                        </div>
-                                        <h3 className="text-xl sm:text-2xl font-bold text-secondary dark:text-slate-900 mb-3 leading-tight group-hover:text-[var(--purple)] transition-colors line-clamp-2 title-font">
-                                            {blog.title}
-                                        </h3>
-                                        <p className="text-slate-700 text-sm leading-relaxed line-clamp-3 mb-6 flex-1">
-                                            {blog.content.replace(/<[^>]+>/g, '')}
-                                        </p>
-                                        <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between text-[var(--purple)] font-bold text-sm">
-                                            <span>Read Article</span>
-                                            <span className="material-symbols-outlined transform group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                                        </div>
-                                    </div>
-                                </Link>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-32 bg-white rounded-[3rem] border border-slate-200 shadow-sm">
-                        <span className="material-symbols-outlined text-6xl text-slate-200 mb-4 block">draft_orders</span>
-                        <h3 className="text-2xl font-bold text-slate-500">No Articles Yet</h3>
-                        <p className="text-slate-600 mt-2">Check back soon for the latest updates.</p>
-                        {isAdmin && (
-                            <button
-                                onClick={openCreateModal}
-                                className="mt-6 inline-flex items-center gap-2 bg-[var(--purple)] text-white px-6 py-3 rounded-full font-bold text-sm"
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12 py-24 relative z-10">
+        {blogs.length === 0 ? (
+          <div className="text-center py-32 border border-[#540C3C]/10 rounded-none bg-white/50">
+             <span className="text-sm font-bold tracking-[0.2em] text-[#540C3C] uppercase">The archive is currently empty</span>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-32">
+             
+            {/* Featured Post - Massive Asymmetric Layout */}
+            {featuredBlog && (
+                <Link href={`/blogs/${featuredBlog.slug}`} className="group block">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                        <div className="lg:col-span-7 relative overflow-hidden" style={{ aspectRatio: '4/5' }}>
+                            <motion.div 
+                               className="absolute inset-0 bg-[#540C3C]"
+                               initial={{ opacity: 0 }}
+                               animate={{ opacity: 1 }}
+                               transition={{ duration: 1.2 }}
                             >
-                                <span className="material-symbols-outlined text-[18px]">add_circle</span>
-                                Create First Post
-                            </button>
-                        )}
-                    </div>
-                )}
-
-                {/* Blog Create/Edit Modal */}
-                {showModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                        <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 sm:p-10 border border-slate-200">
-                            <div className="flex justify-between items-center mb-8">
-                                <h2 className="text-2xl font-bold text-secondary">{editingBlog ? 'Edit Blog Post' : 'Create Blog Post'}</h2>
-                                <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-700 transition p-1">
-                                    <span className="material-symbols-outlined">close</span>
-                                </button>
+                               {/* Image wrapper for hover effect */}
+                               <div className="w-full h-full overflow-hidden">
+                                    <img 
+                                      src={featuredBlog.featured_image || featuredBlog.image_id || 'https://images.unsplash.com/photo-1611095960682-1ad203875fdf?auto=format&fit=crop&q=80'} 
+                                      alt={featuredBlog.title} 
+                                      className="w-full h-full object-cover filter grayscale opacity-90 group-hover:filter-none group-hover:scale-105 transition-all duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)]"
+                                    />
+                               </div>
+                            </motion.div>
+                            
+                            {/* Floating Metadata */}
+                            <div className="absolute top-6 left-6 z-10">
+                               <div className="bg-white/90 backdrop-blur-md px-4 py-2 font-mono text-[10px] tracking-widest text-[#540C3C] uppercase">
+                                  No. {new Date(featuredBlog.published_at || featuredBlog.created_at || '').getFullYear()}
+                               </div>
                             </div>
-                            <form onSubmit={handleSave} className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-widest">Title *</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={formData.title}
-                                            onChange={e => setFormData({...formData, title: e.target.value})}
-                                            className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-[var(--purple)] transition bg-slate-50"
-                                            placeholder="Blog post title"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-widest">Featured Image URL</label>
-                                        <input
-                                            type="text"
-                                            value={formData.featured_image}
-                                            onChange={e => setFormData({...formData, featured_image: e.target.value})}
-                                            className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-[var(--purple)] transition bg-slate-50"
-                                            placeholder="https://..."
-                                        />
-                                    </div>
+                        </div>
+
+                        <div className="lg:col-span-5 lg:pl-12 lg:-ml-24 z-10 relative mt-8 lg:mt-0">
+                            <motion.div 
+                               style={{ y: yParallax }} 
+                               className="bg-[#FAF8F2] p-8 md:p-16 border border-[#540C3C]/10 shadow-2xl shadow-[#540C3C]/5"
+                            >
+                                <div className="flex items-center gap-4 mb-8">
+                                    <span className="w-12 h-[1px] bg-[#E87722]"></span>
+                                    <span className="text-[#E87722] text-xs font-bold tracking-[0.2em] uppercase">Featured</span>
                                 </div>
+                                <h2 className="text-4xl md:text-5xl font-serif text-[#540C3C] leading-[1.1] mb-8 group-hover:text-[#E87722] transition-colors duration-500">
+                                   {featuredBlog.title}
+                                </h2>
+                                <p className="text-[#2C2420]/70 font-sans leading-relaxed text-lg mb-12 line-clamp-4">
+                                   {featuredBlog.content.replace(/<[^>]+>/g, '').slice(0, 200)}...
+                                </p>
                                 
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-600 uppercase tracking-widest">Content (Markdown) *</label>
-                                    <textarea
-                                        required
-                                        rows={14}
-                                        value={formData.content}
-                                        onChange={e => setFormData({...formData, content: e.target.value})}
-                                        className="w-full border-2 border-slate-200 rounded-xl p-4 text-slate-800 font-mono text-sm focus:outline-none focus:border-[var(--purple)] transition bg-slate-50 resize-y"
-                                        placeholder="Write your blog post content in Markdown..."
-                                    ></textarea>
+                                <div className="flex items-center justify-between text-xs font-bold tracking-widest text-[#540C3C] uppercase group-hover:text-[#E87722] transition-colors">
+                                   <span>Read Article</span>
+                                   <span className="material-symbols-outlined transform group-hover:translate-x-4 transition-transform duration-500">east</span>
                                 </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-widest">Status</label>
-                                        <select
-                                            value={formData.status}
-                                            onChange={e => setFormData({...formData, status: e.target.value})}
-                                            className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-[var(--purple)] transition bg-slate-50 appearance-none"
-                                        >
-                                            <option value="draft">Draft</option>
-                                            <option value="published">Published</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-widest">Category</label>
-                                        <input
-                                            type="text"
-                                            value={formData.category}
-                                            onChange={e => setFormData({...formData, category: e.target.value})}
-                                            className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-[var(--purple)] transition bg-slate-50"
-                                            placeholder="e.g. Ayurveda, Wellness"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-end gap-3 pt-6 border-t border-slate-200">
-                                    <button type="button" onClick={() => setShowModal(false)} className="px-6 py-3 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-800 transition bg-transparent border-none">Cancel</button>
-                                    <button type="submit" disabled={saving} className="px-8 py-3 bg-[var(--purple)] hover:brightness-95 text-white rounded-xl text-sm font-bold uppercase tracking-widest shadow-lg transition disabled:opacity-60">
-                                        {saving ? 'Saving...' : 'Save Post'}
-                                    </button>
-                                </div>
-                            </form>
+                            </motion.div>
                         </div>
                     </div>
-                )}
-            </main>
-        </div>
-    );
+                </Link>
+            )}
+
+            {/* List Array - Grid flow with negative space */}
+            {remainingBlogs.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-24">
+                   {remainingBlogs.map((blog, idx) => (
+                      <motion.div 
+                         initial={{ opacity: 0, y: 50 }}
+                         whileInView={{ opacity: 1, y: 0 }}
+                         viewport={{ once: true, margin: "-100px" }}
+                         transition={{ duration: 0.8, delay: (idx % 3) * 0.15 }}
+                         key={blog._id}
+                      >
+                          <Link href={`/blogs/${blog.slug}`} className="group block h-full flex flex-col">
+                              <div className="relative overflow-hidden mb-6" style={{ aspectRatio: idx % 2 === 0 ? '3/4' : '4/3' }}>
+                                 <img 
+                                    src={blog.featured_image || blog.image_id || 'https://images.unsplash.com/photo-1611095960682-1ad203875fdf?auto=format&fit=crop&q=80'} 
+                                    alt={blog.title}
+                                    className="w-full h-full object-cover filter grayscale group-hover:filter-none transition-[filter,transform] duration-700 ease-out group-hover:scale-105"
+                                 />
+                                 {blog.category && (
+                                     <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur px-3 py-1 text-[9px] font-bold tracking-[0.2em] text-[#540C3C] uppercase">
+                                        {blog.category}
+                                     </div>
+                                 )}
+                              </div>
+                              <div className="flex flex-col flex-1">
+                                  <div className="flex items-center gap-3 mb-4 text-[#8B6914] text-[10px] font-bold tracking-widest uppercase">
+                                     <span>{new Date(blog.published_at || blog.created_at || '').toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                     <span className="w-1 h-1 bg-current rounded-full"></span>
+                                     <span>{blog.author_name || 'Jammi'}</span>
+                                  </div>
+                                  <h3 className="text-2xl font-serif text-[#540C3C] leading-tight mb-4 group-hover:text-[#E87722] transition-colors duration-300 line-clamp-2">
+                                     {blog.title}
+                                  </h3>
+                                  <div className="mt-auto pt-6 border-t border-[#540C3C]/10 flex justify-between items-center opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                                     <span className="text-xs font-bold tracking-widest text-[#540C3C] uppercase">Explore</span>
+                                     <span className="material-symbols-outlined text-[#540C3C] text-[18px]">arrow_outward</span>
+                                  </div>
+                              </div>
+                          </Link>
+                      </motion.div>
+                   ))}
+                </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
