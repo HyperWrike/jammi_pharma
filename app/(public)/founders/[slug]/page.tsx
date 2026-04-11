@@ -30,6 +30,32 @@ export default async function FounderDetailPage({ params }: { params: Promise<{ 
           <p className="text-primary font-bold tracking-wide uppercase text-sm mt-3">{profile.role}</p>
           <p className="mt-6 text-lg text-slate-700 leading-relaxed">{profile.summary}</p>
 
+          {Array.isArray(profile.bio) && profile.bio.length > 0 && (
+            <div className="mt-6 space-y-4">
+              {profile.bio.map((paragraph, idx) => (
+                <p key={idx} className="text-base md:text-lg text-slate-700 leading-relaxed">{paragraph}</p>
+              ))}
+            </div>
+          )}
+
+          {profile.quote && (
+            <blockquote className="mt-6 border-l-4 border-primary pl-5 italic text-lg text-secondary">
+              "{profile.quote}"
+            </blockquote>
+          )}
+
+          {profile.linkedInUrl && (
+            <a
+              href={profile.linkedInUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-3 text-sm font-bold text-secondary hover:border-primary hover:text-primary transition-colors"
+            >
+              Connect on LinkedIn
+              <span className="material-symbols-outlined text-base">arrow_outward</span>
+            </a>
+          )}
+
           {descendants.length > 0 && (
             <div className="mt-10 border-t border-slate-200 pt-6">
               <h2 className="text-xl font-bold text-secondary mb-4">Next Generation</h2>
