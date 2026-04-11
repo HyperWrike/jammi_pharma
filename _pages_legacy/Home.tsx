@@ -137,7 +137,7 @@ const Home: React.FC = () => {
               <CMS section="claim" field="claimQuote" multiline fallback="We don't sell hope. We sell 128 years of clinical results. Authentic Ayurveda doesn't ask for belief—it demands respect." />
             </blockquote>
             <div className="pt-4">
-              <Link href="/heritage" className="inline-flex text-forest font-bold uppercase tracking-widest text-sm items-center gap-2 hover:text-saffron transition-colors pb-1 border-b-2 border-forest hover:border-saffron">
+              <Link href="/legacy" className="inline-flex text-forest font-bold uppercase tracking-widest text-sm items-center gap-2 hover:text-saffron transition-colors pb-1 border-b-2 border-forest hover:border-saffron">
                 DISCOVER THE 1897 GENESIS
                 <span className="material-symbols-outlined text-lg">arrow_forward</span>
               </Link>

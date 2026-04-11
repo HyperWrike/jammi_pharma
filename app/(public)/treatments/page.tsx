@@ -5,20 +5,20 @@ import Link from 'next/link';
 
 export default function TreatmentsPage() {
   const treatments = [
-    { name: 'Skin Care', slug: 'skin-care' },
-    { name: 'Immunity', slug: 'immunity' },
-    { name: 'Wellness/Lifestyle', slug: 'wellness' },
-    { name: 'Internal Bleeding', slug: 'internal-bleeding' },
-    { name: 'Geriatric', slug: 'geriatric' },
-    { name: 'Pediatric', slug: 'pediatric' },
-    { name: 'Respiratory', slug: 'respiratory' },
-    { name: 'Supportive Therapy', slug: 'supportive-therapy' },
-    { name: 'Migraines', slug: 'migraines' },
-    { name: 'Kidney', slug: 'kidney' },
-    { name: 'Digestion', slug: 'digestion' },
-    { name: 'Women’s Health', slug: 'womens-health' },
-    { name: 'Pain Management', slug: 'pain-management' },
-    { name: 'Hepatic (Liver)', slug: 'liver' }
+    { name: 'Skin Care', query: 'skin-care' },
+    { name: 'Immunity', query: 'immunity' },
+    { name: 'Wellness/Lifestyle', query: 'wellness' },
+    { name: 'Internal Bleeding', query: 'internal-bleeding' },
+    { name: 'Geriatric', query: 'geriatric' },
+    { name: 'Pediatric', query: 'pediatric' },
+    { name: 'Respiratory', query: 'respiratory' },
+    { name: 'Supportive Therapy', query: 'supportive-therapy' },
+    { name: 'Migraines', query: 'migraines' },
+    { name: 'Kidney', query: 'kidney' },
+    { name: 'Digestion', query: 'digestion' },
+    { name: 'Women’s Health', query: 'womens-health' },
+    { name: 'Pain Management', query: 'pain-management' },
+    { name: 'Hepatic (Liver)', query: 'liver' }
   ];
 
   return (
@@ -64,7 +64,7 @@ export default function TreatmentsPage() {
               {treatments.map((t, idx) => (
                 <Link 
                   key={idx} 
-                  href={`/category/${t.slug}`}
+                  href={`/shop?category=${t.query}`}
                   className="flex items-center gap-3 text-lg font-bold text-[#1A4B3A] hover:text-[#F3A010] transition-colors p-3 hover:bg-white rounded shadow-sm border border-transparent hover:border-gray-100 group"
                 >
                   <span className="w-2 h-2 bg-[#F3A010] rounded-full group-hover:scale-150 transition-transform"></span>

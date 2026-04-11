@@ -196,6 +196,16 @@ export default function ProductTemplate({ productId, initialData }: { productId:
         { id: 3, style: {}, icon: 'flip', label: 'Detail View', image: galleryImages[3] || galleryImages[0] || product.image },
     ];
 
+    const reviewCount = reviews.length;
+    const reviewAverage = reviewCount > 0
+        ? reviews.reduce((sum, r) => sum + Number(r.rating || 0), 0) / reviewCount
+        : 0;
+    const starBuckets = [5, 4, 3, 2, 1].map((star) => {
+        const count = reviews.filter((r) => Number(r.rating || 0) === star).length;
+        const pct = reviewCount > 0 ? Math.round((count / reviewCount) * 100) : 0;
+        return { star, count, pct };
+    });
+
     return (
         <div className="bg-background-light text-slate-900 font-body min-h-screen pt-20">
             <main className="max-w-7xl mx-auto px-4 md:px-10 py-8">
@@ -409,12 +419,40 @@ export default function ProductTemplate({ productId, initialData }: { productId:
                 )}
 
                 {/* Reviews Section */}
-                <section className="mb-16 sm:mb-24 bg-white p-8 sm:p-12 rounded-3xl border border-slate-200 shadow-sm">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                <section className="mb-16 sm:mb-24 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm">
+                    <div className="mb-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="rounded-2xl border border-slate-200 p-5 bg-slate-50/70">
+                            <p className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-2">Overall Rating</p>
+                            <p className="text-4xl font-black text-secondary leading-none">{reviewAverage.toFixed(1)}</p>
+                            <div className="flex items-center gap-1 text-saffron mt-2">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <span key={star} className={`material-symbols-outlined text-[18px] ${star <= Math.round(reviewAverage) ? 'font-variation-settings-"FILL" 1' : ''}`}>star</span>
+                                ))}
+                            </div>
+                            <p className="text-xs text-slate-500 mt-2">Based on {reviewCount} testimonial{reviewCount === 1 ? '' : 's'}</p>
+                        </div>
+
+                        <div className="rounded-2xl border border-slate-200 p-5 lg:col-span-2">
+                            <p className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-4">Customer Sentiment</p>
+                            <div className="space-y-2">
+                                {starBuckets.map((bucket) => (
+                                    <div key={bucket.star} className="grid grid-cols-[40px_1fr_45px] items-center gap-3 text-xs">
+                                        <span className="font-semibold text-slate-700">{bucket.star}★</span>
+                                        <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                                            <div className="h-full bg-amber-400" style={{ width: `${bucket.pct}%` }} />
+                                        </div>
+                                        <span className="text-slate-500 text-right">{bucket.pct}%</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Write a Review */}
                         <div className="lg:col-span-1">
                             <h3 className="text-2xl font-bold text-secondary dark:text-white mb-2 font-display">Customer Reviews</h3>
-                            <p className="text-slate-500 text-sm mb-8">Share your experience with this formulation.</p>
+                            <p className="text-slate-500 text-sm mb-6">Share your experience with this formulation.</p>
 
                             {reviewSuccess ? (
                                 <div className="bg-green-50 text-green-800 p-4 rounded-xl border border-green-200 text-sm font-medium flex items-start gap-2">
@@ -422,7 +460,7 @@ export default function ProductTemplate({ productId, initialData }: { productId:
                                     Thank you! Your review has been submitted and is pending moderation.
                                 </div>
                             ) : (
-                                <form onSubmit={handleReviewSubmit} className="space-y-4">
+                                <form onSubmit={handleReviewSubmit} className="space-y-3">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Your Name</label>
                                         <input type="text" value={reviewName} onChange={e => setReviewName(e.target.value)} required className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:border-primary" />
@@ -439,7 +477,7 @@ export default function ProductTemplate({ productId, initialData }: { productId:
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Your Review</label>
-                                        <textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)} required rows={4} className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:border-primary resize-none" placeholder="How did this product help you?" />
+                                        <textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)} required rows={3} className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:border-primary resize-none" placeholder="How did this product help you?" />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Add an Image (Optional)</label>
@@ -462,36 +500,39 @@ export default function ProductTemplate({ productId, initialData }: { productId:
                         </div>
 
                         {/* Reviews List */}
-                        <div className="lg:col-span-2 space-y-6">
+                        <div className="lg:col-span-2">
                             {reviews.length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center text-slate-400 p-8 border-2 border-dashed border-slate-200 rounded-2xl">
                                     <span className="material-symbols-outlined text-4xl mb-2">reviews</span>
                                     <p>No reviews yet. Be the first to share your experience!</p>
                                 </div>
                             ) : (
-                                reviews.map(review => (
-                                    <div key={review.id} className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                                        <div className="flex justify-between items-start mb-3">
-                                            <div>
-                                                <h4 className="font-bold text-slate-900 text-lg">{review.customerName}</h4>
-                                                <span className="text-xs text-slate-500">{new Date(review.createdAt).toLocaleDateString()}</span>
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                    {reviews.map(review => (
+                                        <div key={review.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                            <div className="flex justify-between items-start gap-3 mb-2">
+                                                <div>
+                                                    <h4 className="font-bold text-slate-900 text-sm">{review.customerName}</h4>
+                                                    <span className="text-[11px] text-slate-500">{new Date(review.createdAt).toLocaleDateString()}</span>
+                                                </div>
+                                                <div className="flex text-saffron">
+                                                    {[1, 2, 3, 4, 5].map(star => (
+                                                        <span key={star} className={`material-symbols-outlined text-[14px] ${star <= review.rating ? 'font-variation-settings-"FILL" 1' : ''}`}>
+                                                            star
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <div className="flex text-saffron">
-                                                {[1, 2, 3, 4, 5].map(star => (
-                                                    <span key={star} className={`material-symbols-outlined text-[16px] ${star <= review.rating ? 'font-variation-settings-"FILL" 1' : ''}`}>
-                                                        star
-                                                    </span>
-                                                ))}
+                                            <div className="inline-block text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded-full mb-2">
+                                                Verified Testimonial
                                             </div>
+                                            <p className="text-slate-600 text-xs leading-relaxed line-clamp-5">{review.comment}</p>
+                                            {review.imageUrl && (
+                                                <img src={review.imageUrl} alt="Review" className="mt-3 h-24 w-full rounded-lg object-cover bg-slate-100 border border-slate-200" />
+                                            )}
                                         </div>
-                                        <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">{review.comment}</p>
-                                        {review.imageUrl && (
-                                            <div className="mt-3">
-                                                <img src={review.imageUrl} alt="Review Image" className="max-h-48 rounded-xl object-contain bg-slate-100 border border-slate-200" />
-                                            </div>
-                                        )}
-                                    </div>
-                                ))
+                                    ))}
+                                </div>
                             )}
                         </div>
                     </div>

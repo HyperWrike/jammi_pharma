@@ -112,8 +112,13 @@ export default function FoundersPage() {
                             <React.Fragment key={root.slug}>
                                 <Link
                                     href={`/founders/${root.slug}`}
-                                    className="px-6 py-4 rounded-2xl border-2 border-primary bg-primary/5 text-center hover:bg-primary/10 transition-colors"
+                                    className="px-6 py-4 rounded-2xl border-2 border-primary bg-primary/5 text-center hover:bg-primary/10 transition-colors flex flex-col items-center"
                                 >
+                                    <img
+                                        src={root.image || '/images/founder_1.png'}
+                                        alt={root.name}
+                                        className="w-20 h-20 rounded-full object-cover border-2 border-primary/30 mb-3"
+                                    />
                                     <p className="font-bold text-secondary text-lg">{root.name}</p>
                                     <p className="text-xs tracking-widest uppercase text-primary mt-1">{root.role}</p>
                                 </Link>
@@ -125,8 +130,13 @@ export default function FoundersPage() {
                                         <Link
                                             key={node.slug}
                                             href={`/founders/${node.slug}`}
-                                            className="px-5 py-4 rounded-2xl border border-slate-300 bg-slate-50 text-center hover:border-primary hover:bg-primary/5 transition-colors"
+                                            className="px-5 py-4 rounded-2xl border border-slate-300 bg-slate-50 text-center hover:border-primary hover:bg-primary/5 transition-colors flex flex-col items-center"
                                         >
+                                            <img
+                                                src={node.image || '/images/founder_2.jpg'}
+                                                alt={node.name}
+                                                className="w-16 h-16 rounded-full object-cover border border-slate-300 mb-2"
+                                            />
                                             <p className="font-bold text-slate-900">{node.name}</p>
                                             <p className="text-xs tracking-wide uppercase text-slate-500 mt-1">{node.role}</p>
                                         </Link>

@@ -4,15 +4,6 @@ const nextConfig: NextConfig = {
     typescript: {
         ignoreBuildErrors: true,
     },
-    async redirects() {
-        return [
-            {
-                source: '/legacy',
-                destination: '/heritage',
-                permanent: false,
-            },
-        ];
-    },
     images: {
         remotePatterns: [
             {

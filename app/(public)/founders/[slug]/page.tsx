@@ -17,6 +17,13 @@ export default function FounderDetailPage({ params }: { params: { slug: string }
         </Link>
 
         <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
+          <div className="mb-6">
+            <img
+              src={profile.image || '/images/founder_1.png'}
+              alt={profile.name}
+              className="w-28 h-28 rounded-full object-cover border-2 border-primary/20"
+            />
+          </div>
           <p className="text-xs uppercase tracking-widest text-primary font-bold mb-2">{profile.era}</p>
           <h1 className="text-4xl md:text-5xl font-display font-bold text-secondary">{profile.name}</h1>
           <p className="text-primary font-bold tracking-wide uppercase text-sm mt-3">{profile.role}</p>
@@ -30,10 +37,17 @@ export default function FounderDetailPage({ params }: { params: { slug: string }
                   <Link
                     key={node.slug}
                     href={`/founders/${node.slug}`}
-                    className="rounded-2xl border border-slate-200 p-4 hover:border-primary hover:bg-primary/5 transition-colors"
+                    className="rounded-2xl border border-slate-200 p-4 hover:border-primary hover:bg-primary/5 transition-colors flex items-center gap-3"
                   >
-                    <p className="font-bold text-slate-900">{node.name}</p>
-                    <p className="text-sm text-slate-600 mt-1">{node.role}</p>
+                    <img
+                      src={node.image || '/images/founder_2.jpg'}
+                      alt={node.name}
+                      className="w-14 h-14 rounded-full object-cover border border-slate-200"
+                    />
+                    <div>
+                      <p className="font-bold text-slate-900">{node.name}</p>
+                      <p className="text-sm text-slate-600 mt-1">{node.role}</p>
+                    </div>
                   </Link>
                 ))}
               </div>

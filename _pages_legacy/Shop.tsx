@@ -24,6 +24,23 @@ const CONCERNS_BY_GROUP: Record<(typeof CONCERN_GROUP_OPTIONS)[number], string[]
   ],
 };
 
+const CATEGORY_ALIAS_TO_CONCERNS: Record<string, string[]> = {
+  'skin-care': ['Skin Complexion', 'Acne/Pimples', 'Skin Dullness'],
+  'immunity': ['Immunity', 'Weakened Immunity'],
+  'wellness': ['Immunity', 'Digestion', 'Stress'],
+  'internal-bleeding': ['Digestion'],
+  'geriatric': ['Aches & Pains', 'Heart Health'],
+  'pediatric': ['Immunity', 'Digestion'],
+  'respiratory': ['Asthma/Wheezing', 'Coughs and Colds'],
+  'supportive-therapy': ['Aches & Pains', 'Stress'],
+  'migraines': ['Stress'],
+  'kidney': ['Kidney/Gall Bladder Stones'],
+  'digestion': ['Digestion', 'Gut-health Disorders'],
+  'womens-health': ['Gynaecological Health'],
+  'pain-management': ['Aches & Pains'],
+  'liver': ['Fatty Liver', 'Liver Diseases'],
+};
+
 const CONCERN_KEYWORDS: Record<string, string[]> = {
   'Immunity': ['immunity', 'immune'],
   'Fatty Liver': ['liver', 'hepatic', 'fatty liver'],
@@ -79,6 +96,12 @@ const Shop: React.FC = () => {
   useEffect(() => {
     const defaultCat = searchParams?.get('category');
     if (defaultCat) {
+      const aliasMatches = CATEGORY_ALIAS_TO_CONCERNS[defaultCat.toLowerCase()];
+      if (aliasMatches?.length) {
+        setSelectedConcerns(new Set(aliasMatches));
+        return;
+      }
+
       const formattedSlug = defaultCat.replace(/-/g, ' ');
 
       if (formattedSlug.toLowerCase() === 'skin care' || formattedSlug.toLowerCase() === 'hair care') {
