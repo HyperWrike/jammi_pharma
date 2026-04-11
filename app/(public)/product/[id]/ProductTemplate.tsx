@@ -407,8 +407,15 @@ export default function ProductTemplate({ productId, initialData }: { productId:
                 </div>
 
                 {/* Certification Badges */}
-                <div className="mb-16 sm:mb-24 flex flex-col items-center justify-center gap-8 py-6 rounded-3xl">
-                    <img src="/images/badges/2.jpeg" className="h-28 object-contain rounded-xl mix-blend-multiply" alt="Certifications — 100% Natural, Vegetarian, Non-GMO, GMP Certified, Ethically Sourced" onError={(e) => e.currentTarget.style.display = 'none'} />
+                <div className="mb-10 sm:mb-12 flex items-center justify-center">
+                    <div className="bg-slate-100 border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm">
+                        <img
+                            src="/images/badges/2.jpeg"
+                            className="h-16 sm:h-20 md:h-24 object-contain mix-blend-multiply"
+                            alt="Certifications - 100% Natural, Vegetarian, Non-GMO, GMP Certified, Ethically Sourced"
+                            onError={(e) => e.currentTarget.style.display = 'none'}
+                        />
+                    </div>
                 </div>
 
                 {/* 4 Tabs Section */}
@@ -427,30 +434,10 @@ export default function ProductTemplate({ productId, initialData }: { productId:
                             </button>
                         ))}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-                        {/* Product Image in Tabs */}
-                        <div className="hidden md:flex items-center justify-center bg-slate-50 rounded-2xl p-6 aspect-square">
-                            <div className="w-full h-full flex items-center justify-center">
-                                <EditorImage
-                                    src={imageAngles[selectedAngle].image}
-                                    alt={product.name}
-                                    bucket="product-images"
-                                    folder="products"
-                                    onUpdate={async (newUrl) => {
-                                        await updateDocument('products', product.id, { images: [newUrl] });
-                                    }}
-                                    editorActive={isAdmin && isEditMode}
-                                    fitMode="contain"
-                                    className="w-full h-full object-contain"
-                                />
-                            </div>
-                        </div>
-                        {/* Tab Content */}
-                        <div className="prose prose-lg max-w-none text-slate-800 font-body leading-relaxed">
-                            <LiveEditable collection="products" docId={product.id} field={activeTab} multiline>
-                                {(product as any)[activeTab] || `No ${activeTab} information available yet.`}
-                            </LiveEditable>
-                        </div>
+                    <div className="prose prose-lg max-w-none text-slate-800 font-body leading-relaxed">
+                        <LiveEditable collection="products" docId={product.id} field={activeTab} multiline>
+                            {(product as any)[activeTab] || `No ${activeTab} information available yet.`}
+                        </LiveEditable>
                     </div>
                 </div>
 
