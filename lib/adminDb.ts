@@ -27,6 +27,14 @@ export async function convexMutation(path: string, args?: any) {
 function normalizeProductRecord(product: any) {
   if (!product) return null;
 
+  const ingredients = Array.isArray(product.ingredients)
+    ? product.ingredients.join('\n')
+    : (product.ingredients || '');
+  const indications = Array.isArray(product.benefits)
+    ? product.benefits.join('\n')
+    : (product.indications || '');
+  const dosage = product.dosage || product.usage_instructions || '';
+
   return {
     _id: String(product._id || product.id || ''),
     id: String(product._id || product.id || ''),
@@ -41,6 +49,9 @@ function normalizeProductRecord(product: any) {
     ritual: product.ritual || [],
     stockStatus: product.status === 'published' || product.status === 'active' ? 'In Stock' : (product.status || 'In Stock'),
     description: product.description || product.short_description || '',
+    ingredients,
+    indications,
+    dosage,
     slug: product.slug || '',
     status: product.status || 'published',
   };
@@ -231,6 +242,33 @@ export const updateDocument = async (collectionName: string, id: string, data: a
         content_value: value as string,
       });
     }
+    return;
+  }
+  if (collectionName === 'products') {
+    const payload: any = { ...data };
+
+    if (Array.isArray(payload.ingredients)) {
+      payload.ingredients = payload.ingredients
+        .map((line: unknown) => String(line).trim())
+        .filter(Boolean)
+        .join('\n');
+    }
+
+    if (typeof payload.dosage === 'string' && !payload.usage_instructions) {
+      payload.usage_instructions = payload.dosage;
+    }
+
+    if (typeof payload.indications === 'string' && !Array.isArray(payload.benefits)) {
+      payload.benefits = payload.indications
+        .split(/\r?\n+/)
+        .map((line: string) => line.trim())
+        .filter(Boolean);
+    }
+
+    delete payload.indications;
+    delete payload.dosage;
+
+    await convexMutation("functions/products_mutations:updateProduct", { id, ...payload });
     return;
   }
   throw new Error(`updateDocument not supported for ${collectionName}`);

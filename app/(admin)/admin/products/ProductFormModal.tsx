@@ -203,7 +203,7 @@ export default function ProductFormModal({ product, categories, onClose, onSucce
                 <textarea 
                   name="ingredients" 
                   value={Array.isArray(formData.ingredients) ? formData.ingredients.join(', ') : formData.ingredients || ''} 
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, ingredients: e.target.value.split(',').map((s: string) => s.trim()) }))} 
+                  onChange={(e) => setFormData((prev: any) => ({ ...prev, ingredients: e.target.value }))} 
                   className="admin-input min-h-[100px]" 
                   placeholder="Herb 1, Herb 2..." 
                 />

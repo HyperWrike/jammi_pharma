@@ -13,6 +13,10 @@ function cleanArgs(args: any) {
 }
 
 function sanitizeProductUpdate(input: any) {
+  const ingredients = Array.isArray(input?.ingredients)
+    ? input.ingredients.map((v: unknown) => String(v).trim()).filter(Boolean).join('\n')
+    : input?.ingredients;
+
   return cleanArgs({
     name: input?.name,
     slug: input?.slug,
@@ -21,12 +25,23 @@ function sanitizeProductUpdate(input: any) {
     price: input?.price !== undefined ? Number(input.price) : undefined,
     discount_price: input?.discount_price ?? (input?.compare_at_price !== undefined ? Number(input.compare_at_price) : undefined),
     stock: input?.stock !== undefined ? Number(input.stock) : undefined,
+    low_stock_threshold: input?.low_stock_threshold !== undefined ? Number(input.low_stock_threshold) : undefined,
     sku: input?.sku,
     category_id: input?.category_id,
     images: Array.isArray(input?.images) ? input.images : undefined,
     tags: Array.isArray(input?.tags) ? input.tags : undefined,
+    ingredients,
+    usage_instructions: input?.usage_instructions ?? input?.dosage,
+    benefits: Array.isArray(input?.benefits)
+      ? input.benefits
+      : (typeof input?.indications === 'string'
+        ? input.indications.split(/\r?\n+/).map((line: string) => line.trim()).filter(Boolean)
+        : undefined),
+    meta_title: input?.meta_title,
+    meta_description: input?.meta_description,
     status: input?.status,
     is_featured: typeof input?.is_featured === 'boolean' ? input.is_featured : undefined,
+    display_order: input?.display_order !== undefined ? Number(input.display_order) : undefined,
   });
 }
 

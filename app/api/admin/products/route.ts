@@ -22,6 +22,10 @@ function toSlug(input: string) {
 }
 
 function sanitizeProductInput(input: any) {
+  const ingredients = Array.isArray(input?.ingredients)
+    ? input.ingredients.map((v: unknown) => String(v).trim()).filter(Boolean).join('\n')
+    : input?.ingredients;
+
   const payload: any = {
     name: input?.name,
     slug: input?.slug,
@@ -35,7 +39,7 @@ function sanitizeProductInput(input: any) {
     category_id: input?.category_id,
     images: Array.isArray(input?.images) ? input.images : undefined,
     tags: Array.isArray(input?.tags) ? input.tags : undefined,
-    ingredients: input?.ingredients,
+    ingredients,
     usage_instructions: input?.usage_instructions,
     benefits: Array.isArray(input?.benefits) ? input.benefits : undefined,
     meta_title: input?.meta_title,
