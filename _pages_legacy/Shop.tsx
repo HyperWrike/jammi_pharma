@@ -24,6 +24,38 @@ const CONCERNS_BY_GROUP: Record<(typeof CONCERN_GROUP_OPTIONS)[number], string[]
   ],
 };
 
+const CONCERN_KEYWORDS: Record<string, string[]> = {
+  'Immunity': ['immunity', 'immune'],
+  'Fatty Liver': ['liver', 'hepatic', 'fatty liver'],
+  'Digestion': ['digestion', 'digestive', 'gut'],
+  'IBS': ['ibs', 'bowel'],
+  'Pre-Diabetes': ['diabetes', 'sugar', 'metabolism'],
+  'Obesity': ['obesity', 'weight'],
+  'Aches & Pains': ['pain', 'joint', 'ache', 'inflammation'],
+  'Heart Health': ['heart', 'cardio'],
+  'Kidney/Gall Bladder Stones': ['kidney', 'gall', 'stones'],
+  'Male & Female Sexual Wellness': ['sexual', 'fertility', 'reproductive'],
+  'Stress': ['stress', 'anxiety', 'sleep', 'mental'],
+  'Thyroid Related': ['thyroid'],
+  'Acne/Pimples': ['acne', 'pimple'],
+  'Skin Complexion': ['complexion', 'glow', 'skin tone'],
+  'Lip and Oral Care': ['lip', 'oral', 'mouth'],
+  'Skin Dullness': ['dull', 'radiance', 'brighten'],
+  'Hair Fall': ['hair', 'hair fall', 'alopecia'],
+  'Dandruff': ['dandruff', 'scalp'],
+  'Liver Diseases': ['liver', 'hepatic'],
+  'Prostate Disorders': ['prostate'],
+  'Viral Fevers': ['fever', 'viral'],
+  'Asthma/Wheezing': ['asthma', 'wheezing', 'respiratory'],
+  'Anaemia – Ayurin': ['anaemia', 'hemoglobin', 'ayurin'],
+  'Coughs and Colds': ['cough', 'cold'],
+  'Weakened Immunity': ['immunity', 'immune'],
+  'Gynaecological Health': ['gynaec', 'women', 'menstrual'],
+  'Gut-health Disorders': ['gut', 'digestion', 'digestive'],
+  'Psoriasis/Eczema': ['psoriasis', 'eczema', 'skin'],
+  'Diabetes': ['diabetes', 'sugar'],
+};
+
 const Shop: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -130,7 +162,9 @@ const Shop: React.FC = () => {
           image: prod.images?.[0] || 'https://images.unsplash.com/photo-1629198688000-71f23e745b6e?q=80&w=800&auto=format&fit=crop',
           category: categoryName,
           status: prod.status,
-          ingredients: prod.ingredients || []
+          ingredients: prod.ingredients || [],
+          tags: Array.isArray(prod.tags) ? prod.tags : [],
+          benefits: Array.isArray(prod.benefits) ? prod.benefits : [],
         };
       });
 
@@ -203,17 +237,21 @@ const Shop: React.FC = () => {
       
       // Multi-select Concern filter
       if (selectedConcerns.size > 0) {
-        let matchesAny = false;
-        
-        for (const concern of selectedConcerns) {
-          const concernKeyword = concern.split(/[\\/–-]/)[0].trim().toLowerCase();
-          const concernHaystack = `${p.label ?? ''} ${p.shortDesc ?? ''} ${p.name ?? ''} ${p.category ?? ''}`.toLowerCase();
-          if (concernHaystack.includes(concernKeyword)) {
-            matchesAny = true;
-            break; // Matched at least one selected concern
-          }
-        }
-        
+        const ingredientsText = Array.isArray(p.ingredients)
+          ? p.ingredients.join(' ')
+          : typeof p.ingredients === 'string'
+            ? p.ingredients
+            : '';
+        const tagsText = Array.isArray(p.tags) ? p.tags.join(' ') : '';
+        const benefitsText = Array.isArray(p.benefits) ? p.benefits.join(' ') : '';
+        const concernHaystack = `${p.label ?? ''} ${p.shortDesc ?? ''} ${p.name ?? ''} ${p.category ?? ''} ${ingredientsText} ${tagsText} ${benefitsText}`.toLowerCase();
+
+        const matchesAny = Array.from(selectedConcerns).some((concern) => {
+          const fallbackKeyword = concern.split(/[\\/–-]/)[0].trim().toLowerCase();
+          const concernKeywords = CONCERN_KEYWORDS[concern] || [fallbackKeyword];
+          return concernKeywords.some((keyword) => concernHaystack.includes(keyword.toLowerCase()));
+        });
+
         if (!matchesAny) return false;
       }
 

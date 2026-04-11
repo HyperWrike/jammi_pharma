@@ -1,5 +1,5 @@
-import Heritage from '../../../_pages_legacy/Heritage';
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-    return <Heritage />;
+    redirect('/legacy');
 }

@@ -106,6 +106,25 @@ export default function TreatmentsPage() {
                   <a href="mailto:info@jammi.org" className="block text-gray-600 hover:text-[#F3A010] transition-colors">info@jammi.org</a>
                 </div>
               </div>
+
+              <div className="pt-4 border-t border-gray-100">
+                <p className="text-[#1A4B3A] font-bold text-[15px] mb-3">Quicklinks</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <Link href="/" className="text-gray-600 hover:text-[#F3A010] transition-colors">Home</Link>
+                  <Link href="/legacy" className="text-gray-600 hover:text-[#F3A010] transition-colors">About Us</Link>
+                  <Link href="/treatments" className="text-gray-600 hover:text-[#F3A010] transition-colors">Treatments</Link>
+                  <Link href="/blog" className="text-gray-600 hover:text-[#F3A010] transition-colors">Blogs</Link>
+                  <Link href="/contact" className="text-gray-600 hover:text-[#F3A010] transition-colors">Contact Us</Link>
+                  <Link href="/shop" className="text-gray-600 hover:text-[#F3A010] transition-colors">Shop</Link>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <a href="https://www.facebook.com/thejammiayurveda/" target="_blank" rel="noreferrer" className="text-gray-500 hover:text-[#F3A010]">Facebook</a>
+                <a href="https://www.instagram.com/thejammiayurveda/" target="_blank" rel="noreferrer" className="text-gray-500 hover:text-[#F3A010]">Instagram</a>
+                <a href="https://www.linkedin.com/company/jammi-pharmaceuticals" target="_blank" rel="noreferrer" className="text-gray-500 hover:text-[#F3A010]">LinkedIn</a>
+                <a href="https://youtube.com/@voiceofjammi9500" target="_blank" rel="noreferrer" className="text-gray-500 hover:text-[#F3A010]">YouTube</a>
+              </div>
             </div>
           </div>
 

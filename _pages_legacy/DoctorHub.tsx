@@ -13,6 +13,20 @@ const DoctorHub: React.FC = () => {
   const { content, loading } = useCMSContent('doctor_hub');
   const { isEditMode, isAdmin } = useAdmin();
   const editorActive = isEditMode && isAdmin;
+  const [isJoinOpen, setIsJoinOpen] = useState(false);
+  const [isSubmittingJoin, setIsSubmittingJoin] = useState(false);
+  const [joinVisitCount, setJoinVisitCount] = useState(1);
+  const [joinForm, setJoinForm] = useState({
+    name: '',
+    occupation: '',
+    specialty: '',
+    email: '',
+    phone: '',
+    bio: '',
+    consentMarketing: false,
+    allowCookies: false,
+  });
+  const [joinPdf, setJoinPdf] = useState<File | null>(null);
 
   // CMS Helper
   const CMS = ({ section = 'general', field, fallback, multiline, inputType }: any) => (
@@ -47,6 +61,76 @@ const DoctorHub: React.FC = () => {
         }}
     />
   );
+
+  React.useEffect(() => {
+    try {
+      const key = 'jammi_doctor_join_visits';
+      const previous = Number(localStorage.getItem(key) || 0);
+      const next = previous + 1;
+      localStorage.setItem(key, String(next));
+      setJoinVisitCount(next);
+    } catch {
+      setJoinVisitCount(1);
+    }
+  }, []);
+
+  const handleJoinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!joinForm.name || !joinForm.specialty || !joinForm.email || !joinForm.phone) {
+      alert('Please fill all required fields.');
+      return;
+    }
+
+    if (!joinPdf) {
+      alert('Please upload your PDF credentials.');
+      return;
+    }
+
+    setIsSubmittingJoin(true);
+    try {
+      const formData = new FormData();
+      formData.append('name', joinForm.name);
+      formData.append('occupation', joinForm.occupation);
+      formData.append('specialty', joinForm.specialty);
+      formData.append('email', joinForm.email);
+      formData.append('phone', joinForm.phone);
+      formData.append('bio', joinForm.bio);
+      formData.append('consentMarketing', String(joinForm.consentMarketing));
+      formData.append('allowCookies', String(joinForm.allowCookies));
+      formData.append('sourcePage', '/doctors');
+      formData.append('visitCount', String(joinVisitCount));
+      formData.append('resume', joinPdf);
+
+      const res = await fetch('/api/doctor-application', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json?.success === false) {
+        throw new Error(json?.error || 'Failed to submit doctor application');
+      }
+
+      alert('Application submitted successfully. Our team will review and contact you.');
+      setIsJoinOpen(false);
+      setJoinForm({
+        name: '',
+        occupation: '',
+        specialty: '',
+        email: '',
+        phone: '',
+        bio: '',
+        consentMarketing: false,
+        allowCookies: false,
+      });
+      setJoinPdf(null);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to submit application');
+    } finally {
+      setIsSubmittingJoin(false);
+    }
+  };
+
   return (
     <div className="max-w-[1280px] mx-auto w-full px-6 lg:px-10 py-10 mt-10">
       <div className="mb-12">
@@ -65,7 +149,10 @@ const DoctorHub: React.FC = () => {
               </p>
             </div>
             <div className="flex flex-wrap gap-4">
-              <button className="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-primary/20">
+              <button
+                onClick={() => setIsJoinOpen(true)}
+                className="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-primary/20"
+              >
                 <CMS section="hero" field="btnJoin" fallback="Join the Community" />
               </button>
               <button className="border border-primary text-primary font-bold py-3 px-8 rounded-xl hover:bg-primary/5 transition-all">
@@ -123,6 +210,55 @@ const DoctorHub: React.FC = () => {
           </section>
         </div>
       </div>
+
+      {isJoinOpen && (
+        <div className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm flex items-center justify-center px-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+              <h3 className="text-2xl font-bold text-forest">Join as a Doctor</h3>
+              <button onClick={() => setIsJoinOpen(false)} className="w-10 h-10 rounded-full hover:bg-slate-100">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleJoinSubmit} className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input className="border border-slate-300 rounded-lg px-4 py-3" placeholder="Name *" value={joinForm.name} onChange={(e) => setJoinForm((p) => ({ ...p, name: e.target.value }))} />
+              <input className="border border-slate-300 rounded-lg px-4 py-3" placeholder="Occupation" value={joinForm.occupation} onChange={(e) => setJoinForm((p) => ({ ...p, occupation: e.target.value }))} />
+              <input className="border border-slate-300 rounded-lg px-4 py-3" placeholder="Specialty *" value={joinForm.specialty} onChange={(e) => setJoinForm((p) => ({ ...p, specialty: e.target.value }))} />
+              <input type="email" className="border border-slate-300 rounded-lg px-4 py-3" placeholder="Email *" value={joinForm.email} onChange={(e) => setJoinForm((p) => ({ ...p, email: e.target.value }))} />
+              <input className="border border-slate-300 rounded-lg px-4 py-3 md:col-span-2" placeholder="Phone Number *" value={joinForm.phone} onChange={(e) => setJoinForm((p) => ({ ...p, phone: e.target.value }))} />
+              <textarea className="border border-slate-300 rounded-lg px-4 py-3 md:col-span-2 min-h-[90px]" placeholder="Brief profile / notes" value={joinForm.bio} onChange={(e) => setJoinForm((p) => ({ ...p, bio: e.target.value }))} />
+
+              <div className="md:col-span-2 border-2 border-dashed border-primary/40 rounded-xl p-4">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Upload Credentials PDF *</label>
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={(e) => setJoinPdf(e.target.files?.[0] || null)}
+                  className="w-full"
+                />
+                {joinPdf && <p className="text-xs text-slate-500 mt-2">Selected: {joinPdf.name}</p>}
+              </div>
+
+              <label className="md:col-span-2 flex items-start gap-3 text-sm text-slate-700">
+                <input type="checkbox" checked={joinForm.consentMarketing} onChange={(e) => setJoinForm((p) => ({ ...p, consentMarketing: e.target.checked }))} className="mt-1" />
+                <span>I consent to receive emails and promotional communication.</span>
+              </label>
+              <label className="md:col-span-2 flex items-start gap-3 text-sm text-slate-700">
+                <input type="checkbox" checked={joinForm.allowCookies} onChange={(e) => setJoinForm((p) => ({ ...p, allowCookies: e.target.checked }))} className="mt-1" />
+                <span>I allow cookies for application tracking and experience improvements.</span>
+              </label>
+
+              <div className="md:col-span-2 flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setIsJoinOpen(false)} className="px-5 py-3 rounded-lg border border-slate-300 font-semibold">Cancel</button>
+                <button type="submit" disabled={isSubmittingJoin} className="px-6 py-3 rounded-lg bg-primary text-white font-bold hover:brightness-95 disabled:opacity-50">
+                  {isSubmittingJoin ? 'Submitting...' : 'Submit Application'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

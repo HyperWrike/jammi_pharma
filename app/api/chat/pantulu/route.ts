@@ -200,6 +200,9 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const userMessage: string = (body?.message || '').toString().trim();
+    const history: Array<{ role?: string; text?: string }> = Array.isArray(body?.history)
+      ? body.history.slice(-8)
+      : [];
 
     if (!userMessage) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -219,6 +222,10 @@ export async function POST(req: NextRequest) {
 
     const catalogContext = buildCatalogContext(products, categoryMap);
     const fallbackRecommendations = bestEffortRecommendations(userMessage, products, categoryMap);
+    const conversationContext = history
+      .map((h) => `${h.role === 'user' ? 'User' : 'Assistant'}: ${(h.text || '').toString().trim()}`)
+      .filter(Boolean)
+      .join('\n');
     
     let kbContext = "";
     try {
@@ -253,6 +260,7 @@ export async function POST(req: NextRequest) {
     const systemPrompt = [
       'You are Pantulu, customer-care and product assistant for Jammi Pharmaceuticals.',
       'Your job is to guide customers from question to action: understand concern, suggest suitable real products, and direct them to the exact product pages.',
+      'Treat this as a mini doctor-style triage conversation: ask short follow-up questions when needed, then suggest products based on symptoms and previous chat context.',
       'The catalog context contains the current live products from admin panel. Use only that data.',
       'Never invent product names, URLs, prices, categories, tags, or benefits.',
       'Recommend at most 3 products and keep advice concise and practical.',
@@ -262,6 +270,7 @@ export async function POST(req: NextRequest) {
       'If exact match is unavailable, suggest closest related products from catalog instead of saying not available.',
       'Never respond with dead-end phrases like "we do not have" or "not available" without giving alternatives.',
       'Tone: respectful, clear, customer-friendly, no overpromising medical claims.',
+      conversationContext ? `Recent conversation context:\n${conversationContext}` : '',
       kbContext ? `Here is some Ayurvedic knowledge base you can use to answer questions: ${kbContext}` : '',
       'You MUST respond in strict JSON with this shape (no text before or after the JSON):',
       '{"reply":"your conversational human-readable reply here","recommendations":[{"name":"product name","url":"/product/slug","reason":"why this helps"}]}',

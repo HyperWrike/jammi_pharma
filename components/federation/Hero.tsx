@@ -121,7 +121,10 @@ export default function Hero() {
                     <button className="px-8 py-4 border border-[#C9A84C] text-[#C9A84C] font-['Cinzel'] text-sm tracking-widest hover:bg-[#C9A84C] hover:text-white transition-colors duration-300">
                         EXPLORE THE FEDERATION
                     </button>
-                    <button className="px-8 py-4 bg-[#1C1411] text-[#E8C96D] font-['Cinzel'] text-sm tracking-widest hover:bg-[#0D0907] transition-colors duration-300">
+                    <button
+                        onClick={() => window.dispatchEvent(new CustomEvent('jammi_open_membership_form'))}
+                        className="px-8 py-4 bg-[#1C1411] text-[#E8C96D] font-['Cinzel'] text-sm tracking-widest hover:bg-[#0D0907] transition-colors duration-300"
+                    >
                         APPLY FOR MEMBERSHIP
                     </button>
                 </motion.div>

@@ -29,7 +29,71 @@ const doctorApplicationHtml = (name: string, specialty: string, bio: string) => 
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, specialty, bio } = await req.json();
+    const contentType = req.headers.get('content-type') || '';
+
+    let name = '';
+    let specialty = '';
+    let bio = '';
+    let email = '';
+    let phone = '';
+    let occupation = '';
+    let consentMarketing = false;
+    let allowCookies = false;
+    let sourcePage = '';
+    let visitCount = 0;
+    let resumeUrl = '';
+
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await req.formData();
+      name = String(formData.get('name') || '').trim();
+      specialty = String(formData.get('specialty') || '').trim();
+      bio = String(formData.get('bio') || '').trim();
+      email = String(formData.get('email') || '').trim();
+      phone = String(formData.get('phone') || '').trim();
+      occupation = String(formData.get('occupation') || '').trim();
+      consentMarketing = String(formData.get('consentMarketing') || '').toLowerCase() === 'true';
+      allowCookies = String(formData.get('allowCookies') || '').toLowerCase() === 'true';
+      sourcePage = String(formData.get('sourcePage') || '').trim();
+      visitCount = Number(formData.get('visitCount') || 0);
+
+      const file = formData.get('resume') as File | null;
+      if (file) {
+        if (file.type !== 'application/pdf') {
+          return NextResponse.json({ error: 'Only PDF files are allowed' }, { status: 400 });
+        }
+        const uploadUrl = await convexMutation<string>('functions/uploads:generateUploadUrl', {});
+        const uploadResponse = await fetch(uploadUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': file.type || 'application/pdf',
+          },
+          body: file,
+        });
+
+        if (!uploadResponse.ok) {
+          const text = await uploadResponse.text();
+          return NextResponse.json({ error: `PDF upload failed: ${text}` }, { status: 500 });
+        }
+
+        const uploadResult = await uploadResponse.json();
+        const storageId = uploadResult.storageId;
+        const publicUrl = await convexMutation<string | null>('functions/uploads:getStorageUrl', { storageId });
+        resumeUrl = publicUrl || '';
+      }
+    } else {
+      const body = await req.json();
+      name = String(body?.name || '').trim();
+      specialty = String(body?.specialty || '').trim();
+      bio = String(body?.bio || '').trim();
+      email = String(body?.email || '').trim();
+      phone = String(body?.phone || '').trim();
+      occupation = String(body?.occupation || '').trim();
+      consentMarketing = Boolean(body?.consentMarketing);
+      allowCookies = Boolean(body?.allowCookies);
+      sourcePage = String(body?.sourcePage || '').trim();
+      visitCount = Number(body?.visitCount || 0);
+      resumeUrl = String(body?.resume_url || '').trim();
+    }
 
     if (!name || !specialty) {
       return NextResponse.json({ error: 'Name and Specialty are required' }, { status: 400 });
@@ -40,6 +104,14 @@ export async function POST(req: NextRequest) {
       name,
       specialty,
       bio,
+      email,
+      phone,
+      occupation,
+      resume_url: resumeUrl,
+      consent_marketing: consentMarketing,
+      allow_cookies: allowCookies,
+      source_page: sourcePage,
+      visit_count: Number.isFinite(visitCount) ? visitCount : 0,
       verified: false,
     }));
 
@@ -52,7 +124,15 @@ export async function POST(req: NextRequest) {
            from: 'Jammi Federation <updates@updates.jammi.in>',
            to: ['frontdesk@jammi.org'],
            subject: `🚨 New Doctor Application: ${name}`,
-           html: doctorApplicationHtml(name, specialty, bio),
+           html: `${doctorApplicationHtml(name, specialty, bio)}
+              <p><strong>Email:</strong> ${email || '-'}</p>
+              <p><strong>Phone:</strong> ${phone || '-'}</p>
+              <p><strong>Occupation:</strong> ${occupation || '-'}</p>
+              <p><strong>Source Page:</strong> ${sourcePage || '-'}</p>
+              <p><strong>Visit Count:</strong> ${visitCount || 0}</p>
+              <p><strong>Consent (Mails/Promotions):</strong> ${consentMarketing ? 'Yes' : 'No'}</p>
+              <p><strong>Allow Cookies:</strong> ${allowCookies ? 'Yes' : 'No'}</p>
+              ${resumeUrl ? `<p><strong>PDF:</strong> <a href="${resumeUrl}">View uploaded PDF</a></p>` : ''}`,
          });
       } catch (err) {
          console.error('[doctor-application] Email trigger failed:', err);

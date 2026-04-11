@@ -7,6 +7,7 @@ import LiveEditable from '../../../components/admin/LiveEditable';
 import EditorImage from '../../../components/EditorImage';
 import { useAdmin } from '../../../components/admin/AdminContext';
 import { useCMSContent } from '../../../hooks/useCMSContent';
+import { FOUNDERS_TREE } from '../../../lib/foundersTree';
 
 export default function FoundersPage() {
     const { isEditMode, isAdmin } = useAdmin();
@@ -99,6 +100,43 @@ export default function FoundersPage() {
             <div className="max-w-4xl mx-auto px-6 py-12">
                 <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
             </div>
+
+            {/* Family Tree */}
+            <section className="py-8 px-6 max-w-7xl mx-auto">
+                <div className="bg-white border border-slate-200 rounded-3xl p-8 md:p-10 shadow-sm">
+                    <h2 className="text-3xl md:text-4xl font-display font-bold text-secondary mb-2">Jammi Family Tree</h2>
+                    <p className="text-slate-600 mb-8">Click any node to open the detailed profile page.</p>
+
+                    <div className="flex flex-col items-center gap-6">
+                        {FOUNDERS_TREE.filter((node) => !node.lineageFrom).map((root) => (
+                            <React.Fragment key={root.slug}>
+                                <Link
+                                    href={`/founders/${root.slug}`}
+                                    className="px-6 py-4 rounded-2xl border-2 border-primary bg-primary/5 text-center hover:bg-primary/10 transition-colors"
+                                >
+                                    <p className="font-bold text-secondary text-lg">{root.name}</p>
+                                    <p className="text-xs tracking-widest uppercase text-primary mt-1">{root.role}</p>
+                                </Link>
+
+                                <div className="w-px h-8 bg-primary/40" />
+
+                                <div className="grid md:grid-cols-2 gap-4 w-full max-w-3xl">
+                                    {FOUNDERS_TREE.filter((node) => node.lineageFrom === root.slug).map((node) => (
+                                        <Link
+                                            key={node.slug}
+                                            href={`/founders/${node.slug}`}
+                                            className="px-5 py-4 rounded-2xl border border-slate-300 bg-slate-50 text-center hover:border-primary hover:bg-primary/5 transition-colors"
+                                        >
+                                            <p className="font-bold text-slate-900">{node.name}</p>
+                                            <p className="text-xs tracking-wide uppercase text-slate-500 mt-1">{node.role}</p>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </React.Fragment>
+                        ))}
+                    </div>
+                </div>
+            </section>
 
             {/* Dr. Anitha Balachander */}
             <section className="py-16 px-6 max-w-7xl mx-auto mb-20">

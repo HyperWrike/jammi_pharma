@@ -148,10 +148,17 @@ export default function Chatbot() {
         setIsTyping(true);
 
         try {
+            const history = messages
+                .slice(-8)
+                .map((m) => ({
+                    role: m.sender === 'user' ? 'user' : 'assistant',
+                    text: m.text,
+                }));
+
             const res = await fetch('/api/chat/pantulu', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: text })
+                body: JSON.stringify({ message: text, history })
             });
 
             const data = await res.json();

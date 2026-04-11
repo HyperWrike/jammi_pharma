@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import Heritage from '../../../_pages_legacy/Heritage';
 
-export default async function LegacyPage() {
-  redirect('/heritage');
+export default function LegacyPage() {
+  return <Heritage />;
 }
