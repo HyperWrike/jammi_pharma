@@ -89,11 +89,12 @@ const Navbar: React.FC = () => {
             className="flex flex-col flex-shrink-0 mr-8 xl:mr-16 group relative items-start justify-center"
             onClick={() => setMobileMenuOpen(false)}
           >
-            <span className="text-[28px] sm:text-[34px] lg:text-[38px] font-black tracking-[0.28em] text-white leading-none">
-              JAMMI
-            </span>
-            <span className="text-[8px] sm:text-[9px] tracking-[0.42em] text-white/80 uppercase mt-1">
-              Pharmaceuticals
+            <span className="inline-flex items-center justify-center rounded-lg bg-white/95 px-2.5 py-1.5 shadow-sm ring-1 ring-black/5">
+              <img
+                src="/images/Finalized Logo.png"
+                alt="Jammi Pharmaceuticals"
+                className="h-10 sm:h-12 lg:h-14 w-auto object-contain"
+              />
             </span>
           </Link>
 
