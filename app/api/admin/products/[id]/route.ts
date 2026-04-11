@@ -35,6 +35,8 @@ function sanitizeProductUpdate(input: any) {
     images: Array.isArray(input?.images) ? input.images : undefined,
     tags: Array.isArray(input?.tags) ? input.tags : undefined,
     ingredients,
+    indications,
+    dosage: input?.dosage,
     usage_instructions: input?.usage_instructions ?? input?.dosage,
     benefits: Array.isArray(input?.benefits)
       ? input.benefits
