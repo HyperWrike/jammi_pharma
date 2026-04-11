@@ -51,6 +51,8 @@ export default defineSchema({
     main_image_index: v.optional(v.number()),
     tags: v.optional(v.array(v.string())),
     ingredients: v.optional(v.string()),
+    indications: v.optional(v.string()),
+    dosage: v.optional(v.string()),
     usage_instructions: v.optional(v.string()),
     benefits: v.optional(v.array(v.string())),
     meta_title: v.optional(v.string()),
