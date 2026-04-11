@@ -26,6 +26,10 @@ function sanitizeProductInput(input: any) {
     ? input.ingredients.map((v: unknown) => String(v).trim()).filter(Boolean).join('\n')
     : input?.ingredients;
 
+  const indications = Array.isArray(input?.indications)
+    ? input.indications.map((v: unknown) => String(v).trim()).filter(Boolean).join('\n')
+    : input?.indications;
+
   const payload: any = {
     name: input?.name,
     slug: input?.slug,
@@ -40,8 +44,12 @@ function sanitizeProductInput(input: any) {
     images: Array.isArray(input?.images) ? input.images : undefined,
     tags: Array.isArray(input?.tags) ? input.tags : undefined,
     ingredients,
-    usage_instructions: input?.usage_instructions,
-    benefits: Array.isArray(input?.benefits) ? input.benefits : undefined,
+    usage_instructions: input?.usage_instructions ?? input?.dosage,
+    benefits: Array.isArray(input?.benefits)
+      ? input.benefits
+      : (typeof indications === 'string'
+        ? indications.split(/\r?\n+/).map((line: string) => line.trim()).filter(Boolean)
+        : undefined),
     meta_title: input?.meta_title,
     meta_description: input?.meta_description,
     status: input?.status,

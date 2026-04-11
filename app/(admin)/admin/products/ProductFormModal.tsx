@@ -48,12 +48,19 @@ export default function ProductFormModal({ product, categories, onClose, onSucce
     ritual: [],
     results: [],
     quote: { text: '', author: '' },
+    indications: '',
+    dosage: '',
     meta_title: '',
     meta_description: ''
   });
 
   useEffect(() => {
     if (product) {
+      const indicationsValue = Array.isArray(product.benefits)
+        ? product.benefits.join('\n')
+        : (product.indications || '');
+      const dosageValue = product.dosage || product.usage_instructions || '';
+
       setFormData({
         ...formData,
         ...product,
@@ -64,6 +71,8 @@ export default function ProductFormModal({ product, categories, onClose, onSucce
         meta_title: product.meta_title || '',
         meta_description: product.meta_description || '',
         shortDesc: product.shortDesc || product.short_description || '',
+        indications: indicationsValue,
+        dosage: dosageValue,
         banner: product.banner || { subtitle: '', title: '', desc: '', image: '', stats: [] },
         quote: product.quote || { text: '', author: '' }
       });
@@ -207,6 +216,28 @@ export default function ProductFormModal({ product, categories, onClose, onSucce
                   className="admin-input min-h-[100px]" 
                   placeholder="Herb 1, Herb 2..." 
                 />
+              </div>
+              <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Indications</label>
+                  <textarea
+                    name="indications"
+                    value={formData.indications || ''}
+                    onChange={handleChange}
+                    className="admin-input min-h-[120px]"
+                    placeholder="Enter indications, one per line if needed..."
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Dosage</label>
+                  <textarea
+                    name="dosage"
+                    value={formData.dosage || ''}
+                    onChange={handleChange}
+                    className="admin-input min-h-[120px]"
+                    placeholder="Enter dosage instructions..."
+                  />
+                </div>
               </div>
               <div className="col-span-2 flex flex-col gap-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Publishing Status</label>

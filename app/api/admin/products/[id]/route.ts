@@ -17,6 +17,10 @@ function sanitizeProductUpdate(input: any) {
     ? input.ingredients.map((v: unknown) => String(v).trim()).filter(Boolean).join('\n')
     : input?.ingredients;
 
+  const indications = Array.isArray(input?.indications)
+    ? input.indications.map((v: unknown) => String(v).trim()).filter(Boolean).join('\n')
+    : input?.indications;
+
   return cleanArgs({
     name: input?.name,
     slug: input?.slug,
@@ -34,8 +38,8 @@ function sanitizeProductUpdate(input: any) {
     usage_instructions: input?.usage_instructions ?? input?.dosage,
     benefits: Array.isArray(input?.benefits)
       ? input.benefits
-      : (typeof input?.indications === 'string'
-        ? input.indications.split(/\r?\n+/).map((line: string) => line.trim()).filter(Boolean)
+      : (typeof indications === 'string'
+        ? indications.split(/\r?\n+/).map((line: string) => line.trim()).filter(Boolean)
         : undefined),
     meta_title: input?.meta_title,
     meta_description: input?.meta_description,
