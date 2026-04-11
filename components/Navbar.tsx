@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { label: 'Treatments', href: '/treatments' },
   { label: 'Insights', href: '/journal' },
   { label: 'Federation', href: '/federation' },
+  { label: 'Contact Us', href: '/contact' },
 ];
 
 const Navbar: React.FC = () => {

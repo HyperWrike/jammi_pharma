@@ -347,8 +347,6 @@ export default function ProductTemplate({ productId, initialData }: { productId:
                                 </button>
                             </div>
                             
-                            <img src="/images/badges/1.jpeg" className="w-full mt-6 opacity-90 mix-blend-multiply rounded select-none pointer-events-none" alt="Product Quality Badges" onError={(e) => e.currentTarget.style.display = 'none'} />
-
                             {/* Toast Notification */}
                             {addedToCart && (
                                 <div className="fixed bottom-6 right-6 bg-forest text-white px-5 py-3 rounded-lg shadow-xl z-50 flex items-center gap-3 font-medium animate-in fade-in slide-in-from-bottom-5 duration-300">
