@@ -16,7 +16,7 @@ export const FOUNDERS_TREE: FounderNode[] = [
     era: 'Since 1897',
     summary:
       'Established the Jammi healing legacy and codified core formulations that continue to guide the institution.',
-    image: '/images/founder_1.png',
+    image: '/images/Thatha%20Logo%20-Since%201897.png',
   },
   {
     slug: 'dr-narasimham-jammi',
