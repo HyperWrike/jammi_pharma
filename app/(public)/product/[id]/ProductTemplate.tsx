@@ -394,6 +394,15 @@ export default function ProductTemplate({ productId, initialData }: { productId:
                                     </span>
                                 </button>
                             </div>
+
+                            <div className="mt-6">
+                                <img
+                                    src="/images/badges/2.jpeg"
+                                    className="h-14 sm:h-16 object-contain mix-blend-multiply"
+                                    alt="Certifications - 100% Natural, Vegetarian, Non-GMO, GMP Certified, Ethically Sourced"
+                                    onError={(e) => e.currentTarget.style.display = 'none'}
+                                />
+                            </div>
                             
                             {/* Toast Notification */}
                             {addedToCart && (
@@ -403,18 +412,6 @@ export default function ProductTemplate({ productId, initialData }: { productId:
                                 </div>
                             )}
                         </div>
-                    </div>
-                </div>
-
-                {/* Certification Badges */}
-                <div className="mb-10 sm:mb-12 flex items-center justify-center">
-                    <div className="bg-slate-100 border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm">
-                        <img
-                            src="/images/badges/2.jpeg"
-                            className="h-16 sm:h-20 md:h-24 object-contain mix-blend-multiply"
-                            alt="Certifications - 100% Natural, Vegetarian, Non-GMO, GMP Certified, Ethically Sourced"
-                            onError={(e) => e.currentTarget.style.display = 'none'}
-                        />
                     </div>
                 </div>
 
