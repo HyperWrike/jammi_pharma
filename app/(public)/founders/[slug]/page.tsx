@@ -2,8 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { FOUNDERS_BY_SLUG, FOUNDERS_TREE } from '@/lib/foundersTree';
 
-export default function FounderDetailPage({ params }: { params: { slug: string } }) {
-  const profile = FOUNDERS_BY_SLUG[params.slug];
+export default async function FounderDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const profile = FOUNDERS_BY_SLUG[slug];
   if (!profile) notFound();
 
   const descendants = FOUNDERS_TREE.filter((node) => node.lineageFrom === profile.slug);
