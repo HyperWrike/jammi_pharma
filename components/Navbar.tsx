@@ -23,6 +23,7 @@ const Navbar: React.FC = () => {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [wishlistCount, setWishlistCount] = useState(0);
   const [bouncing, setBouncing] = useState(false);
   const prevCount = useRef(cartCount);
 
@@ -46,6 +47,26 @@ const Navbar: React.FC = () => {
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const syncWishlistCount = () => {
+      try {
+        const raw = localStorage.getItem('jammi_wishlist');
+        const parsed = raw ? JSON.parse(raw) : [];
+        setWishlistCount(Array.isArray(parsed) ? parsed.length : 0);
+      } catch {
+        setWishlistCount(0);
+      }
+    };
+
+    syncWishlistCount();
+    window.addEventListener('storage', syncWishlistCount);
+    window.addEventListener('focus', syncWishlistCount);
+    return () => {
+      window.removeEventListener('storage', syncWishlistCount);
+      window.removeEventListener('focus', syncWishlistCount);
+    };
   }, []);
 
   useEffect(() => {
@@ -82,11 +103,11 @@ const Navbar: React.FC = () => {
         className="sticky top-0 z-50 w-full bg-[var(--purple)] border-b border-black/10 transition-[top] duration-200"
         style={isAdmin && isEditMode ? { top: 'var(--jammi-editor-banner-height, 0px)' } : undefined}
       >
-        <div className="w-full max-w-[1440px] mx-auto px-4 lg:px-10 h-20 flex items-center">
+        <div className="w-full max-w-[1440px] mx-auto px-4 lg:px-10 h-20 flex items-center justify-between">
           {/* Logo - Left */}
           <Link
             href="/"
-            className="flex flex-col flex-shrink-0 mr-8 xl:mr-16 group relative items-start justify-center"
+            className="flex flex-col flex-shrink-0 mr-2 lg:mr-8 xl:mr-16 group relative items-start justify-center"
             onClick={() => setMobileMenuOpen(false)}
           >
             <span className="inline-flex items-center justify-center rounded-lg bg-white/95 px-2.5 py-1.5 shadow-sm ring-1 ring-black/5">
@@ -108,7 +129,7 @@ const Navbar: React.FC = () => {
           </nav>
 
           {/* Actions - Right */}
-          <div className="flex items-center justify-end flex-shrink-0 gap-3 sm:gap-4 ml-6 lg:ml-8 xl:ml-12">
+          <div className="flex items-center justify-end flex-shrink-0 gap-2 sm:gap-3 lg:gap-4 ml-auto">
             <button
               type="button"
               onClick={openConsultModal}
@@ -122,6 +143,19 @@ const Navbar: React.FC = () => {
               className="hidden lg:inline-flex items-center h-[38px] rounded-full border border-white/20 bg-white/10 px-5 text-xs xl:text-sm font-bold text-white transition-colors hover:bg-white/15 whitespace-nowrap"
             >
               My Orders
+            </Link>
+
+            <Link
+              href="/shop"
+              className="p-1 min-w-[38px] min-h-[38px] flex items-center justify-center rounded-full transition-all relative text-white/95 hover:bg-white/10 group"
+              aria-label="Wishlist"
+            >
+              <span className="material-symbols-outlined text-[25px] transition-transform inline-block group-hover:scale-110">favorite</span>
+              {mounted && wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 text-white text-[11px] flex justify-center items-center rounded-full font-bold shadow-sm border border-white transition-all">
+                  {wishlistCount}
+                </span>
+              )}
             </Link>
 
             <Link
@@ -190,6 +224,14 @@ const Navbar: React.FC = () => {
           </nav>
 
           <div className="mt-auto space-y-4">
+            <Link
+              href="/shop"
+              className="flex justify-center w-full border-2 border-[var(--purple)] text-[var(--purple)] px-6 py-4 rounded-full font-bold text-sm tracking-widest uppercase hover:bg-[var(--purple)] hover:text-white transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              WISHLIST
+            </Link>
+
             <Link
               href="/account/orders"
               className="flex justify-center w-full border-2 border-[var(--purple)] text-[var(--purple)] px-6 py-4 rounded-full font-bold text-sm tracking-widest uppercase hover:bg-[var(--purple)] hover:text-white transition-colors"
