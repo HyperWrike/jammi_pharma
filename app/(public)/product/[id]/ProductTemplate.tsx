@@ -168,17 +168,6 @@ export default function ProductTemplate({ productId, initialData }: { productId:
         }
     };
 
-    const galleryImages = (Array.isArray((product as any)?.images) && (product as any).images.length > 0)
-        ? (product as any).images.slice(0, 4)
-        : [product.image, product.image, product.image, product.image];
-
-    const imageAngles = [
-        { id: 0, style: {}, icon: 'image', label: 'Front View', image: galleryImages[0] || product.image },
-        { id: 1, style: {}, icon: 'zoom_in', label: 'Side View', image: galleryImages[1] || galleryImages[0] || product.image },
-        { id: 2, style: {}, icon: 'view_in_ar', label: 'Back View', image: galleryImages[2] || galleryImages[0] || product.image },
-        { id: 3, style: {}, icon: 'flip', label: 'Detail View', image: galleryImages[3] || galleryImages[0] || product.image },
-    ];
-
     if (isLoading) {
         return (
             <div className="bg-background-light min-h-screen pt-20 flex justify-center items-center">
@@ -195,6 +184,17 @@ export default function ProductTemplate({ productId, initialData }: { productId:
             </div>
         );
     }
+
+    const galleryImages = (Array.isArray((product as any)?.images) && (product as any).images.length > 0)
+        ? (product as any).images.slice(0, 4)
+        : [product.image, product.image, product.image, product.image];
+
+    const imageAngles = [
+        { id: 0, style: {}, icon: 'image', label: 'Front View', image: galleryImages[0] || product.image },
+        { id: 1, style: {}, icon: 'zoom_in', label: 'Side View', image: galleryImages[1] || galleryImages[0] || product.image },
+        { id: 2, style: {}, icon: 'view_in_ar', label: 'Back View', image: galleryImages[2] || galleryImages[0] || product.image },
+        { id: 3, style: {}, icon: 'flip', label: 'Detail View', image: galleryImages[3] || galleryImages[0] || product.image },
+    ];
 
     return (
         <div className="bg-background-light text-slate-900 font-body min-h-screen pt-20">
@@ -346,6 +346,8 @@ export default function ProductTemplate({ productId, initialData }: { productId:
                                     {addedToCart ? 'Added to Cart!' : addingToCart ? 'Adding...' : 'Add to Cart'}
                                 </button>
                             </div>
+                            
+                            <img src="/images/badges/1.jpeg" className="w-full mt-6 opacity-90 mix-blend-multiply rounded select-none pointer-events-none" alt="Product Quality Badges" onError={(e) => e.currentTarget.style.display = 'none'} />
 
                             {/* Toast Notification */}
                             {addedToCart && (

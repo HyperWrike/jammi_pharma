@@ -195,6 +195,20 @@ export default function ProductFormModal({ product, categories, onClose, onSucce
                 <textarea name="shortDesc" value={formData.shortDesc} onChange={handleChange} className="admin-input min-h-[100px]" placeholder="Brief intro for shop cards..." />
               </div>
               <div className="col-span-2 flex flex-col gap-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Full Description</label>
+                <textarea name="description" value={formData.description || formData.shortDesc} onChange={handleChange} className="admin-input min-h-[150px]" placeholder="Detailed product description..." />
+              </div>
+              <div className="col-span-2 flex flex-col gap-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Ingredients (comma separated)</label>
+                <textarea 
+                  name="ingredients" 
+                  value={Array.isArray(formData.ingredients) ? formData.ingredients.join(', ') : formData.ingredients || ''} 
+                  onChange={(e) => setFormData((prev: any) => ({ ...prev, ingredients: e.target.value.split(',').map((s: string) => s.trim()) }))} 
+                  className="admin-input min-h-[100px]" 
+                  placeholder="Herb 1, Herb 2..." 
+                />
+              </div>
+              <div className="col-span-2 flex flex-col gap-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Publishing Status</label>
                   <div className="flex gap-4">
                      {['published', 'draft'].map(s => (

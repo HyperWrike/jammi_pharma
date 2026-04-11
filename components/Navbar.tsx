@@ -12,7 +12,6 @@ const NAV_LINKS = [
   { label: 'Founders', href: '/founders' },
   { label: 'Store', href: '/shop' },
   { label: 'Treatments', href: '/treatments' },
-  { label: 'Contact Us', href: '/contact' },
   { label: 'Insights', href: '/journal' },
   { label: 'Federation', href: '/federation' },
 ];
@@ -79,7 +78,7 @@ const Navbar: React.FC = () => {
   return (
     <>
       <header
-        className="fixed top-0 z-50 w-full bg-[var(--purple)] border-b border-black/10 transition-[top] duration-200"
+        className="sticky top-0 z-50 w-full bg-[var(--purple)] border-b border-black/10 transition-[top] duration-200"
         style={isAdmin && isEditMode ? { top: 'var(--jammi-editor-banner-height, 0px)' } : undefined}
       >
         <div className="w-full max-w-[1440px] mx-auto px-4 lg:px-10 h-20 flex items-center">

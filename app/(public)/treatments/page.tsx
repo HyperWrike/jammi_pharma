@@ -64,7 +64,7 @@ export default function TreatmentsPage() {
               {treatments.map((t, idx) => (
                 <Link 
                   key={idx} 
-                  href={`/shop?category=${t.slug}`}
+                  href={`/category/${t.slug}`}
                   className="flex items-center gap-3 text-lg font-bold text-[#1A4B3A] hover:text-[#F3A010] transition-colors p-3 hover:bg-white rounded shadow-sm border border-transparent hover:border-gray-100 group"
                 >
                   <span className="w-2 h-2 bg-[#F3A010] rounded-full group-hover:scale-150 transition-transform"></span>
