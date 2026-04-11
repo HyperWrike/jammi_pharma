@@ -27,6 +27,7 @@ interface Product {
     ingredients?: string;
     indications?: string;
     dosage?: string;
+    rating?: number;
 }
 
 export default function ProductTemplate({ productId, initialData }: { productId: string, initialData?: any }) {
@@ -37,6 +38,7 @@ export default function ProductTemplate({ productId, initialData }: { productId:
     const [selectedAngle, setSelectedAngle] = useState(0);
     const [addedToCart, setAddedToCart] = useState(false);
     const [addingToCart, setAddingToCart] = useState(false);
+    const [inWishlist, setInWishlist] = useState(false);
     const { addToCart } = useCart();
     const { isAdmin, isEditMode } = useAdmin();
 
@@ -54,6 +56,25 @@ export default function ProductTemplate({ productId, initialData }: { productId:
     const [reviewImage, setReviewImage] = useState<File | null>(null);
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
     const [reviewSuccess, setReviewSuccess] = useState(false);
+
+    // Load wishlist from localStorage
+    useEffect(() => {
+        const wishlist = JSON.parse(localStorage.getItem('jammi_wishlist') || '[]');
+        setInWishlist(wishlist.includes(productId));
+    }, [productId]);
+
+    // Toggle wishlist
+    const toggleWishlist = () => {
+        const wishlist = JSON.parse(localStorage.getItem('jammi_wishlist') || '[]');
+        if (inWishlist) {
+            const updated = wishlist.filter((id: string) => id !== productId);
+            localStorage.setItem('jammi_wishlist', JSON.stringify(updated));
+        } else {
+            wishlist.push(productId);
+            localStorage.setItem('jammi_wishlist', JSON.stringify(wishlist));
+        }
+        setInWishlist(!inWishlist);
+    };
 
     useEffect(() => {
         if (!initialData) setIsLoading(true);
@@ -105,6 +126,9 @@ export default function ProductTemplate({ productId, initialData }: { productId:
         };
         fetchReviews();
 
+        // Poll for reviews every 10 seconds for real-time updates
+        const reviewPollInterval = setInterval(fetchReviews, 10000);
+
 
         const unsubBundles = subscribeToCollection('bundles', (b) => {
             setBundles(b.filter(bundle => bundle.active && (bundle.product_ids || []).includes(productId)));
@@ -113,6 +137,7 @@ export default function ProductTemplate({ productId, initialData }: { productId:
         return () => {
             unsubProduct();
             unsubBundles();
+            clearInterval(reviewPollInterval);
         };
     }, [productId]);
 
@@ -355,6 +380,19 @@ export default function ProductTemplate({ productId, initialData }: { productId:
                                     </span>
                                     {addedToCart ? 'Added to Cart!' : addingToCart ? 'Adding...' : 'Add to Cart'}
                                 </button>
+                                <button 
+                                    onClick={toggleWishlist}
+                                    className={`h-14 w-14 rounded-xl shadow-lg transition-all flex items-center justify-center font-bold ${
+                                        inWishlist
+                                            ? 'bg-red-600 shadow-red-600/20 text-white'
+                                            : 'bg-slate-100 text-secondary hover:bg-slate-200'
+                                    }`}
+                                    title={inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                                >
+                                    <span className="material-symbols-outlined flex" style={{ fontVariationSettings: inWishlist ? '"FILL" 1' : '"FILL" 0' }}>
+                                        favorite
+                                    </span>
+                                </button>
                             </div>
                             
                             {/* Toast Notification */}
@@ -366,6 +404,11 @@ export default function ProductTemplate({ productId, initialData }: { productId:
                             )}
                         </div>
                     </div>
+                </div>
+
+                {/* Certification Badges */}
+                <div className="mb-16 sm:mb-24 flex flex-col items-center justify-center gap-8 py-6 rounded-3xl">
+                    <img src="/images/badges/2.jpeg" className="h-28 object-contain rounded-xl mix-blend-multiply" alt="Certifications — 100% Natural, Vegetarian, Non-GMO, GMP Certified, Ethically Sourced" onError={(e) => e.currentTarget.style.display = 'none'} />
                 </div>
 
                 {/* 4 Tabs Section */}
@@ -409,11 +452,6 @@ export default function ProductTemplate({ productId, initialData }: { productId:
                             </LiveEditable>
                         </div>
                     </div>
-                </div>
-
-                {/* Certification Badges */}
-                <div className="mb-16 sm:mb-24 flex flex-col items-center justify-center gap-8 py-6 rounded-3xl">
-                    <img src="/images/badges/2.jpeg" className="h-28 object-contain rounded-xl mix-blend-multiply" alt="Certifications — 100% Natural, Vegetarian, Non-GMO, GMP Certified, Ethically Sourced" onError={(e) => e.currentTarget.style.display = 'none'} />
                 </div>
 
                 {/* Bundles Section */}

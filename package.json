@@ -12,7 +12,10 @@
         "test:watch": "vitest",
         "test:coverage": "vitest run --coverage",
         "convex:dev": "npx convex dev",
-        "convex:deploy": "npx convex deploy"
+        "convex:deploy": "npx convex deploy",
+        "scrape:jammi": "node scripts/scrape-jammi-products.js",
+        "import:jammi": "node scripts/import-jammi-convex.js",
+        "import:all": "npm run scrape:jammi && npm run import:jammi"
     },
     "dependencies": {
         "@gsap/react": "^2.1.2",

@@ -142,3 +142,60 @@ export const updateInventory = mutation({
     return { success: true, stock: nextStock };
   },
 });
+
+export const importProductBatch = mutation({
+  args: {
+    products: v.array(v.object({
+      name: v.string(),
+      slug: v.string(),
+      price: v.number(),
+      description: v.optional(v.string()),
+      short_description: v.optional(v.string()),
+      images: v.optional(v.array(v.string())),
+      category: v.optional(v.string()),
+      status: v.optional(v.string()),
+      sku: v.optional(v.string()),
+      ingredients: v.optional(v.string()),
+      indications: v.optional(v.string()),
+      dosage: v.optional(v.string()),
+      rating: v.optional(v.number()),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const imported = [];
+    
+    for (const product of args.products) {
+      // Check if product already exists by slug
+      const existing = await ctx.db
+        .query("products")
+        .withIndex("slug", (q) => q.eq("slug", product.slug))
+        .first();
+      
+      if (existing) {
+        // Update existing product
+        await ctx.db.patch(existing._id, {
+          ...product,
+          updated_at: new Date().toISOString(),
+        });
+        imported.push({ status: 'updated', name: product.name });
+      } else {
+        // Create new product
+        const id = await ctx.db.insert("products", {
+          ...product,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          view_count: 0,
+          stock: 100,
+          low_stock_threshold: 10,
+          is_featured: false,
+          display_order: 0,
+          status: product.status || 'Published',
+          category_id: product.category || 'Wellness',
+        });
+        imported.push({ status: 'created', name: product.name, id });
+      }
+    }
+    
+    return { success: true, imported, count: imported.length };
+  },
+});
