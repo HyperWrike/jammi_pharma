@@ -54,28 +54,43 @@ export default function ProductFormModal({ product, categories, onClose, onSucce
     meta_description: ''
   });
 
+  const buildFormData = (sourceProduct: any = null) => {
+    const indicationsValue = Array.isArray(sourceProduct?.benefits)
+      ? sourceProduct.benefits.join('\n')
+      : (sourceProduct?.indications || '');
+    const dosageValue = sourceProduct?.dosage || sourceProduct?.usage_instructions || '';
+
+    return {
+      name: sourceProduct?.name || '',
+      slug: sourceProduct?.slug || '',
+      sku: sourceProduct?.sku || '',
+      category_id: sourceProduct?.category_id || '',
+      price: sourceProduct?.price || 0,
+      compare_at_price: sourceProduct?.compare_at_price || 0,
+      stock: sourceProduct?.stock || 0,
+      low_stock_threshold: sourceProduct?.low_stock_threshold || 10,
+      status: sourceProduct?.status || 'published',
+      shortDesc: sourceProduct?.shortDesc || sourceProduct?.short_description || '',
+      description: sourceProduct?.description || '',
+      images: sourceProduct?.images || [],
+      banner: sourceProduct?.banner || { subtitle: '', title: '', desc: '', image: '', stats: [] },
+      features: sourceProduct?.features || [],
+      botanicals: sourceProduct?.botanicals || [],
+      ritual: sourceProduct?.ritual || [],
+      results: sourceProduct?.results || [],
+      quote: sourceProduct?.quote || { text: '', author: '' },
+      indications: indicationsValue,
+      dosage: dosageValue,
+      meta_title: sourceProduct?.meta_title || '',
+      meta_description: sourceProduct?.meta_description || ''
+    };
+  };
+
   useEffect(() => {
     if (product) {
-      const indicationsValue = Array.isArray(product.benefits)
-        ? product.benefits.join('\n')
-        : (product.indications || '');
-      const dosageValue = product.dosage || product.usage_instructions || '';
-
-      setFormData({
-        ...formData,
-        ...product,
-        category_id: product.category_id || '',
-        sku: product.sku || '',
-        slug: product.slug || '',
-        name: product.name || '',
-        meta_title: product.meta_title || '',
-        meta_description: product.meta_description || '',
-        shortDesc: product.shortDesc || product.short_description || '',
-        indications: indicationsValue,
-        dosage: dosageValue,
-        banner: product.banner || { subtitle: '', title: '', desc: '', image: '', stats: [] },
-        quote: product.quote || { text: '', author: '' }
-      });
+      setFormData(buildFormData(product));
+    } else {
+      setFormData(buildFormData(null));
     }
   }, [product]);
 
