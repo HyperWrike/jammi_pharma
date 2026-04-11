@@ -148,17 +148,11 @@ export const importProductBatch = mutation({
     products: v.array(v.object({
       name: v.string(),
       slug: v.string(),
-      price: v.number(),
       description: v.optional(v.string()),
       short_description: v.optional(v.string()),
-      images: v.optional(v.array(v.string())),
-      category: v.optional(v.string()),
-      status: v.optional(v.string()),
-      sku: v.optional(v.string()),
       ingredients: v.optional(v.string()),
       indications: v.optional(v.string()),
       dosage: v.optional(v.string()),
-      rating: v.optional(v.number()),
     })),
   },
   handler: async (ctx, args) => {
@@ -170,18 +164,48 @@ export const importProductBatch = mutation({
         .query("products")
         .withIndex("slug", (q) => q.eq("slug", product.slug))
         .first();
+
+      // Fallback duplicate check by name (case-insensitive)
+      const existingByName = existing
+        ? existing
+        : (await ctx.db
+            .query("products")
+            .filter((q) => q.eq(q.field("name"), product.name))
+            .first()) ||
+          (await ctx.db
+            .query("products")
+            .filter((q) => q.eq(q.field("name"), product.name.toLowerCase()))
+            .first()) ||
+          (await ctx.db
+            .query("products")
+            .filter((q) => q.eq(q.field("name"), product.name.toUpperCase()))
+            .first());
       
-      if (existing) {
-        // Update existing product
-        await ctx.db.patch(existing._id, {
-          ...product,
+      if (existingByName) {
+        // Only sync wellness content sections; keep pricing/inventory/media unchanged.
+        await ctx.db.patch(existingByName._id, {
+          description: product.description,
+          short_description: product.short_description || existingByName.short_description,
+          ingredients: product.ingredients,
+          indications: product.indications,
+          dosage: product.dosage,
           updated_at: new Date().toISOString(),
         });
         imported.push({ status: 'updated', name: product.name });
       } else {
-        // Create new product
+        // Create minimal product only when no match exists.
         const id = await ctx.db.insert("products", {
-          ...product,
+          name: product.name,
+          slug: product.slug,
+          price: 0,
+          description: product.description,
+          short_description: product.short_description,
+          images: [],
+          ingredients: product.ingredients,
+          indications: product.indications,
+          dosage: product.dosage,
+          status: 'Published',
+          category_id: 'Wellness',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           view_count: 0,
@@ -189,8 +213,6 @@ export const importProductBatch = mutation({
           low_stock_threshold: 10,
           is_featured: false,
           display_order: 0,
-          status: product.status || 'Published',
-          category_id: product.category || 'Wellness',
         });
         imported.push({ status: 'created', name: product.name, id });
       }

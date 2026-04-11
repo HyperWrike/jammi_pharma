@@ -1,163 +1,221 @@
 #!/usr/bin/env node
 
 /**
- * Script to fetch product data from jammi.in and import to Convex
- * Usage: node scripts/import-jammi-products.js
+ * Scrape jammi.in wellness products and sync Product Description,
+ * Key Ingredients, Indications, and Dosage into Convex products.
+ *
+ * Usage:
+ *   npm run sync:jammi
  */
 
-const https = require('https');
-const { exec } = require('child_process');
-const util = require('util');
-const execPromise = util.promisify(exec);
+import { writeFile } from "node:fs/promises";
+import { promisify } from "node:util";
+import { execFile } from "node:child_process";
 
-// Fetch HTML from jammi.in
-async function fetchHTML(url) {
-    return new Promise((resolve, reject) => {
-        https.get(url, (res) => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => resolve(data));
-        }).on('error', reject);
-    });
+const execFileAsync = promisify(execFile);
+
+const BASE_CATEGORY_URL = "https://jammi.in/product-category/wellness/";
+const MAX_PRODUCTS = 50;
+const PAGE_LIMIT = 8;
+const BATCH_SIZE = 12;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const cleanText = (value) =>
+    (value || "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "- ")
+    .replace(/<\/li>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&#8217;/g, "'")
+    .replace(/&#8220;|&#8221;/g, '"')
+    .replace(/&#8230;/g, "...")
+    .replace(/&#8377;/g, "₹")
+    .replace(/\s+\n/g, "\n")
+    .replace(/\n\s+/g, "\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+
+function slugFromUrl(url) {
+    const match = url.match(/\/product\/([^/?#]+)/i);
+    return match ? match[1].toLowerCase() : "";
 }
 
-// Parse products from HTML
-function parseProducts(html) {
-    const products = [];
+function titleToSlug(name) {
+    return (name || "")
+        .toLowerCase()
+        .replace(/<[^>]+>/g, "")
+        .replace(/[^a-z0-9\s-]/g, "")
+        .trim()
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-");
+}
 
-    // Extract product cards - looking for common e-commerce patterns
-    const productRegex = /<li[^>]*class="[^"]*product[^"]*"[^>]*>([\s\S]*?)<\/li>/gi;
-    let match;
+function extractAccordionContent(html, sectionTitle) {
+    const escaped = sectionTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(
+        `<div class="accordion-item">[\\s\\S]*?<button[^>]*>[\\s\\S]*?${escaped}[\\s\\S]*?<\\/button>[\\s\\S]*?<div class="accordion-content">([\\s\\S]*?)<\\/div>[\\s\\S]*?<\\/div>`,
+        "i"
+    );
+    const m = html.match(re);
+    return m ? cleanText(m[1]) : "";
+}
 
-    while ((match = productRegex.exec(html)) !== null) {
-        const productHTML = match[1];
+async function fetchHtml(url) {
+    const res = await fetch(url, {
+        headers: {
+            "user-agent": "Mozilla/5.0 (compatible; JammiSyncBot/1.0)",
+            accept: "text/html,application/xhtml+xml",
+        },
+    });
+    if (!res.ok) {
+        throw new Error(`Failed ${url}: ${res.status}`);
+    }
+    return res.text();
+}
 
-        // Extract name
-        const nameMatch = productHTML.match(/<h2[^>]*>([\s\S]*?)<\/h2>|<a[^>]*title="([^"]*)/i);
-        const name = nameMatch ? (nameMatch[1] || nameMatch[2]).replace(/<[^>]+>/g, '').trim() : 'Unknown Product';
+async function collectProductLinks() {
+    const links = new Set();
 
-        // Extract price
-        const priceMatch = productHTML.match(/₹\s*([\d,]+)/);
-        const price = priceMatch ? parseInt(priceMatch[1].replace(/,/g, '')) : 0;
+    for (let page = 1; page <= PAGE_LIMIT && links.size < MAX_PRODUCTS; page += 1) {
+        const url = page === 1 ? BASE_CATEGORY_URL : `${BASE_CATEGORY_URL}page/${page}/`;
+        const html = await fetchHtml(url);
 
-        // Extract image URL
-        const imgMatch = productHTML.match(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"/);
-        const image = imgMatch ? imgMatch[1] : null;
-        const altText = imgMatch ? imgMatch[2] : name;
+        const re = /href="(https:\/\/jammi\.in\/product\/[^"]+)"/gi;
+        let match;
+        while ((match = re.exec(html)) !== null) {
+            links.add(match[1]);
+            if (links.size >= MAX_PRODUCTS) break;
+        }
 
-        // Extract description
-        const descMatch = productHTML.match(/<p[^>]*class="[^"]*desc[^"]*"[^>]*>([\s\S]*?)<\/p>/i);
-        const description = descMatch ? descMatch[1].replace(/<[^>]+>/g, '').trim() : '';
-
-        // Extract rating
-        const ratingMatch = productHTML.match(/(\d\.?\d*)\s*(?:\/|out of)\s*5|★{1,5}/);
-        const rating = ratingMatch ? parseFloat(ratingMatch[1]) || 0 : 0;
-
-        // Generate slug
-        const slug = name.toLowerCase()
-            .trim()
-            .replace(/[^a-z0-9\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-');
-
-        if (name !== 'Unknown Product' && price > 0) {
-            products.push({
-                name,
-                slug,
-                price,
-                images: image ? [image] : [],
-                description,
-                rating: parseFloat(rating.toFixed(1)),
-                category: 'Wellness',
-                status: 'Published',
-                is_featured: false,
-                sku: `JAMMI-${slug.toUpperCase()}`
-            });
+        // Stop early if pagination ended
+        if (!html.includes("next page-numbers") && page > 1) {
+            break;
         }
     }
 
-    return products;
+    return Array.from(links).slice(0, MAX_PRODUCTS);
 }
 
-// Import products using Convex mutation
-async function importToDB(products) {
-    console.log(`\n📦 Preparing to import ${products.length} products to Convex...`);
+function extractPrice(html) {
+    const m = html.match(/woocommerce-Price-amount[^>]*>\s*<bdi>[\s\S]*?([\d,.]+)\s*<\/bdi>/i) ||
+        html.match(/₹\s*([\d,.]+)/i);
+    if (!m) return 0;
+    const num = Number(String(m[1]).replace(/,/g, ""));
+    return Number.isFinite(num) ? num : 0;
+}
 
-    const batch = products.slice(0, 50); // Cap at 50 products
+function extractImage(html) {
+    const og = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i);
+    if (og && og[1]) return og[1];
 
-    // Create a simple import data file
-    const importScript = `
-npx convex run functions/products_mutations:importProductBatch --args '${JSON.stringify(batch)}'
-  `;
+    const img = html.match(/<img[^>]+class="[^"]*wp-post-image[^"]*"[^>]+src="([^"]+)"/i);
+    return (img && img[1]) ? img[1] : "";
+}
 
-    try {
-        console.log('🔄 Running Convex import...');
-        // For now, just log that we have the data
-        console.log(`✅ Ready to import ${batch.length} products`);
-        console.log('\nSample products:');
-        batch.slice(0, 3).forEach(p => {
-            console.log(`  - ${p.name} (₹${p.price})`);
-        });
-    } catch (error) {
-        console.error('Error importing:', error.message);
+async function scrapeProduct(url) {
+    const html = await fetchHtml(url);
+
+    const titleMatch =
+        html.match(/<h1[^>]*class="[^"]*product-title[^"]*"[^>]*>([\s\S]*?)<\/h1>/i) ||
+        html.match(/<h1[^>]*class="[^"]*product_title[^"]*"[^>]*>([\s\S]*?)<\/h1>/i);
+    const ogTitle = html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i);
+    const resolvedName = (titleMatch && titleMatch[1]) || (ogTitle && ogTitle[1]) || slugFromUrl(url);
+    const name = cleanText(resolvedName).split("\n")[0].trim();
+
+    const description = extractAccordionContent(html, "Product Description");
+    const ingredients = extractAccordionContent(html, "Key Ingredients") || extractAccordionContent(html, "Ingredients");
+    const indications = extractAccordionContent(html, "Indications");
+    const dosage = extractAccordionContent(html, "Dosage");
+
+    const slug = slugFromUrl(url) || titleToSlug(name);
+    const price = extractPrice(html);
+    const image = extractImage(html);
+
+    return {
+        name,
+        slug,
+        price: price || 0,
+        description,
+        short_description: (description || "").slice(0, 180),
+        ingredients,
+        indications,
+        dosage,
+        images: image ? [image] : [],
+        category: "Wellness",
+        status: "Published",
+        source_url: url,
+    };
+}
+
+function chunk(list, size) {
+    const out = [];
+    for (let i = 0; i < list.length; i += size) out.push(list.slice(i, i + size));
+    return out;
+}
+
+async function importBatch(productsBatch) {
+    const payload = productsBatch.map((p) => ({
+        name: p.name,
+        slug: p.slug,
+        description: p.description,
+        short_description: p.short_description,
+        ingredients: p.ingredients,
+        indications: p.indications,
+        dosage: p.dosage,
+    }));
+    const args = JSON.stringify({ products: payload });
+    const { stdout, stderr } = await execFileAsync(
+        "npx", [
+            "convex",
+            "run",
+            "--push",
+            "functions/products_mutations:importProductBatch",
+            args,
+        ], { maxBuffer: 1024 * 1024 * 10 }
+    );
+
+    if (stderr && stderr.trim()) {
+        console.warn(stderr.trim());
     }
+    return stdout;
 }
 
-// Main execution
 async function main() {
-    try {
-        console.log('🚀 Starting product import from jammi.in...\n');
+    console.log("[1/4] Collecting wellness product links from jammi.in...");
+    const links = await collectProductLinks();
+    if (links.length === 0) throw new Error("No product links found on jammi.in wellness pages");
 
-        // For production use, we'd scrape jammi.in
-        // For now, generating sample products with realistic Jammi data
-        const sampleProducts = [{
-                name: "Womaniya Forte",
-                slug: "womaniya-forte",
-                price: 399,
-                description: "Boosts energy, hormonal balance & immunity for women",
-                rating: 4.5,
-                category: "Wellness",
-                status: "Published",
-                images: ["https://jammi.in/wp-content/uploads/2023/womaniya.jpg"],
-                ingredients: "Ashwagandha, Shatavari, Lodhra, Gokshura",
-                indications: "Hormonal imbalance, Low energy, Menstrual irregularities",
-                dosage: "2 capsules twice daily"
-            },
-            {
-                name: "KeshPro Oil",
-                slug: "keshpro-oil",
-                price: 299,
-                description: "Nourishing hair oil with Bhringraj for strong, shiny hair",
-                rating: 4.8,
-                category: "Wellness",
-                status: "Published",
-                images: ["https://jammi.in/wp-content/uploads/2023/keshpro.jpg"],
-                ingredients: "Bhringraj oil, Brahmi, Neem, Coconut Oil",
-                indications: "Hair loss, Baldness, Weak hair",
-                dosage: "Apply 2-3 times per week"
-            },
-            {
-                name: "Livercure Tablets",
-                slug: "livercure-tablets",
-                price: 450,
-                description: "Liver support formula with milk thistle and turmeric",
-                rating: 4.6,
-                category: "Wellness",
-                status: "Published",
-                images: ["https://jammi.in/wp-content/uploads/2023/livercure.jpg"],
-                ingredients: "Milk Thistle, Turmeric, Punarnava, Bhumyamlaki",
-                indications: "Liver dysfunction, Fatty liver, Weak digestion",
-                dosage: "1 tablet twice daily after meals"
-            }
-        ];
-
-        console.log('📊 Sample products prepared\n');
-        await importToDB(sampleProducts);
-
-    } catch (error) {
-        console.error('❌ Error:', error.message);
-        process.exit(1);
+    console.log(`[2/4] Scraping ${links.length} product pages for description/ingredients/indications/dosage...`);
+    const scraped = [];
+    for (let i = 0; i < links.length; i += 1) {
+        const url = links[i];
+        try {
+            const p = await scrapeProduct(url);
+            if (p.name && p.slug) scraped.push(p);
+            console.log(`  ${i + 1}/${links.length}: ${p.name || p.slug}`);
+        } catch (err) {
+            console.warn(`  skipped ${url}: ${err.message}`);
+        }
+        await sleep(300);
     }
+
+    await writeFile("scripts/jammi-products.json", `${JSON.stringify(scraped, null, 2)}\n`);
+
+    console.log(`[3/4] Importing ${scraped.length} products into Convex in batches of ${BATCH_SIZE}...`);
+    const batches = chunk(scraped, BATCH_SIZE);
+    for (let i = 0; i < batches.length; i += 1) {
+        await importBatch(batches[i]);
+        console.log(`  imported batch ${i + 1}/${batches.length}`);
+    }
+
+    console.log("[4/4] Done. Product content synced to your Jammi site.");
+    console.log("Saved scraped snapshot: scripts/jammi-products.json");
 }
 
-main();
+main().catch((err) => {
+    console.error("Sync failed:", err.message);
+    process.exit(1);
+});
